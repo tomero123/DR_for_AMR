@@ -22,7 +22,7 @@ def download_or_open_ftp(input_list):
         dest_path = input_list[5]
         if ftp_sub_folder == '-':
             print(f"SKIP! ftp_sub_folder is: {ftp_sub_folder} for strain: {strain_name}, index: {ind}")
-            return
+            return "None"
         ftp = FTP(ftp_site)
         ftp.login()
         ftp.cwd(ftp_sub_folder)
@@ -32,7 +32,7 @@ def download_or_open_ftp(input_list):
             with open(output_file_path, 'wb') as f:
                 ftp.retrbinary('RETR ' + ftp_file_name, f.write)
             print(f"Downloaded file for: {strain_name}, index: {ind}")
-            return
+            return "None"
         else:
             line_reader = StringIO()
             ftp.retrlines('RETR ' + ftp_file_name, line_reader.write)
@@ -42,3 +42,4 @@ def download_or_open_ftp(input_list):
             return [strain_name, str_to_return]
     except Exception as e:
         print(f"ERROR at downloading assembly_status for: {strain_name}, index: {ind}, message: {e}")
+        return "None"
