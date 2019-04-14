@@ -21,13 +21,17 @@ def download_assembly_status(input_list):
         ind = input_list[0]
         ref_seq_ftp = input_list[1]
         strain_name = input_list[2]
+        file_name = input_list[3]
+        if ref_seq_ftp == '-':
+            print(f"SKIP! no RefSeq: {strain_name}, index: {ind}")
+            return
         ftp = FTP(NCBI_FTP_SITE)
         ftp.login()
         ftp.cwd(ref_seq_ftp)
-
-        assembly_status_file_path = DEST_PATH + strain_name + ".txt"
-        with open(assembly_status_file_path, 'wb') as f:
-            ftp.retrbinary('RETR ' + ASSEMBLY_STATUS_FILE, f.write)
+        # replace "/" with "$" so it will be possible to save the file
+        output_file_path = DEST_PATH + strain_name.replace("/", "$") + ".txt"
+        with open(output_file_path, 'wb') as f:
+            ftp.retrbinary('RETR ' + file_name, f.write)
         print(f"Downloaded assembly_status for: {strain_name}, index: {ind}")
     except Exception as e:
         print(f"ERROR at downloading assembly_status for: {strain_name}, index: {ind}, message: {e}")
@@ -41,7 +45,8 @@ if __name__ == '__main__':
         folder_ind = df["RefSeq FTP"][ind].find("/genomes")
         ref_seq_ftp = df["RefSeq FTP"][ind][folder_ind:]
         strain_name = df["Strain"][ind]
-        input_list.append([ind, ref_seq_ftp, strain_name])
+        input_list.append([ind, ref_seq_ftp, strain_name, ASSEMBLY_STATUS_FILE])
+    # input_list = [input_list[158]]
     if NUM_OF_PROCESSES > 1:
         pool = ProcessPool(processes=NUM_OF_PROCESSES)
         pool.map(download_assembly_status, input_list)
