@@ -20,7 +20,7 @@ if __name__ == '__main__':
         ftp_sub_folder = df["RefSeq FTP"][ind][folder_ind:]
         strain_name = df["Strain"][ind]
         input_list.append([ind, ftp_sub_folder, strain_name, FTP_FILE_NAME, NCBI_FTP_SITE, None])
-    input_list = input_list[0:20]
+    # input_list = input_list[0:20]
     if NUM_OF_PROCESSES > 1:
         pool = ProcessPool(processes=NUM_OF_PROCESSES)
         status_list = pool.map(download_or_open_ftp, input_list)
@@ -28,9 +28,7 @@ if __name__ == '__main__':
         status_list = []
         for i in input_list:
             status_list.append(download_or_open_ftp(i))
-    print(status_list)
-    # mapping_dic = {val[0]: val[1].replace("status=", "") for val in status_list}
-    # df['status'] = df['Strain'].map(mapping_dic)
+    # print(status_list)
     status_df = pd.DataFrame({"strain_validation": [x[0] for x in status_list], "status": [x[1].replace("status=", "") for x in status_list]})
     df = pd.concat([df, status_df], axis=1)
     df.to_csv("../data_files/pa_data.csv", index=False)
