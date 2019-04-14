@@ -1,6 +1,6 @@
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
-from ncbi_download_data.ftp_download_utils import download_or_open_ftp
+from ncbi_download_data.ftp_download_utils import open_ftp_file
 
 # PARAMS
 NUM_OF_PROCESSES = 8
@@ -19,15 +19,15 @@ if __name__ == '__main__':
         folder_ind = df["RefSeq FTP"][ind].find("/genomes")
         ftp_sub_folder = df["RefSeq FTP"][ind][folder_ind:]
         strain_name = df["Strain"][ind]
-        input_list.append([ind, ftp_sub_folder, strain_name, FTP_FILE_NAME, NCBI_FTP_SITE, None])
+        input_list.append([ind, ftp_sub_folder, strain_name, FTP_FILE_NAME, NCBI_FTP_SITE])
     # input_list = input_list[0:20]
     if NUM_OF_PROCESSES > 1:
         pool = ProcessPool(processes=NUM_OF_PROCESSES)
-        status_list = pool.map(download_or_open_ftp, input_list)
+        status_list = pool.map(open_ftp_file, input_list)
     else:
         status_list = []
         for i in input_list:
-            status_list.append(download_or_open_ftp(i))
+            status_list.append(open_ftp_file(i))
     # print(status_list)
     status_df = pd.DataFrame({"strain_validation": [x[0] for x in status_list], "status": [x[1].replace("status=", "") for x in status_list]})
     df = pd.concat([df, status_df], axis=1)
