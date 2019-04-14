@@ -3,7 +3,7 @@ from pathos.multiprocessing import ProcessPool
 from ncbi_download_data.ftp_download_utils import download_ftp_file
 
 # PARAMS
-NUM_OF_PROCESSES = 1
+NUM_OF_PROCESSES = 8
 DEST_PATH = "C:/University 2nd degree/Thesis/Pseudomonas Aureginosa data/genome_files/"
 CSV_FILE_PATH = "../data_files/genomes_proks.csv"
 NCBI_FTP_SITE = "ftp.ncbi.nlm.nih.gov"
@@ -20,7 +20,7 @@ if __name__ == '__main__':
         strain_name = df["Strain"][ind]
         ftp_file_name = ftp_sub_folder.split("/")[-1] + "_genomic.fna.gz"
         input_list.append([ind, ftp_sub_folder, strain_name, ftp_file_name, NCBI_FTP_SITE, DEST_PATH])
-    input_list = input_list[0:2]
+    # input_list = input_list[0:2]
     if NUM_OF_PROCESSES > 1:
         pool = ProcessPool(processes=NUM_OF_PROCESSES)
         pool.map(download_ftp_file, input_list)
