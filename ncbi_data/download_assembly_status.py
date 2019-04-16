@@ -1,6 +1,6 @@
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
-from ncbi_download_data.ncbi_utils import open_ftp_file
+from ncbi_data.ncbi_utils import open_ftp_file
 
 # PARAMS
 NUM_OF_PROCESSES = 8

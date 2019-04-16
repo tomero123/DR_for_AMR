@@ -114,4 +114,4 @@ def create_kmers_file(input_list):
         with gzip.open(path + output_folder + file_name.replace(".fna.gz", ".txt.gz"), 'wt') as outfile:
             json.dump(kmers_dic, outfile)
     except Exception as e:
-        print(f"ERROR at create_kmers_file for: {strain_name}, index: {ind}, message: {e}")
+        print(f"ERROR at create_kmers_file for: {file_name}, index: {ind}, message: {e}")

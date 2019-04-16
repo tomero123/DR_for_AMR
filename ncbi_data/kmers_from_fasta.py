@@ -2,7 +2,7 @@ from pathos.multiprocessing import ProcessPool
 import gzip
 from functools import partial
 import os
-from ncbi_download_data.ncbi_utils import create_kmers_file
+from ncbi_data.ncbi_utils import create_kmers_file
 
 # PARAMS
 NUM_OF_PROCESSES = 8
