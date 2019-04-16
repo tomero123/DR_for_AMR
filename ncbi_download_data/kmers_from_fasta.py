@@ -1,24 +1,31 @@
-from Bio import SeqIO
-import json
+from pathos.multiprocessing import ProcessPool
+import gzip
+from functools import partial
+import os
+from ncbi_download_data.ncbi_utils import create_kmers_file
 
-
+# PARAMS
+NUM_OF_PROCESSES = 8
+K = 10  # Choose K size
 path = "C:/University 2nd degree/Thesis/Pseudomonas Aureginosa data/"
-input_folder = "genome_files"
-output_folder = "kmers_files"
+input_folder = "genome_files/"
+output_folder = "kmers_files/"
+# PARAMS END
 
-K = 10
-kmers_dic = {}
+files_list = os.listdir(path + input_folder)
+files_list = [x for x in files_list if ".fna.gz" in x]
+_open = partial(gzip.open, mode='rt')
 
-file_name = "/GCF_004370345.1_ASM437034v1_genomic.fna"
-fasta_sequences = SeqIO.parse(open(path + input_folder + file_name), 'fasta')
-for fasta in fasta_sequences:
-    name, sequence = fasta.id, str(fasta.seq)
-    for start_ind in range(len(sequence) - K + 1):
-        key = sequence[start_ind:start_ind + K]
-        if key in kmers_dic:
-            kmers_dic[key] += 1
-        else:
-            kmers_dic[key] = 1
 
-with open(path + output_folder + file_name.replace(".fna", ".txt"), 'w') as outfile:
-    json.dump(kmers_dic, outfile)
+if __name__ == '__main__':
+    input_list = []
+    for ind, file_name in enumerate(files_list):
+        input_list.append([ind, file_name, K, path, input_folder, output_folder])
+    # input_list = input_list[0:10]
+    if NUM_OF_PROCESSES > 1:
+        pool = ProcessPool(processes=NUM_OF_PROCESSES)
+        pool.map(create_kmers_file, input_list)
+    else:
+        status_list = []
+        for i in input_list:
+            create_kmers_file(i)
