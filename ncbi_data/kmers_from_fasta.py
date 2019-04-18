@@ -20,9 +20,13 @@ if __name__ == '__main__':
     input_list = []
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
+    output_files_list = os.listdir(output_folder)
+    output_files_list = [x for x in output_files_list if ".txt.gz" in x]
     for ind, file_name in enumerate(files_list):
-        input_list.append([ind, file_name, K, input_folder, output_folder])
+        if file_name.replace(".fna", ".txt") not in output_files_list:
+            input_list.append([ind, file_name, K, input_folder, output_folder])
     # input_list = input_list[0:10]
+    print("Start processing {} files".format(len(input_list)))
     if NUM_OF_PROCESSES > 1:
         pool = ProcessPool(processes=NUM_OF_PROCESSES)
         pool.map(create_kmers_file, input_list)
@@ -30,3 +34,4 @@ if __name__ == '__main__':
         status_list = []
         for i in input_list:
             create_kmers_file(i)
+    print("DONE!")
