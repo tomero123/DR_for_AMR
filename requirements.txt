@@ -1,0 +1,2 @@
+pathos==0.2.3
+biopython==1.73
