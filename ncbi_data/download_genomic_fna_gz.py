@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/home/local/BGU-USERS/tomeror")
+
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
 import os
