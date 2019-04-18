@@ -23,13 +23,17 @@ if __name__ == '__main__':
     input_list = []
     if not os.path.exists(DEST_PATH):
         os.makedirs(DEST_PATH)
+    files_list = os.listdir(DEST_PATH)
+    files_list = [x for x in files_list if ".fna.gz" in x]
     for ind in range(n_rows):
         folder_ind = df["RefSeq FTP"][ind].find("/genomes")
         ftp_sub_folder = df["RefSeq FTP"][ind][folder_ind:]
         strain_name = df["Strain"][ind]
         ftp_file_name = ftp_sub_folder.split("/")[-1] + "_genomic.fna.gz"
-        input_list.append([ind, ftp_sub_folder, strain_name, ftp_file_name, NCBI_FTP_SITE, DEST_PATH])
+        if ftp_file_name not in files_list:
+            input_list.append([ind, ftp_sub_folder, strain_name, ftp_file_name, NCBI_FTP_SITE, DEST_PATH])
     # input_list = input_list[0:10]
+    print("Start downloading {} files".format(len(input_list)))
     if NUM_OF_PROCESSES > 1:
         pool = ProcessPool(processes=NUM_OF_PROCESSES)
         pool.map(download_ftp_file, input_list)
@@ -37,3 +41,4 @@ if __name__ == '__main__':
         status_list = []
         for i in input_list:
             download_ftp_file(i)
+    print("DONE!")
