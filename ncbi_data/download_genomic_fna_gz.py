@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/home/local/BGU-USERS/tomeror")
+sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
