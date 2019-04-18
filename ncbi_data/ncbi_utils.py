@@ -7,6 +7,7 @@ from functools import partial
 
 _open = partial(gzip.open, mode='rt')
 
+
 def open_ftp_file(input_list):
     """
     Download one assembly_status.txt file
@@ -97,12 +98,11 @@ def create_kmers_file(input_list):
         ind = input_list[0]
         file_name = input_list[1]
         K = input_list[2]
-        path = input_list[3]
-        input_folder = input_list[4]
-        output_folder = input_list[5]
+        input_folder = input_list[3]
+        output_folder = input_list[4]
         print(f"Started processing: {file_name}")
         kmers_dic = {}
-        fasta_sequences = SeqIO.parse(_open(path + input_folder + file_name), 'fasta')
+        fasta_sequences = SeqIO.parse(_open(input_folder + file_name), 'fasta')
         for fasta in fasta_sequences:
             name, sequence = fasta.id, str(fasta.seq)
             for start_ind in range(len(sequence) - K + 1):
@@ -111,7 +111,7 @@ def create_kmers_file(input_list):
                     kmers_dic[key] += 1
                 else:
                     kmers_dic[key] = 1
-        with gzip.open(path + output_folder + file_name.replace(".fna.gz", ".txt.gz"), 'wt') as outfile:
+        with gzip.open(output_folder + file_name.replace(".fna.gz", ".txt.gz"), 'wt') as outfile:
             json.dump(kmers_dic, outfile)
     except Exception as e:
         print(f"ERROR at create_kmers_file for: {file_name}, index: {ind}, message: {e}")

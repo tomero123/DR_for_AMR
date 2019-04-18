@@ -1,10 +1,12 @@
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
+import os
+
 from ncbi_data.ncbi_utils import download_ftp_file
 
 # PARAMS
 NUM_OF_PROCESSES = 8
-DEST_PATH = "C:/University 2nd degree/Thesis/Pseudomonas Aureginosa data/genome_files/"
+DEST_PATH = "../results_files/genome_files/"
 CSV_FILE_PATH = "../data_files/pa_data.csv"
 NCBI_FTP_SITE = "ftp.ncbi.nlm.nih.gov"
 # PARAMS END
@@ -16,6 +18,8 @@ if __name__ == '__main__':
     df = df[df['status'] == 'latest'].reset_index()
     n_rows = df.shape[0]
     input_list = []
+    if not os.path.exists(DEST_PATH):
+        os.makedirs(DEST_PATH)
     for ind in range(n_rows):
         folder_ind = df["RefSeq FTP"][ind].find("/genomes")
         ftp_sub_folder = df["RefSeq FTP"][ind][folder_ind:]
