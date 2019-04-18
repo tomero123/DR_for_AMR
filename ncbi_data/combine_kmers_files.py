@@ -28,3 +28,4 @@ if __name__ == '__main__':
         json.dump(all_kmers_dic, outfile)
     with open("../results_files/all_kmers_map.txt", 'wt') as outfile2:
         json.dump(mapping_dic, outfile2)
+    print("DONE!")
