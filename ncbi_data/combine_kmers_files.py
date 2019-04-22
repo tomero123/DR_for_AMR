@@ -26,6 +26,6 @@ if __name__ == '__main__':
                     all_kmers_dic[kmer][ind] = kmers_dic[kmer]
     with gzip.open("../results_files/all_kmers_file.txt.gz", 'wt') as outfile:
         json.dump(all_kmers_dic, outfile)
-    with open("../results_files/all_kmers_map.txt", 'wt') as outfile2:
+    with open("../results_files/all_kmers_map.txt", 'w') as outfile2:
         json.dump(mapping_dic, outfile2)
     print("DONE!")
