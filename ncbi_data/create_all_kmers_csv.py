@@ -11,12 +11,12 @@ if os.name == 'nt':
 else:
     path = os.path.join('.', 'results_files')
 
-with gzip.open(path + kmers_file_name, 'rt') as f:
+with gzip.open(os.path.join(path, kmers_file_name), 'rt') as f:
     all_kmers_dic = json.loads(f.read())
 
-with open(path + kmers_map_file_name, 'r') as f:
+with open(os.path.join(path, kmers_map_file_name), 'r') as f:
     all_kmers_map = json.loads(f.read())
 
 df = pd.DataFrame({key: pd.Series(val) for key, val in all_kmers_dic.items()})
 df = df.T
-df.to_csv(path + kmers_file_name.replace("txt.gz", "csv"))
+df.to_csv(os.path.join(path, kmers_file_name.replace("txt.gz", "csv")))
