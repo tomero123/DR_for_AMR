@@ -7,7 +7,7 @@ kmers_file_name = 'all_kmers_file_SMALL.txt.gz'
 kmers_map_file_name = 'all_kmers_map_SMALL.txt'
 
 import glob
-print(glob.glob(os.path.join('..', 'results_files', '*')))
+print(glob.glob(os.path.join('.', 'results_files', '*')))
 
 
 # with gzip.open(os.path.join('..', 'results_files', kmers_file_name), 'rt') as f:
