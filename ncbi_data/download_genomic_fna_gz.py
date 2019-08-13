@@ -8,7 +8,7 @@ import os
 from ncbi_data.ncbi_utils import download_ftp_file
 
 # PARAMS
-NUM_OF_PROCESSES = 8
+NUM_OF_PROCESSES = 1
 DEST_PATH = "../results_files/genome_files/"
 CSV_FILE_PATH = "../data_files/pa_data.csv"
 NCBI_FTP_SITE = "ftp.ncbi.nlm.nih.gov"
