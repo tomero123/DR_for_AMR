@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="tomeror@132.72.67.169:22">
+    <serverData>
+      <paths name="rna.ise.bgu.ac.il">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/local/BGU-USERS/tomeror/tomer_thesis" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="tomeror@132.72.67.169:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/local/BGU-USERS/tomeror/tomer_thesis" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
