@@ -4,9 +4,9 @@ import json
 
 # PARAMS
 input_folder = "../results_files/kmers_files/"
-all_kmers_file_txt_name = "all_kmers_file_SMALL_50.txt.gz"
-all_kmers_map_file_name = "all_kmers_map_SMALL_50.txt"
-limit = 50  # if None - take all files from kmers_files else limit
+all_kmers_file_txt_name = "all_kmers_file.txt.gz"
+all_kmers_map_file_name = "all_kmers_map.txt"
+limit = None  # if None - take all files from kmers_files else limit
 # PARAMS END
 
 files_list = os.listdir(input_folder)
