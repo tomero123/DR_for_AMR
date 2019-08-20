@@ -12,6 +12,7 @@ NUM_OF_PROCESSES = 1
 DEST_PATH = "../results_files/genome_files/"
 CSV_FILE_PATH = "../data_files/pa_data.csv"
 NCBI_FTP_SITE = "ftp.ncbi.nlm.nih.gov"
+limit = None  # if None - take all files found else limit
 # PARAMS END
 
 
@@ -32,7 +33,8 @@ if __name__ == '__main__':
         ftp_file_name = ftp_sub_folder.split("/")[-1] + "_genomic.fna.gz"
         if ftp_file_name not in files_list:
             input_list.append([ind, ftp_sub_folder, strain_name, ftp_file_name, NCBI_FTP_SITE, DEST_PATH])
-    # input_list = input_list[0:10]
+    if limit is not None:
+        input_list = input_list[:limit]
     print("Start downloading {} files".format(len(input_list)))
     if NUM_OF_PROCESSES > 1:
         pool = ProcessPool(processes=NUM_OF_PROCESSES)
