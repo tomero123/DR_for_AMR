@@ -37,12 +37,12 @@ def get_final_df(path, dataset_file_name, amr_data_file_name, kmers_map_file_nam
         label_df = label_df.rename(columns={antibiotic_for_test: "label"})
         label_df = label_df.set_index(['NCBI File Name'])
         # Join (inner) between kmers_df and label_df
+        final_df = kmers_df.join(label_df, how="inner")
         # REMOVE!$#!@!#@#$@!#@!
-        # final_df = kmers_df.join(label_df, how="inner")
-        final_df = kmers_df.join(label_df, how="left")
-        final_df["label"] = ["S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R"]
-        final_df = final_df.append(final_df)
-        final_df = final_df.append(final_df)
+        # final_df = kmers_df.join(label_df, how="left")
+        # final_df["label"] = ["S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R"]
+        # final_df = final_df.append(final_df)
+        # final_df = final_df.append(final_df)
         print("final_df have {} Strains with label and {} features".format(final_df.shape[0], final_df.shape[1]))
         return final_df
     except Exception as e:
@@ -123,8 +123,8 @@ def write_roc_curve(raw_score_list, labels, path, results_file_name, txt):
 # *********************************************************************************************************************************
 # Config
 
-dataset_file_name = 'all_kmers_file_SMALL_50.csv.gz'
-kmers_map_file_name = 'all_kmers_map_SMALL_50.txt'
+dataset_file_name = 'all_kmers_file.csv.gz'
+kmers_map_file_name = 'all_kmers_map.txt'
 amr_data_file_name = 'amr_data_summary.csv'
 
 antibiotic_for_test = 'amikacin'
@@ -137,9 +137,9 @@ random_seed = 1
 num_of_processes = 10  # relevant only if test_mode = "cv"
 k_folds = 10  # relevant only if test_mode = "cv"
 model = GradientBoostingClassifier(random_state=random_seed)
-model_params = {'criterion': 'friedman_mse', 'learning_rate': 0.17104776679947403, 'loss': 'exponential',
-                'max_depth': 5, 'max_features': 0.6648727833497278, 'min_samples_leaf': 0.001,
-                'min_samples_split': 15, 'n_estimators': 107, 'subsample': 0.9352817735692912}
+model_params = {'criterion': 'friedman_mse', 'learning_rate': 0.15, 'loss': 'exponential',
+                'max_depth': 5, 'max_features': 0.9, 'min_samples_leaf': 0.001,
+                'min_samples_split': 15, 'n_estimators': 300, 'subsample': 0.9}
 
 results_file_name = "{}_RESULTS.xlsx".format(antibiotic_for_test)
 if os.name == 'nt':
