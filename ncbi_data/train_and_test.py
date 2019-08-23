@@ -27,6 +27,7 @@ def get_final_df(path, dataset_file_name, amr_data_file_name, kmers_map_file_nam
         kmers_df = kmers_df.set_index(['Unnamed: 0'])
         # Transpose to have strains as rows and kmers as columns
         kmers_df = kmers_df.T
+        print("kmers_df shape: {}".format(kmers_df.shape))
         # Get label of specific antibiotic
         label_df = amr_df[[ncbi_file_name_column, strain_column, antibiotic_for_test]]
         # Remove antibiotics without resistance data
@@ -36,6 +37,7 @@ def get_final_df(path, dataset_file_name, amr_data_file_name, kmers_map_file_nam
             label_df = label_df[label_df[antibiotic_for_test] != 'I']
         label_df = label_df.rename(columns={antibiotic_for_test: "label"})
         label_df = label_df.set_index(['NCBI File Name'])
+        print("label_df shape: {}".format(label_df.shape))
         # Join (inner) between kmers_df and label_df
         final_df = kmers_df.join(label_df, how="inner")
         # REMOVE!$#!@!#@#$@!#@!
