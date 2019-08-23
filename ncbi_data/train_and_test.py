@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 def get_final_df(path, dataset_file_name, amr_data_file_name, kmers_map_file_name, antibiotic_for_test, ncbi_file_name_column, strain_column, remove_intermediate):
     try:
         kmers_df = pd.read_csv(os.path.join(path, dataset_file_name), compression='gzip')
+        print("kmers_df shape: {}".format(kmers_df.shape))
         amr_df = pd.read_csv(os.path.join(path, amr_data_file_name))
         with open(os.path.join(path, kmers_map_file_name), 'r') as f:
             all_kmers_map = json.loads(f.read())
