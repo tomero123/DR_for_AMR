@@ -6,6 +6,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
 import matplotlib.pyplot as plt
+import traceback
 
 
 def get_final_df(path, dataset_file_name, amr_data_file_name, kmers_map_file_name, antibiotic_for_test, ncbi_file_name_column, strain_column, remove_intermediate):
@@ -50,6 +51,7 @@ def get_final_df(path, dataset_file_name, amr_data_file_name, kmers_map_file_nam
         return final_df
     except Exception as e:
         print(f"ERROR at get_final_df, message: {e}")
+        traceback.print_exc()
 
 
 def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column):
