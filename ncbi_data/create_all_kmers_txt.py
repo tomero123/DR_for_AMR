@@ -4,7 +4,7 @@ import json
 import pandas as pd
 
 # PARAMS
-input_folder = "../results_files/kmers_files/"
+input_folder = os.path.join("../results_files", "kmers_files/")
 all_kmers_file_txt_name = "all_kmers_file.txt.gz"
 all_kmers_map_file_name = "all_kmers_map.txt"
 amr_data_file_path = os.path.join("../results_files", 'amr_data_summary.csv')
