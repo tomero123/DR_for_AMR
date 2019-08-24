@@ -103,7 +103,7 @@ def create_kmers_file(input_list):
         output_folder = input_list[4]
         print(f"Started processing: {file_name}")
         kmers_dic = {}
-        fasta_sequences = SeqIO.parse(_open(input_folder + file_name), 'fasta')
+        fasta_sequences = SeqIO.parse(_open(os.path.join(input_folder, file_name)), 'fasta')
         for fasta in fasta_sequences:
             name, sequence = fasta.id, str(fasta.seq)
             for start_ind in range(len(sequence) - K + 1):
