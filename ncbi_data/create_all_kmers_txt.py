@@ -13,7 +13,7 @@ results_files_path = os.path.join(prefix, 'results_files')
 input_folder = os.path.join(results_files_path, 'kmers_files')
 amr_data_file_path = os.path.join(results_files_path, 'amr_data_summary.csv')
 
-all_kmers_file_txt_name = "all_kmers_file.txt.gz"
+all_kmers_file_csv_name = "all_kmers_file.csv.gz"
 all_kmers_map_file_name = "all_kmers_map.txt"
 
 limit = None  # if None - take all files from kmers_files else limit
@@ -43,8 +43,11 @@ if __name__ == '__main__':
                 else:
                     all_kmers_dic[kmer] = [0] * n_of_files
                     all_kmers_dic[kmer][ind] = kmers_dic[kmer]
-    with gzip.open(os.path.join(results_files_path, all_kmers_file_txt_name), 'wt') as outfile:
-        json.dump(all_kmers_dic, outfile)
+
+    df = pd.DataFrame({key: pd.Series(val) for key, val in all_kmers_dic.items()})
+    df = df.T
+    df.to_csv(os.path.join(results_files_path, all_kmers_file_csv_name), compression="gzip")
+
     with open(os.path.join(results_files_path, all_kmers_map_file_name), 'w') as outfile2:
         json.dump(mapping_dic, outfile2)
     print("DONE!")
