@@ -9,8 +9,9 @@ if os.name == 'nt':
 else:
     prefix = '.'
 
-input_folder = os.path.join(prefix, 'results_files', 'kmers_files')
-amr_data_file_path = os.path.join(prefix, 'results_files', 'amr_data_summary.csv')
+results_files_path = os.path.join(prefix, 'results_files')
+input_folder = os.path.join(results_files_path, 'kmers_files')
+amr_data_file_path = os.path.join(results_files_path, 'amr_data_summary.csv')
 
 all_kmers_file_txt_name = "all_kmers_file.txt.gz"
 all_kmers_map_file_name = "all_kmers_map.txt"
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     for ind, file_name in enumerate(files_list):
         mapping_dic[ind] = file_name
         print(f"Started processing: {file_name}")
-        with gzip.open(input_folder + file_name, "rt") as f:
+        with gzip.open(os.path.join(input_folder, file_name), "rt") as f:
             kmers_dic = json.loads(f.read())
             for kmer in kmers_dic.keys():
                 if kmer in all_kmers_dic:
@@ -42,8 +43,8 @@ if __name__ == '__main__':
                 else:
                     all_kmers_dic[kmer] = [0] * n_of_files
                     all_kmers_dic[kmer][ind] = kmers_dic[kmer]
-    with gzip.open("../results_files/" + all_kmers_file_txt_name, 'wt') as outfile:
+    with gzip.open(os.path.join(results_files_path, all_kmers_file_txt_name), 'wt') as outfile:
         json.dump(all_kmers_dic, outfile)
-    with open("../results_files/" + all_kmers_map_file_name, 'w') as outfile2:
+    with open(os.path.join(results_files_path, all_kmers_map_file_name), 'w') as outfile2:
         json.dump(mapping_dic, outfile2)
     print("DONE!")
