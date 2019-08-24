@@ -128,8 +128,8 @@ def write_roc_curve(raw_score_list, labels, path, results_file_name, txt):
 # *********************************************************************************************************************************
 # Config
 
-dataset_file_name = 'all_kmers_file.csv.gz'
-kmers_map_file_name = 'all_kmers_map.txt'
+dataset_file_name = 'all_kmers_file_SMALL_50.csv.gz'
+kmers_map_file_name = 'all_kmers_map_SMALL_50.txt'
 amr_data_file_name = 'amr_data_summary.csv'
 
 antibiotic_for_test = 'amikacin'
@@ -148,9 +148,11 @@ model_params = {'criterion': 'friedman_mse', 'learning_rate': 0.15, 'loss': 'exp
 
 results_file_name = "{}_RESULTS.xlsx".format(antibiotic_for_test)
 if os.name == 'nt':
-    path = os.path.join('..', 'results_files')
+    prefix = '..'
 else:
-    path = os.path.join('.', 'results_files')
+    prefix = '.'
+
+path = os.path.join(prefix, 'results_files')
 
 # Config END
 # *********************************************************************************************************************************

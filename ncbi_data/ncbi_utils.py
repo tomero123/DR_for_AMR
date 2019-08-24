@@ -4,6 +4,7 @@ from Bio import SeqIO
 import json
 import gzip
 from functools import partial
+import os
 
 _open = partial(gzip.open, mode='rt')
 
@@ -68,7 +69,7 @@ def download_ftp_file(input_list):
         ftp.cwd(ftp_sub_folder)
         # replace "/" with "$" so it will be possible to save the file
         if dest_path is not None:
-            output_file_path = dest_path + ftp_file_name
+            output_file_path = os.path.join(dest_path, ftp_file_name)
             with open(output_file_path, 'wb') as f:
                 ftp.retrbinary('RETR ' + ftp_file_name, f.write)
             print(f"Downloaded file for: {strain_name}, index: {ind}")
