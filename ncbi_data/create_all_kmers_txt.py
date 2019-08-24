@@ -1,11 +1,13 @@
 import gzip
 import os
 import json
+import pandas as pd
 
 # PARAMS
 input_folder = "../results_files/kmers_files/"
-all_kmers_file_txt_name = "all_kmers_file.txt.gz"
+all_kmers_file_txt_name = "all_kmers_file_SMALL_50.txt.gz"
 all_kmers_map_file_name = "all_kmers_map.txt"
+amr_data_file_path = os.path.join("../results_files", 'amr_data_summary.csv')
 limit = None  # if None - take all files from kmers_files else limit
 # PARAMS END
 
@@ -14,10 +16,14 @@ files_list = [x for x in files_list if ".txt.gz" in x]
 n_of_files = len(files_list)
 
 if __name__ == '__main__':
+    amr_df = pd.read_csv(amr_data_file_path)
+    files_with_amr_data = list(amr_df['NCBI File Name'])
     all_kmers_dic = {}
     mapping_dic = {}
     if limit is not None:
         files_list = files_list[:limit]
+    # Keep only strains with amr data
+    files_list = [x for x in files_list if x in files_with_amr_data]
     for ind, file_name in enumerate(files_list):
         mapping_dic[ind] = file_name
         print(f"Started processing: {file_name}")
