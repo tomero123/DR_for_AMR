@@ -147,11 +147,8 @@ model_params = {'criterion': 'friedman_mse', 'learning_rate': 0.15, 'loss': 'exp
                 'min_samples_split': 15, 'n_estimators': 300, 'subsample': 0.9}
 
 results_file_name = "{}_RESULTS.xlsx".format(antibiotic_for_test)
-if os.name == 'nt':
-    prefix = '..'
-else:
-    prefix = '.'
 
+prefix = '..' if os.name == 'nt' else '.'
 path = os.path.join(prefix, 'results_files')
 
 # Config END

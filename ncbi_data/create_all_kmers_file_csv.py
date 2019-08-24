@@ -4,11 +4,7 @@ import json
 import pandas as pd
 
 # PARAMS
-if os.name == 'nt':
-    prefix = '..'
-else:
-    prefix = '.'
-
+prefix = '..' if os.name == 'nt' else '.'
 results_files_path = os.path.join(prefix, 'results_files')
 input_folder = os.path.join(results_files_path, 'kmers_files')
 amr_data_file_path = os.path.join(results_files_path, 'amr_data_summary.csv')

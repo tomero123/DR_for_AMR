@@ -11,8 +11,10 @@ from ncbi_data.ncbi_utils import create_kmers_file
 # PARAMS
 NUM_OF_PROCESSES = 8
 K = 10  # Choose K size
-input_folder = "../results_files/genome_files/"
-output_folder = "../results_files/kmers_files/"
+
+prefix = '..' if os.name == 'nt' else '.'
+input_folder = os.path.join(prefix, "results_files", "genome_files")
+output_folder = os.path.join(prefix, "results_files", "kmers_files")
 # PARAMS END
 
 files_list = os.listdir(input_folder)

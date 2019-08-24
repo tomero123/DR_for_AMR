@@ -8,16 +8,13 @@ import os
 from ncbi_data.ncbi_utils import download_ftp_file
 
 # PARAMS
-if os.name == 'nt':
-    prefix = '..'
-else:
-    prefix = '.'
+NUM_OF_PROCESSES = 8
+limit = None  # if None - take all files found else limit
 
+prefix = '..' if os.name == 'nt' else '.'
 DEST_PATH = os.path.join(prefix, "results_files", "genome_files")
 CSV_FILE_PATH = os.path.join(prefix, "data_files", "pa_data.csv")
 NCBI_FTP_SITE = "ftp.ncbi.nlm.nih.gov"
-NUM_OF_PROCESSES = 8
-limit = None  # if None - take all files found else limit
 # PARAMS END
 
 
