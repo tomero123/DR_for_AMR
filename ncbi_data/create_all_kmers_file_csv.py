@@ -19,15 +19,18 @@ files_list = os.listdir(input_folder)
 files_list = [x for x in files_list if ".txt.gz" in x]
 
 if __name__ == '__main__':
+    print("Total files in folder: {}".format(len(files_list)))
     amr_df = pd.read_csv(amr_data_file_path)
     files_with_amr_data = list(amr_df['NCBI File Name'])
     all_kmers_dic = {}
     mapping_dic = {}
     if limit is not None:
         files_list = files_list[:limit]
+        print("Total files after using limit: {}".format(len(files_list)))
     # Keep only strains with amr data
     files_list = [x for x in files_list if x in files_with_amr_data]
     n_of_files = len(files_list)
+    print("Total files with AMR data: {}".format(n_of_files))
     for ind, file_name in enumerate(files_list):
         mapping_dic[ind] = file_name
         print(f"Started processing: {file_name}")
@@ -41,12 +44,14 @@ if __name__ == '__main__':
                     all_kmers_dic[kmer][ind] = kmers_dic[kmer]
 
     # remove very rare and/or very common k-mers
+    print("Number of unique kmers: {}".format(len(all_kmers_dic)))
     rare_th = 1
     # common_th = n_of_files - 2
     for k in list(all_kmers_dic.keys()):
         num_of_non_zero = [x for x in all_kmers_dic[k] if x > 0]
         if len(num_of_non_zero) <= rare_th:
             del all_kmers_dic[k]
+    print("Number of unique kmers after removal of rare and/or common kmers: {}".format(len(all_kmers_dic)))
     df = pd.DataFrame({key: pd.Series(val) for key, val in all_kmers_dic.items()})
     df = df.T
     df.to_csv(os.path.join(results_files_path, all_kmers_file_csv_name), compression="gzip")
