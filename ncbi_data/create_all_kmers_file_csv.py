@@ -4,6 +4,8 @@ import json
 import pandas as pd
 
 # PARAMS
+from tqdm import tqdm
+
 prefix = '..' if os.name == 'nt' else '.'
 results_files_path = os.path.join(prefix, 'results_files')
 input_folder = os.path.join(results_files_path, 'kmers_files')
@@ -31,9 +33,9 @@ if __name__ == '__main__':
     files_list = [x for x in files_list if x in files_with_amr_data]
     n_of_files = len(files_list)
     print("Total files with AMR data: {}".format(n_of_files))
-    for ind, file_name in enumerate(files_list):
+    for ind, file_name in enumerate(tqdm(files_list)):
         mapping_dic[ind] = file_name
-        print(f"Started processing: {file_name}")
+        # print(f"Started processing: {file_name}")
         with gzip.open(os.path.join(input_folder, file_name), "rt") as f:
             kmers_dic = json.loads(f.read())
             for kmer in kmers_dic.keys():
