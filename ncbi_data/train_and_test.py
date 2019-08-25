@@ -20,10 +20,10 @@ def get_final_df(path, dataset_file_name, amr_data_file_name, kmers_map_file_nam
         ids_with_amr_data = [str(x) for x in list(amr_df['Index'])]
         columns_to_leave = [x for x in list(kmers_df.columns) if x == 'Unnamed: 0' or x in ids_with_amr_data]
         kmers_df = kmers_df[columns_to_leave]
-        # remove very common and very rare k-mers
-        rare_th = 1
-        common_th = kmers_df.shape[1] - 2
-        kmers_df = kmers_df[(kmers_df.astype(bool).sum(axis=1) > rare_th) & (kmers_df.astype(bool).sum(axis=1) < common_th)]
+        # # remove very common and very rare k-mers
+        # rare_th = 1
+        # common_th = kmers_df.shape[1] - 2
+        # kmers_df = kmers_df[(kmers_df.astype(bool).sum(axis=1) > rare_th) & (kmers_df.astype(bool).sum(axis=1) < common_th)]
         # replace columns names from index to 'NCBI File Name'
         kmers_df = kmers_df.rename(columns=all_kmers_map)
         kmers_df = kmers_df.set_index(['Unnamed: 0'])

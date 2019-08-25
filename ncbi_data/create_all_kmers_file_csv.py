@@ -40,6 +40,13 @@ if __name__ == '__main__':
                     all_kmers_dic[kmer] = [0] * n_of_files
                     all_kmers_dic[kmer][ind] = kmers_dic[kmer]
 
+    # remove very rare and/or very common k-mers
+    rare_th = 1
+    # common_th = n_of_files - 2
+    for k in list(all_kmers_dic.keys()):
+        num_of_non_zero = [x for x in all_kmers_dic[k] if x > 0]
+        if len(num_of_non_zero) <= rare_th:
+            del all_kmers_dic[k]
     df = pd.DataFrame({key: pd.Series(val) for key, val in all_kmers_dic.items()})
     df = df.T
     df.to_csv(os.path.join(results_files_path, all_kmers_file_csv_name), compression="gzip")
