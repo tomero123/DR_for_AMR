@@ -55,8 +55,10 @@ if __name__ == '__main__':
             del all_kmers_dic[k]
     print("Number of unique kmers after removal of rare and/or common kmers: {}".format(len(all_kmers_dic)))
     df = pd.DataFrame({key: pd.Series(val) for key, val in all_kmers_dic.items()})
+    print("Finished creating dataframe")
     df = df.T
     df.to_csv(os.path.join(results_files_path, all_kmers_file_csv_name), compression="gzip")
+    print("Finished saving dataframe!")
 
     with open(os.path.join(results_files_path, all_kmers_map_file_name), 'w') as outfile2:
         json.dump(mapping_dic, outfile2)
