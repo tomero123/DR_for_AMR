@@ -128,8 +128,8 @@ def write_roc_curve(raw_score_list, labels, path, results_file_name, txt):
 # *********************************************************************************************************************************
 # Config
 
-dataset_file_name = 'all_kmers_file_SMALL_50.csv.gz'
-kmers_map_file_name = 'all_kmers_map_SMALL_50.txt'
+dataset_file_name = 'all_kmers_file.csv.gz'
+kmers_map_file_name = 'all_kmers_map.txt'
 amr_data_file_name = 'amr_data_summary.csv'
 
 antibiotic_for_test = 'amikacin'
