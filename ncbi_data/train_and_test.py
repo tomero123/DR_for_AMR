@@ -151,7 +151,8 @@ def write_roc_curve(raw_score_list, labels, path, results_file_name, txt):
 # *********************************************************************************************************************************
 # Config
 
-antibiotic_list = ['amikacin', 'meropenem', 'Meropenem', 'Levofloxacin', 'ceftazidime']
+# antibiotic_list = ['amikacin', 'meropenem', 'Meropenem', 'Levofloxacin', 'ceftazidime']
+antibiotic_list = ['Levofloxacin', 'ceftazidime']
 remove_intermediate = True
 
 # Model params
