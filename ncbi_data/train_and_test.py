@@ -7,10 +7,12 @@ from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
 import matplotlib.pyplot as plt
 import traceback
+import time
 
 
 def get_final_df(path, dataset_file_name, amr_data_file_name, kmers_map_file_name, antibiotic_for_test, ncbi_file_name_column, strain_column, remove_intermediate):
     try:
+        now = time.time()
         kmers_df = pd.read_csv(os.path.join(path, dataset_file_name), compression='gzip')
         print("kmers_df shape: {}".format(kmers_df.shape))
         amr_df = pd.read_csv(os.path.join(path, amr_data_file_name))
@@ -48,6 +50,7 @@ def get_final_df(path, dataset_file_name, amr_data_file_name, kmers_map_file_nam
         # final_df = final_df.append(final_df)
         # final_df = final_df.append(final_df)
         print("final_df have {} Strains with label and {} features".format(final_df.shape[0], final_df.shape[1]))
+        print("Finished running get_final_df in {} minutes".format(round((time.time() - now)/60), 3))
         return final_df
     except Exception as e:
         print(f"ERROR at get_final_df, message: {e}")
@@ -56,11 +59,14 @@ def get_final_df(path, dataset_file_name, amr_data_file_name, kmers_map_file_nam
 
 def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column):
     try:
+        now = time.time()
         X = final_df.drop(['label', strain_column], axis=1).copy()
         Y = final_df[['label']].copy()
 
         # Create weight according to the ratio of each class
-        sample_weight = np.array([1] * Y.shape[0])
+        resistance_weight = (Y['label'] == "S").sum() / (Y['label'] == "R").sum() \
+            if (Y['label'] == "S").sum() / (Y['label'] == "R").sum() > 0 else 1
+        sample_weight = np.array([resistance_weight if i == "R" else 1 for i in Y['label']])
 
         model.set_params(**model_params)
         cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
@@ -86,6 +92,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             'Prediction': predictions
         })
         write_data_to_excel(results_df, results_file_path)
+        print("Finished running train_test_and_write_results_cv in {} minutes".format(round((time.time() - now) / 60), 3))
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
 
@@ -155,6 +162,3 @@ path = os.path.join(prefix, 'results_files')
 # *********************************************************************************************************************************
 final_df = get_final_df(path, dataset_file_name, amr_data_file_name, kmers_map_file_name, antibiotic_for_test, ncbi_file_name_column, strain_column,  remove_intermediate)
 train_test_and_write_results_cv(final_df, os.path.join(path, results_file_name), model, model_params, k_folds, num_of_processes, random_seed, strain_column)
-
-
-
