@@ -112,7 +112,7 @@ def write_data_to_excel(results_df, results_file_path, classes):
         y_true = list(results_df['Label'])
         y_pred = list(results_df['Prediction'])
         confusion_matrix = metrics.confusion_matrix(y_true, y_pred, labels=classes)
-        confusion_matrix_df = pd.DataFrame(confusion_matrix, columns=[x + "_Actual" for x in classes], index=[x + "_Pred" for x in classes])
+        confusion_matrix_df = pd.DataFrame(confusion_matrix, columns=[x + "_Prediction" for x in classes], index=[x + "_Actual" for x in classes])
         confusion_matrix_df.to_excel(writer, sheet_name=name, startcol=col_ind, startrow=row_ind, index=True)
         row_ind += confusion_matrix_df.shape[0] + 2
         accuracy = metrics.accuracy_score(y_true, y_pred)
