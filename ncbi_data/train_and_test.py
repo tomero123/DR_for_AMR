@@ -10,11 +10,22 @@ import traceback
 import time
 
 
-def get_kmers_df(path, dataset_file_name, kmers_map_file_name):
+def get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract):
     try:
         now = time.time()
         kmers_df = pd.read_csv(os.path.join(path, dataset_file_name), compression='gzip')
+        kmers_original_count = kmers_df.shape[0]
         print("kmers_df shape: {}".format(kmers_df.shape))
+        # remove too rare and too common kmers
+        if rare_th:
+            non_zero_strains_count = kmers_df.astype(bool).sum(axis=1)
+            kmers_df = kmers_df[non_zero_strains_count > rare_th]
+            print("rare_th: {} ; kmers_df shape after rare kmers removal: {}".format(rare_th, kmers_df.shape))
+        if common_th_subtract:
+            non_zero_strains_count = kmers_df.astype(bool).sum(axis=1)
+            kmers_df = kmers_df[non_zero_strains_count < kmers_df.shape[1] - common_th_subtract]
+            print("common kmers value: {} ; kmers_df shape after common kmers removal: {}".format(kmers_df.shape[1] - common_th_subtract, kmers_df.shape))
+        kmers_final_count = kmers_df.shape[0]
         with open(os.path.join(path, kmers_map_file_name), 'r') as f:
             all_kmers_map = json.loads(f.read())
         kmers_df = kmers_df.rename(columns=all_kmers_map)
@@ -23,7 +34,7 @@ def get_kmers_df(path, dataset_file_name, kmers_map_file_name):
         kmers_df = kmers_df.T
         print("kmers_df shape: {}".format(kmers_df.shape))
         print("Finished running get_kmers_df in {} minutes".format(round((time.time() - now)/60), 4))
-        return kmers_df
+        return kmers_df, kmers_original_count, kmers_final_count
     except Exception as e:
         print(f"ERROR at get_kmers_df, message: {e}")
         traceback.print_exc()
@@ -44,11 +55,9 @@ def get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_
         label_df = label_df.set_index(['NCBI File Name'])
         print("label_df shape: {}".format(label_df.shape))
         if os.name == 'nt':
-            # REMOVE!$#!@!#@#$@!#@!
+            # LOCAL ONLY!!!!$#!@!#@#$@!#@!
             final_df = kmers_df.join(label_df, how="left")
-            final_df["label"] = ["S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R"]
-            final_df = final_df.append(final_df)
-            final_df = final_df.append(final_df)
+            final_df["label"] = ["S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R"]
         else:
             # Join (inner) between kmers_df and label_df
             final_df = kmers_df.join(label_df, how="inner")
@@ -60,7 +69,7 @@ def get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic):
+def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count):
     try:
         now = time.time()
         X = final_df.drop(['label', strain_column], axis=1).copy()
@@ -95,13 +104,14 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             'Resistance score': [x[resistance_ind] for x in temp_scores],
             'Prediction': predictions
         })
-        write_data_to_excel(results_df, results_file_path, classes)
+        model_parmas = json.dumps(model.get_params())
+        write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count)
         print("Finished running train_test_and_write_results_cv for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60), 4))
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
 
 
-def write_data_to_excel(results_df, results_file_path, classes):
+def write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count):
     try:
         writer = pd.ExcelWriter(results_file_path, engine='xlsxwriter')
         name = 'Sheet1'
@@ -117,7 +127,8 @@ def write_data_to_excel(results_df, results_file_path, classes):
         row_ind += confusion_matrix_df.shape[0] + 2
         accuracy = metrics.accuracy_score(y_true, y_pred)
         f1_score = metrics.f1_score(y_true, y_pred, labels=classes, pos_label="R")
-        evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score]]
+        evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score], ["model_parmas", model_parmas],
+                           ["kmers_original_count", kmers_original_count], ["kmers_final_count", kmers_final_count]]
         evaluation_df = pd.DataFrame(evaluation_list, columns=["metric", "value"])
         evaluation_df.to_excel(writer, sheet_name=name, startcol=col_ind, startrow=row_ind, index=False)
         workbook = writer.book
@@ -151,21 +162,23 @@ def write_roc_curve(raw_score_list, labels, path, results_file_name, txt):
 # *********************************************************************************************************************************
 # Config
 
-# antibiotic_list = ['amikacin', 'meropenem', 'Meropenem', 'Levofloxacin', 'ceftazidime']
-antibiotic_list = ['Levofloxacin', 'ceftazidime']
+antibiotic_list = ['amikacin', 'meropenem', 'Levofloxacin', 'ceftazidime']
+# antibiotic_list = ['Levofloxacin', 'ceftazidime']
 remove_intermediate = True
 
 # Model params
 random_seed = 1
-num_of_processes = 10  # relevant only if test_mode = "cv"
 k_folds = 10  # relevant only if test_mode = "cv"
+rare_th = 10  # remove kmer if it appears in number of strains which is less or equal than rare_th
+common_th_subtract = 30  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
 model = GradientBoostingClassifier(random_state=random_seed)
 if os.name == 'nt':
-    model_params = {'n_estimators': 5}
-
+    model_params = {'n_estimators': 2, 'learning_rate': 0.5}
+    num_of_processes = 1
 else:
     # model_params = {}
-    model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8}
+    model_params = {'max_depth': 4, 'n_estimators': 1000, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
+    num_of_processes = 10
 
 # *********************************************************************************************************************************
 # Constant PARAMS
@@ -185,12 +198,12 @@ path = os.path.join(prefix, 'results_files')
 
 # Config END
 # *********************************************************************************************************************************
-kmers_df = get_kmers_df(path, dataset_file_name, kmers_map_file_name)
+kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
 for antibiotic in antibiotic_list:
     results_path = os.path.join(path, "CV_Results")
     if not os.path.exists(results_path):
         os.makedirs(results_path)
     results_file_name = "{}_RESULTS.xlsx".format(antibiotic)
     final_df = get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_column, strain_column, remove_intermediate)
-    train_test_and_write_results_cv(final_df, os.path.join(results_path, results_file_name), model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic)
+    train_test_and_write_results_cv(final_df, os.path.join(results_path, results_file_name), model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count)
 print('DONE!')
