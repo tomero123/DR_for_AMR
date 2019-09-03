@@ -136,25 +136,23 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas, km
         # percent_format = workbook.add_format({'num_format': '0.00%'})
         worksheet.set_column('A:Z', 15)
         workbook.close()
+        write_roc_curve(y_pred, y_true, results_file_path)
         print('Finished creating results file!')
     except Exception as e:
         print("Error in write_roc_curve.error message: {}".format(e))
 
 
-def write_roc_curve(raw_score_list, labels, path, results_file_name, txt):
+def write_roc_curve(y_pred, y_true, results_file_path):
     try:
-        results_path = path + "Plot_Results\\"
-        if not os.path.exists(results_path):
-            os.makedirs(results_path)
-        fpr, tpr, _ = metrics.roc_curve(labels, raw_score_list)
-        auc = round(metrics.roc_auc_score(labels, raw_score_list), 3)
+        labels = [int(i == "R") for i in y_true]
+        predictions = [int(i == "R") for i in y_pred]
+        fpr, tpr, _ = metrics.roc_curve(labels, predictions)
+        auc = round(metrics.roc_auc_score(labels, predictions), 3)
         plt.figure(figsize=(10, 10))
-        plt.legend(loc=4)
         plt.xlabel("False Positive Rate")
         plt.ylabel("True Positive Rate")
-        plt.annotate(txt, ha='right', va='bottom', xy=(1, 0), fontsize=10)
         plt.plot(fpr, tpr, label="auc=" + str(auc))
-        plt.savefig(results_path + results_file_name.replace(".xlsx", ".png"))
+        plt.savefig(results_file_path.replace(".xlsx", ".png"),  bbox_inches="tight")
     except Exception as e:
         print("Error in write_roc_curve.error message: {}".format(e))
 
