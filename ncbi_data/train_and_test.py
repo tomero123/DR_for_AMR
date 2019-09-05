@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
 import matplotlib.pyplot as plt
@@ -16,7 +17,7 @@ def get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_t
         kmers_df = pd.read_csv(os.path.join(path, dataset_file_name), compression='gzip')
         kmers_original_count = kmers_df.shape[0]
         print("kmers_df shape: {}".format(kmers_df.shape))
-        # remove too rare and too common kmers
+        # # remove too rare and too common kmers
         if rare_th:
             non_zero_strains_count = kmers_df.astype(bool).sum(axis=1)
             kmers_df = kmers_df[non_zero_strains_count > rare_th]
@@ -69,25 +70,29 @@ def get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count):
+def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, features_selection_n):
     try:
         now = time.time()
         X = final_df.drop(['label', strain_column], axis=1).copy()
-        Y = final_df[['label']].copy()
+        y = final_df[['label']].copy()
+
+        # Features Selection
+        if features_selection_n:
+            X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
 
         # Create weight according to the ratio of each class
-        resistance_weight = (Y['label'] == "S").sum() / (Y['label'] == "R").sum() \
-            if (Y['label'] == "S").sum() / (Y['label'] == "R").sum() > 0 else 1
-        sample_weight = np.array([resistance_weight if i == "R" else 1 for i in Y['label']])
+        resistance_weight = (y['label'] == "S").sum() / (y['label'] == "R").sum() \
+            if (y['label'] == "S").sum() / (y['label'] == "R").sum() > 0 else 1
+        sample_weight = np.array([resistance_weight if i == "R" else 1 for i in y['label']])
         print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
 
         model.set_params(**model_params)
         cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
         print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
-        classes = np.unique(Y.values.ravel())
+        classes = np.unique(y.values.ravel())
         susceptible_ind = list(classes).index("S")
         resistance_ind = list(classes).index("R")
-        temp_scores = cross_val_predict(model, X, Y.values.ravel(), cv=cv,
+        temp_scores = cross_val_predict(model, X, y.values.ravel(), cv=cv,
                                         fit_params={'sample_weight': sample_weight}, method='predict_proba',
                                         n_jobs=num_of_processes)
         predictions = []
@@ -99,7 +104,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         strains_list = list(final_df[strain_column])
         files_names = list(X.index)
         results_df = pd.DataFrame({
-            'Strain': strains_list, 'File name': files_names, 'Label': Y.values.ravel(),
+            'Strain': strains_list, 'File name': files_names, 'Label': y.values.ravel(),
             'Susceptible score': [x[susceptible_ind] for x in temp_scores],
             'Resistance score': [x[resistance_ind] for x in temp_scores],
             'Prediction': predictions
@@ -167,8 +172,9 @@ remove_intermediate = True
 # Model params
 random_seed = 1
 k_folds = 10  # relevant only if test_mode = "cv"
-rare_th = 10  # remove kmer if it appears in number of strains which is less or equal than rare_th
-common_th_subtract = 30  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
+rare_th = None  # remove kmer if it appears in number of strains which is less or equal than rare_th
+common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
+features_selection_n = 300  # number of features to leave after feature selection
 model = GradientBoostingClassifier(random_state=random_seed)
 if os.name == 'nt':
     model_params = {'n_estimators': 2, 'learning_rate': 0.5}
@@ -203,5 +209,5 @@ for antibiotic in antibiotic_list:
         os.makedirs(results_path)
     results_file_name = "{}_RESULTS.xlsx".format(antibiotic)
     final_df = get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_column, strain_column, remove_intermediate)
-    train_test_and_write_results_cv(final_df, os.path.join(results_path, results_file_name), model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count)
+    train_test_and_write_results_cv(final_df, os.path.join(results_path, results_file_name), model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, features_selection_n)
 print('DONE!')
