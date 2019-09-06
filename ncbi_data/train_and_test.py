@@ -76,6 +76,9 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         X = final_df.drop(['label', strain_column], axis=1).copy()
         y = final_df[['label']].copy()
 
+        files_names = list(X.index)
+        strains_list = list(final_df[strain_column])
+
         # Features Selection
         if features_selection_n:
             X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
@@ -101,8 +104,6 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
                 predictions.append("S")
             else:
                 predictions.append("R")
-        strains_list = list(final_df[strain_column])
-        files_names = list(X.index)
         results_df = pd.DataFrame({
             'Strain': strains_list, 'File name': files_names, 'Label': y.values.ravel(),
             'Susceptible score': [x[susceptible_ind] for x in temp_scores],
