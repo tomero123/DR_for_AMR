@@ -165,7 +165,7 @@ def write_roc_curve(y_pred, y_true, results_file_path):
 # *********************************************************************************************************************************
 # Config
 
-antibiotic_list = ['amikacin', 'meropenem', 'Levofloxacin', 'ceftazidime']
+antibiotic_list = ['amikacin', 'meropenem', 'levofloxacin', 'ceftazidime']
 # antibiotic_list = ['Levofloxacin', 'ceftazidime']
 remove_intermediate = True
 
