@@ -8,12 +8,13 @@ import os
 from ncbi_data.ncbi_utils import download_ftp_file
 
 # PARAMS
+BACTERIA = "mycobacterium_tuberculosis"
 NUM_OF_PROCESSES = 8
 limit = None  # if None - take all files found else limit
 
 prefix = '..' if os.name == 'nt' else '.'
-DEST_PATH = os.path.join(prefix, "results_files", "genome_files")
-CSV_FILE_PATH = os.path.join(prefix, "data_files", "pa_data.csv")
+DEST_PATH = os.path.join(prefix, "results_files", BACTERIA, "genome_files")
+CSV_FILE_PATH = os.path.join(prefix, "data_files", BACTERIA, "{}_data.csv".format(BACTERIA))
 NCBI_FTP_SITE = "ftp.ncbi.nlm.nih.gov"
 # PARAMS END
 

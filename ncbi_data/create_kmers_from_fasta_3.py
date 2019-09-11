@@ -9,12 +9,13 @@ import os
 from ncbi_data.ncbi_utils import create_kmers_file
 
 # PARAMS
+BACTERIA = "mycobacterium_tuberculosis"
 NUM_OF_PROCESSES = 8
 K = 10  # Choose K size
 
 prefix = '..' if os.name == 'nt' else '.'
-input_folder = os.path.join(prefix, "results_files", "genome_files")
-output_folder = os.path.join(prefix, "results_files", "kmers_files")
+input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_files")
+output_folder = os.path.join(prefix, "results_files", BACTERIA, "kmers_files")
 # PARAMS END
 
 files_list = os.listdir(input_folder)
