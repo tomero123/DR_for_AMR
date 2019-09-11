@@ -7,18 +7,23 @@ from pathos.multiprocessing import ProcessPool
 from ncbi_data.ncbi_utils import open_ftp_file
 
 # PARAMS
+
 BACTERIA = "mycobacterium_tuberculosis"
 NUM_OF_PROCESSES = 8
+limit = None  # if None - take all files found else limit
+input_file_name = "genomes_proks166.csv"
+output_file_name = "{}_data.csv".format(BACTERIA)
 
-PREFIX = '..' if os.name == 'nt' else '.'
-PATH = os.path.join(PREFIX, "data_files", BACTERIA)
-CSV_INPUT_FILE_PATH = os.path.join(PATH, "genomes_proks166.csv")
-CSV_OUTPUT_FILE_PATH = os.path.join(PATH, "{}_data.csv".format(BACTERIA))
+########################################################################
 
 NCBI_FTP_SITE = "ftp.ncbi.nlm.nih.gov"
 FTP_FILE_NAME = "assembly_status.txt"
 
-limit = None  # if None - take all files found else limit
+PREFIX = '..' if os.name == 'nt' else '.'
+PATH = os.path.join(PREFIX, "data_files", BACTERIA)
+CSV_INPUT_FILE_PATH = os.path.join(PATH, input_file_name)
+CSV_OUTPUT_FILE_PATH = os.path.join(PATH, output_file_name)
+
 # PARAMS END
 
 if __name__ == '__main__':
