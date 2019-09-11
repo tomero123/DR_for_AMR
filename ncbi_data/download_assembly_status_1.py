@@ -43,3 +43,4 @@ if __name__ == '__main__':
     status_df = pd.DataFrame({"strain_validation": [x[0] for x in status_list], "status": [x[1].replace("status=", "") for x in status_list]})
     df = pd.concat([df, status_df], axis=1)
     df.to_csv(CSV_OUTPUT_FILE_PATH, index=False)
+    print("DONE!")
