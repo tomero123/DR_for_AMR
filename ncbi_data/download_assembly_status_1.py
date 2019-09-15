@@ -9,7 +9,7 @@ from ncbi_data.ncbi_utils import open_ftp_file
 # PARAMS
 
 BACTERIA = "mycobacterium_tuberculosis"
-NUM_OF_PROCESSES = 8
+NUM_OF_PROCESSES = 1
 limit = None  # if None - take all files found else limit
 input_file_name = "genomes_proks166.csv"
 output_file_name = "{}_data.csv".format(BACTERIA)
