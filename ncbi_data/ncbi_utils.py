@@ -5,6 +5,7 @@ import json
 import gzip
 from functools import partial
 import os
+import pandas as pd
 
 _open = partial(gzip.open, mode='rt')
 
@@ -26,17 +27,22 @@ def open_ftp_file(input_list):
         strain_name = input_list[2]
         ftp_file_name = input_list[3]
         ftp_site = input_list[4]
-        if ftp_sub_folder == '-':
-            print(f"SKIP! ftp_sub_folder is: {ftp_sub_folder} for strain: {strain_name}, index: {ind}")
-            return "None"
-        ftp = FTP(ftp_site)
-        ftp.login()
-        ftp.cwd(ftp_sub_folder)
-        line_reader = StringIO()
-        ftp.retrlines('RETR ' + ftp_file_name, line_reader.write)
-        str_to_return = line_reader.getvalue()
-        line_reader.close()
-        print(f"Opened file for: {strain_name}, index: {ind}")
+        status = input_list[5]
+        if not pd.isna(status) and status != "NA":
+            str_to_return = status
+            print(f"Took status from csv: {strain_name}, index: {ind}")
+        else:
+            if ftp_sub_folder == '-':
+                print(f"SKIP! ftp_sub_folder is: {ftp_sub_folder} for strain: {strain_name}, index: {ind}")
+                return "None"
+            ftp = FTP(ftp_site)
+            ftp.login()
+            ftp.cwd(ftp_sub_folder)
+            line_reader = StringIO()
+            ftp.retrlines('RETR ' + ftp_file_name, line_reader.write)
+            str_to_return = line_reader.getvalue()
+            line_reader.close()
+            print(f"Opened ftp for: {strain_name}, index: {ind}")
         return [strain_name, str_to_return]
     except Exception as e:
         print(f"ERROR at open_ftp_file for: {strain_name}, index: {ind}, message: {e}")
