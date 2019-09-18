@@ -2,19 +2,22 @@ import gzip
 import os
 import json
 import pandas as pd
-
-# PARAMS
 from tqdm import tqdm
 
+
+# PARAMS
+BACTERIA = "pseudomonas_aureginosa"
+K = 20  # Choose K size
+limit = None  # if None - take all files from kmers_files else limit
+
 prefix = '..' if os.name == 'nt' else '.'
-results_files_path = os.path.join(prefix, 'results_files')
-input_folder = os.path.join(results_files_path, 'kmers_files')
-amr_data_file_path = os.path.join(results_files_path, 'amr_data_summary.csv')
+results_files_path = os.path.join(prefix, 'results_files', BACTERIA)
+input_folder = os.path.join(results_files_path, 'kmers_files', f"K_{K}")
+amr_data_file_path = os.path.join(results_files_path, BACTERIA, 'amr_data_summary.csv')
 
 all_kmers_file_csv_name = "all_kmers_file.csv.gz"
 all_kmers_map_file_name = "all_kmers_map.txt"
 
-limit = None  # if None - take all files from kmers_files else limit
 # PARAMS END
 
 files_list = os.listdir(input_folder)
