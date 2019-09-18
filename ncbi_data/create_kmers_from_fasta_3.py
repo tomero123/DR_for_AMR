@@ -15,7 +15,7 @@ K = 10  # Choose K size
 
 prefix = '..' if os.name == 'nt' else '.'
 input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_files")
-output_folder = os.path.join(prefix, "results_files", BACTERIA, "kmers_files")
+output_folder = os.path.join(prefix, "results_files", BACTERIA, "kmers_files", f"K_{K}")
 # PARAMS END
 
 files_list = os.listdir(input_folder)
