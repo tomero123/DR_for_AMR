@@ -15,8 +15,8 @@ results_files_path = os.path.join(prefix, 'results_files', BACTERIA)
 input_folder = os.path.join(results_files_path, 'kmers_files', f"K_{K}")
 amr_data_file_path = os.path.join(results_files_path, BACTERIA, 'amr_data_summary.csv')
 
-all_kmers_file_csv_name = "all_kmers_file.csv.gz"
-all_kmers_map_file_name = "all_kmers_map.txt"
+all_kmers_file_csv_name = f"all_kmers_file_K_{K}.csv.gz"
+all_kmers_map_file_name = f"all_kmers_map_K_{K}.txt"
 
 # PARAMS END
 
