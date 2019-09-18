@@ -35,7 +35,7 @@ def open_ftp_file(input_list):
             if ftp_sub_folder == '-':
                 print(f"SKIP! ftp_sub_folder is: {ftp_sub_folder} for strain: {strain_name}, index: {ind}")
                 return "None"
-            ftp = FTP(ftp_site)
+            ftp = FTP(ftp_site, timeout=10)
             ftp.login()
             ftp.cwd(ftp_sub_folder)
             line_reader = StringIO()
