@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
+
 import gzip
 import os
 import json
@@ -6,8 +9,8 @@ from tqdm import tqdm
 
 
 # PARAMS
-BACTERIA = "pseudomonas_aureginosa"
-K = 20  # Choose K size
+BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
+K = 20 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
 limit = None  # if None - take all files from kmers_files else limit
 
 prefix = '..' if os.name == 'nt' else '.'

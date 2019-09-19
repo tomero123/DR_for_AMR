@@ -8,7 +8,7 @@ import os
 from ncbi_data.ncbi_utils import download_ftp_file
 
 # PARAMS
-BACTERIA = "mycobacterium_tuberculosis"
+BACTERIA = "mycobacterium_tuberculosis" if len(sys.argv) < 2 else sys.argv[1]
 NUM_OF_PROCESSES = 8
 limit = None  # if None - take all files found else limit
 
