@@ -9,9 +9,9 @@ import os
 from ncbi_data.ncbi_utils import create_kmers_file
 
 # PARAMS
-BACTERIA = "mycobacterium_tuberculosis"
+BACTERIA = "mycobacterium_tuberculosis" if len(sys.argv) < 2 else sys.argv[1]
 NUM_OF_PROCESSES = 8
-K = 10  # Choose K size
+K = 10 if len(sys.argv) < 3 else sys.argv[2]  # Choose K size
 
 prefix = '..' if os.name == 'nt' else '.'
 input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_files")
@@ -24,6 +24,7 @@ _open = partial(gzip.open, mode='rt')
 
 
 if __name__ == '__main__':
+    print(f"Start running on bacteria: {BACTERIA} with K={K}")
     input_list = []
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
