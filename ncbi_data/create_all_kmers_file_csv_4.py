@@ -41,7 +41,7 @@ if __name__ == '__main__':
     print("Total files with AMR data: {}".format(n_of_files))
     for ind, file_name in enumerate(tqdm(files_list)):
         mapping_dic[ind] = file_name
-        # print(f"Started processing: {file_name}")
+        print(f"Started processing: {file_name}")
         with gzip.open(os.path.join(input_folder, file_name), "rt") as f:
             kmers_dic = json.loads(f.read())
             for kmer in kmers_dic.keys():
