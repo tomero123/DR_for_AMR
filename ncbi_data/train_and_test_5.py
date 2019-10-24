@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
+
 import json
 import os
 import pandas as pd
@@ -166,7 +169,9 @@ def write_roc_curve(y_pred, y_true, results_file_path):
 # *********************************************************************************************************************************
 # Config
 
-antibiotic_list = ['amikacin', 'meropenem', 'levofloxacin', 'ceftazidime']
+BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
+K = 20 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
+antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
 # antibiotic_list = ['Levofloxacin', 'ceftazidime']
 remove_intermediate = True
 
@@ -191,15 +196,15 @@ if os.name == 'nt':
     dataset_file_name = 'all_kmers_file_SMALL_50.csv.gz'
     kmers_map_file_name = 'all_kmers_map.txt'
 else:
-    dataset_file_name = 'all_kmers_file.csv.gz'
-    kmers_map_file_name = 'all_kmers_map.txt'
+    dataset_file_name = f'all_kmers_file_K_{K}.csv.gz'
+    kmers_map_file_name = f'all_kmers_map_K_{K}.txt'
 amr_data_file_name = 'amr_data_summary.csv'
 
 ncbi_file_name_column = 'NCBI File Name'
 strain_column = 'Strain'
 
 prefix = '..' if os.name == 'nt' else '.'
-path = os.path.join(prefix, 'results_files')
+path = os.path.join(prefix, 'results_files', BACTERIA)
 
 # Config END
 # *********************************************************************************************************************************
