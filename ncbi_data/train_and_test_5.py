@@ -46,6 +46,7 @@ def get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_t
 
 def get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_column, strain_column, remove_intermediate):
     try:
+        print("Started running get_final_df for antibiotic: {}".format(antibiotic))
         now = time.time()
         amr_df = pd.read_csv(os.path.join(path, amr_data_file_name))
         # Get label of specific antibiotic
