@@ -176,8 +176,8 @@ def write_roc_curve(y_pred, y_true, results_file_path):
 
 BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
 K = 20 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
-# antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
-antibiotic_list = ['levofloxacin', 'ceftazidime']
+antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
+# antibiotic_list = ['levofloxacin', 'ceftazidime']
 remove_intermediate = True
 
 # Model params
