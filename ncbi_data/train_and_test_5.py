@@ -182,7 +182,7 @@ random_seed = 1
 k_folds = 10  # relevant only if test_mode = "cv"
 rare_th = None  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
-features_selection_n = 1000  # number of features to leave after feature selection
+features_selection_n = 2000  # number of features to leave after feature selection
 # model = GradientBoostingClassifier(random_state=random_seed)
 model = xgboost.XGBClassifier(random_state=random_seed)
 if os.name == 'nt':
