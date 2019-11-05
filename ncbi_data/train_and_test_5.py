@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
+import xgboost
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
@@ -182,7 +183,8 @@ k_folds = 10  # relevant only if test_mode = "cv"
 rare_th = None  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
 features_selection_n = 1000  # number of features to leave after feature selection
-model = GradientBoostingClassifier(random_state=random_seed)
+# model = GradientBoostingClassifier(random_state=random_seed)
+model = xgboost.XGBClassifier(random_state=random_seed)
 if os.name == 'nt':
     model_params = {'n_estimators': 2, 'learning_rate': 0.5}
     num_of_processes = 1
@@ -195,7 +197,7 @@ else:
 # Constant PARAMS
 if os.name == 'nt':
     dataset_file_name = 'all_kmers_file_SMALL_50.csv.gz'
-    kmers_map_file_name = 'all_kmers_map.txt'
+    kmers_map_file_name = 'all_kmers_map_SMALL_50.txt'
 else:
     dataset_file_name = f'all_kmers_file_K_{K}.csv.gz'
     kmers_map_file_name = f'all_kmers_map_K_{K}.txt'
