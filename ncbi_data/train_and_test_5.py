@@ -75,7 +75,7 @@ def get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, features_selection_n):
+def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic):
     try:
         now = time.time()
         X = final_df.drop(['label', strain_column], axis=1).copy()
@@ -116,13 +116,13 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             'Prediction': predictions
         })
         model_parmas = json.dumps(model.get_params())
-        write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count)
+        write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count, all_results_dic)
         print("Finished running train_test_and_write_results_cv for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60), 4))
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
 
 
-def write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count):
+def write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count, all_results_dic):
     try:
         writer = pd.ExcelWriter(results_file_path, engine='xlsxwriter')
         name = 'Sheet1'
@@ -138,6 +138,9 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas, km
         row_ind += confusion_matrix_df.shape[0] + 2
         accuracy = metrics.accuracy_score(y_true, y_pred)
         f1_score = metrics.f1_score(y_true, y_pred, labels=classes, pos_label="R")
+        all_results_dic["antibiotic"].append(antibiotic)
+        all_results_dic["accuracy"].append(accuracy)
+        all_results_dic["f1_score"].append(f1_score)
         evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score], ["model_parmas", model_parmas],
                            ["kmers_original_count", kmers_original_count], ["kmers_final_count", kmers_final_count]]
         evaluation_df = pd.DataFrame(evaluation_list, columns=["metric", "value"])
@@ -173,8 +176,8 @@ def write_roc_curve(y_pred, y_true, results_file_path):
 
 BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
 K = 20 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
-antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
-# antibiotic_list = ['Levofloxacin', 'ceftazidime']
+# antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
+antibiotic_list = ['levofloxacin', 'ceftazidime']
 remove_intermediate = True
 
 # Model params
@@ -212,11 +215,17 @@ path = os.path.join(prefix, 'results_files', BACTERIA)
 # Config END
 # *********************************************************************************************************************************
 kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
+all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
+results_path = os.path.join(path, "CV_Results")
+if not os.path.exists(results_path):
+    os.makedirs(results_path)
 for antibiotic in antibiotic_list:
-    results_path = os.path.join(path, "CV_Results")
-    if not os.path.exists(results_path):
-        os.makedirs(results_path)
     results_file_name = "{}_RESULTS.xlsx".format(antibiotic)
     final_df = get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_column, strain_column, remove_intermediate)
-    train_test_and_write_results_cv(final_df, os.path.join(results_path, results_file_name), model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, features_selection_n)
+    train_test_and_write_results_cv(final_df, os.path.join(results_path, results_file_name), model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
+all_results_df = pd.DataFrame(all_results_dic)
+writer = pd.ExcelWriter(os.path.join(results_path, "ALL_RESULTS.xlsx"), engine='xlsxwriter')
+all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
+workbook = writer.book
+workbook.close()
 print('DONE!')
