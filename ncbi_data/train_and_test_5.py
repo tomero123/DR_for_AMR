@@ -87,26 +87,30 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         files_names = list(X.index)
         strains_list = list(final_df[strain_column])
 
-        # # Features Selection
-        # if features_selection_n:
-        #     X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
-
         # Create weight according to the ratio of each class
         resistance_weight = (y['label'] == "S").sum() / (y['label'] == "R").sum() \
             if (y['label'] == "S").sum() / (y['label'] == "R").sum() > 0 else 1
         sample_weight = np.array([resistance_weight if i == "R" else 1 for i in y['label']])
         print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
 
-        model.set_params(**model_params)
-        selection_model = XGBClassifier()
-        model.fit(X, y.values.ravel())
-        selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=fs_th)
-        select_X = selection.transform(X)
-        # train model
+        # # Features Selection
+        # if features_selection_n:
+        #     X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
 
-        # eval model
-        cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
+        # Features selection with XGBoost
+        if fs_th and fs_th > 0:
+            model.set_params(**model_params)
+            model.fit(X, y.values.ravel())
+            selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=fs_th)
+            select_X = selection.transform(X)
+        else:  # NO FS
+            select_X = X
+
+        selection_model = xgboost.XGBClassifier(random_state=random_seed)
+        selection_model.set_params(**model_params)
+        # cross validation using selection_model
         print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
+        cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
         classes = np.unique(y.values.ravel())
         susceptible_ind = list(classes).index("S")
         resistance_ind = list(classes).index("R")
@@ -123,7 +127,8 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             'Strain': strains_list, 'File name': files_names, 'Label': y.values.ravel(),
             'Susceptible score': [x[susceptible_ind] for x in temp_scores],
             'Resistance score': [x[resistance_ind] for x in temp_scores],
-            'Prediction': predictions
+            'Prediction': predictions,
+            '# of Features': select_X.shape[1]
         })
         model_parmas = json.dumps(model.get_params())
         write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count, all_results_dic)
@@ -186,8 +191,7 @@ def write_roc_curve(y_pred, y_true, results_file_path):
 
 BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
 K = 20 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
-antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
-# antibiotic_list = ['levofloxacin', 'ceftazidime']
+
 remove_intermediate = True
 
 # Model params
@@ -195,17 +199,21 @@ random_seed = 1
 k_folds = 10  # relevant only if test_mode = "cv"
 rare_th = None  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
-features_selection_n = [500, 2000, 3000, 5000]  # number of features to leave after feature selection
+features_selection_n = [0, 500, 2000, 3000, 5000]  # number of features to leave after feature selection
 # model = GradientBoostingClassifier(random_state=random_seed)
 model = xgboost.XGBClassifier(random_state=random_seed)
 if os.name == 'nt':
     model_params = {'n_estimators': 2, 'learning_rate': 0.5}
     num_of_processes = 1
+    antibiotic_list = ['levofloxacin', 'ceftazidime']
 else:
     # model_params = {}
-    model_params = {'max_depth': 4, 'n_estimators': 1000, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
+    model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.15}
     num_of_processes = 10
-
+    if BACTERIA == "mycobacterium_tuberculosis":
+        antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
+    elif BACTERIA == "pseudomonas_aureginosa":
+        antibiotic_list = ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem', 'ciprofloxacin', 'gentamicin', 'tobramycin']
 # *********************************************************************************************************************************
 # Constant PARAMS
 if os.name == 'nt':
