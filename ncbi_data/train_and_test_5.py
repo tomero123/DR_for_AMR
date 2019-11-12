@@ -127,17 +127,17 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             'Strain': strains_list, 'File name': files_names, 'Label': y.values.ravel(),
             'Susceptible score': [x[susceptible_ind] for x in temp_scores],
             'Resistance score': [x[resistance_ind] for x in temp_scores],
-            'Prediction': predictions,
-            '# of Features': select_X.shape[1]
+            'Prediction': predictions
         })
         model_parmas = json.dumps(model.get_params())
-        write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count, all_results_dic)
+        number_of_features = select_X.shape[1]
+        write_data_to_excel(results_df, results_file_path, classes, model_parmas, number_of_features, kmers_original_count, kmers_final_count, all_results_dic)
         print("Finished running train_test_and_write_results_cv for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60), 4))
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
 
 
-def write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count, all_results_dic):
+def write_data_to_excel(results_df, results_file_path, classes, model_parmas, number_of_features, kmers_original_count, kmers_final_count, all_results_dic):
     try:
         writer = pd.ExcelWriter(results_file_path, engine='xlsxwriter')
         name = 'Sheet1'
@@ -156,7 +156,7 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas, km
         all_results_dic["antibiotic"].append(antibiotic)
         all_results_dic["accuracy"].append(accuracy)
         all_results_dic["f1_score"].append(f1_score)
-        evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score], ["model_parmas", model_parmas],
+        evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score], ["model_parmas", model_parmas], ["Number of Features", number_of_features],
                            ["kmers_original_count", kmers_original_count], ["kmers_final_count", kmers_final_count]]
         evaluation_df = pd.DataFrame(evaluation_list, columns=["metric", "value"])
         evaluation_df.to_excel(writer, sheet_name=name, startcol=col_ind, startrow=row_ind, index=False)
@@ -199,17 +199,18 @@ random_seed = 1
 k_folds = 10  # relevant only if test_mode = "cv"
 rare_th = None  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
-features_selection_n = [0, 500, 2000, 3000, 5000]  # number of features to leave after feature selection
-# model = GradientBoostingClassifier(random_state=random_seed)
 model = xgboost.XGBClassifier(random_state=random_seed)
+
 if os.name == 'nt':
     model_params = {'n_estimators': 2, 'learning_rate': 0.5}
     num_of_processes = 1
+    features_selection_n = [0, 500, 1000]  # number of features to leave after feature selection
     antibiotic_list = ['levofloxacin', 'ceftazidime']
 else:
     # model_params = {}
     model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.15}
     num_of_processes = 10
+    features_selection_n = [0, 500, 2000, 3000, 5000]  # number of features to leave after feature selection
     if BACTERIA == "mycobacterium_tuberculosis":
         antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
     elif BACTERIA == "pseudomonas_aureginosa":
