@@ -1,4 +1,7 @@
 import sys
+
+from xgboost import XGBClassifier
+
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 
 import json
@@ -7,7 +10,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
 import xgboost
-from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.feature_selection import SelectKBest, chi2, SelectFromModel
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
 import matplotlib.pyplot as plt
@@ -75,7 +78,7 @@ def get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic):
+def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, fs_th, all_results_dic):
     try:
         now = time.time()
         X = final_df.drop(['label', strain_column], axis=1).copy()
@@ -84,9 +87,9 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         files_names = list(X.index)
         strains_list = list(final_df[strain_column])
 
-        # Features Selection
-        if features_selection_n:
-            X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
+        # # Features Selection
+        # if features_selection_n:
+        #     X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
 
         # Create weight according to the ratio of each class
         resistance_weight = (y['label'] == "S").sum() / (y['label'] == "R").sum() \
@@ -95,12 +98,19 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
 
         model.set_params(**model_params)
+        selection_model = XGBClassifier()
+        model.fit(X, y.values.ravel())
+        selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=fs_th)
+        select_X = selection.transform(X)
+        # train model
+
+        # eval model
         cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
         print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
         classes = np.unique(y.values.ravel())
         susceptible_ind = list(classes).index("S")
         resistance_ind = list(classes).index("R")
-        temp_scores = cross_val_predict(model, X, y.values.ravel(), cv=cv,
+        temp_scores = cross_val_predict(selection_model, select_X, y.values.ravel(), cv=cv,
                                         fit_params={'sample_weight': sample_weight}, method='predict_proba',
                                         n_jobs=num_of_processes)
         predictions = []
@@ -185,7 +195,7 @@ random_seed = 1
 k_folds = 10  # relevant only if test_mode = "cv"
 rare_th = None  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
-features_selection_n = 1000  # number of features to leave after feature selection
+features_selection_n = [500, 2000, 3000, 5000]  # number of features to leave after feature selection
 # model = GradientBoostingClassifier(random_state=random_seed)
 model = xgboost.XGBClassifier(random_state=random_seed)
 if os.name == 'nt':
@@ -215,17 +225,19 @@ path = os.path.join(prefix, 'results_files', BACTERIA)
 # Config END
 # *********************************************************************************************************************************
 kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
-all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
 results_path = os.path.join(path, "CV_Results")
 if not os.path.exists(results_path):
     os.makedirs(results_path)
-for antibiotic in antibiotic_list:
-    results_file_name = "{}_RESULTS.xlsx".format(antibiotic)
-    final_df = get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_column, strain_column, remove_intermediate)
-    train_test_and_write_results_cv(final_df, os.path.join(results_path, results_file_name), model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
-all_results_df = pd.DataFrame(all_results_dic)
-writer = pd.ExcelWriter(os.path.join(results_path, "ALL_RESULTS.xlsx"), engine='xlsxwriter')
-all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
-workbook = writer.book
-workbook.close()
-print('DONE!')
+for fs_th in features_selection_n:
+    all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
+    for antibiotic in antibiotic_list:
+        results_file_name = f"{antibiotic}_RESULTS_FS_{fs_th}.xlsx" if fs_th else f"{antibiotic}_RESULTS.xlsx"
+        final_df = get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_column, strain_column, remove_intermediate)
+        train_test_and_write_results_cv(final_df, os.path.join(results_path, results_file_name), model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, fs_th, all_results_dic)
+    all_results_df = pd.DataFrame(all_results_dic)
+    all_results_file_name = f"ALL_RESULTS_FS_{fs_th}.xlsx" if fs_th else f"ALL_RESULTS.xlsx"
+    writer = pd.ExcelWriter(os.path.join(results_path, all_results_file_name), engine='xlsxwriter')
+    all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
+    workbook = writer.book
+    workbook.close()
+    print('DONE!')
