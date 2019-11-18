@@ -190,7 +190,7 @@ def write_roc_curve(y_pred, y_true, results_file_path):
 # Config
 
 BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
-K = 20 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
+K = 10 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
 
 remove_intermediate = True
 
@@ -209,7 +209,7 @@ if os.name == 'nt':
 else:
     # model_params = {}
     model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.15}
-    num_of_processes = 10
+    num_of_processes = 1
     features_selection_n = [0, 500, 3000, 5000]  # number of features to leave after feature selection
     if BACTERIA == "mycobacterium_tuberculosis":
         antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
