@@ -111,12 +111,12 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         selection_model = xgboost.XGBClassifier(random_state=random_seed)
         selection_model.set_params(**model_params)
         # cross validation using selection_model
-        print("Started running Cross Validation for {} folds with {} processes ; X.shape: {}".format(k_folds, num_of_processes, str(select_X.shape)))
-        now = time.time()
         cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
         classes = np.unique(y.values.ravel())
         susceptible_ind = list(classes).index("S")
         resistance_ind = list(classes).index("R")
+        print("Started running Cross Validation for {} folds with {} processes ; X.shape: {}".format(k_folds, num_of_processes, str(select_X.shape)))
+        now = time.time()
         temp_scores = cross_val_predict(selection_model, select_X, y.values.ravel(), cv=cv,
                                         fit_params={'sample_weight': sample_weight}, method='predict_proba',
                                         n_jobs=num_of_processes)
