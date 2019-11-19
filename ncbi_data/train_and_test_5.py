@@ -22,6 +22,7 @@ def get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_t
     try:
         now = time.time()
         kmers_df = pd.read_csv(os.path.join(path, dataset_file_name), compression='gzip')
+        kmers_df = kmers_df.astype({x: 'Int16' for x in kmers_df.columns if 'Unnamed' not in x})
         kmers_original_count = kmers_df.shape[0]
         print("kmers_df shape: {}".format(kmers_df.shape))
         # # remove too rare and too common kmers
@@ -86,6 +87,8 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         files_names = list(X.index)
         strains_list = list(final_df[strain_column])
 
+        del final_df
+
         # Create weight according to the ratio of each class
         resistance_weight = (y['label'] == "S").sum() / (y['label'] == "R").sum() \
             if (y['label'] == "S").sum() / (y['label'] == "R").sum() > 0 else 1
@@ -103,10 +106,8 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             model.set_params(**model_params)
             model.fit(X, y.values.ravel())
             selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=fs_th)
-            select_X = selection.transform(X)
+            X = selection.transform(X)
             print("Finished Feature Selection for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60, 4)))
-        else:  # NO FS
-            select_X = X
 
         selection_model = xgboost.XGBClassifier(random_state=random_seed)
         selection_model.set_params(**model_params)
@@ -117,7 +118,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         resistance_ind = list(classes).index("R")
         print("Started running Cross Validation for {} folds with {} processes ; X.shape: {}".format(k_folds, num_of_processes, str(select_X.shape)))
         now = time.time()
-        temp_scores = cross_val_predict(selection_model, select_X, y.values.ravel(), cv=cv,
+        temp_scores = cross_val_predict(selection_model, X, y.values.ravel(), cv=cv,
                                         fit_params={'sample_weight': sample_weight}, method='predict_proba',
                                         n_jobs=num_of_processes)
         predictions = []
@@ -133,9 +134,11 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             'Prediction': predictions
         })
         model_parmas = json.dumps(model.get_params())
-        number_of_features = select_X.shape[1]
+        number_of_features = X.shape[1]
         write_data_to_excel(results_df, results_file_path, classes, model_parmas, number_of_features, kmers_original_count, kmers_final_count, all_results_dic)
         print("Finished running train_test_and_write_results_cv for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60, 4)))
+        del X
+        del y
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
 
@@ -241,6 +244,7 @@ results_path = os.path.join(path, "CV_Results")
 if not os.path.exists(results_path):
     os.makedirs(results_path)
 for fs_th in features_selection_n:
+    f"Started Calculations for fs_th: {fs_th}"
     all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
     for antibiotic in antibiotic_list:
         results_file_name = f"{antibiotic}_RESULTS_FS_{fs_th}.xlsx" if fs_th else f"{antibiotic}_RESULTS.xlsx"
