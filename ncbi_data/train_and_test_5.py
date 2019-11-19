@@ -200,8 +200,8 @@ remove_intermediate = True
 # Model params
 random_seed = 1
 k_folds = 10  # relevant only if test_mode = "cv"
-rare_th = None  # remove kmer if it appears in number of strains which is less or equal than rare_th
-common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
+rare_th = 1  # remove kmer if it appears in number of strains which is less or equal than rare_th
+common_th_subtract = 1  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
 model = xgboost.XGBClassifier(random_state=random_seed)
 
 if os.name == 'nt':
