@@ -80,7 +80,6 @@ def get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_
 
 def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, fs_th, all_results_dic):
     try:
-        now = time.time()
         X = final_df.drop(['label', strain_column], axis=1).copy()
         y = final_df[['label']].copy()
 
@@ -95,15 +94,17 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
 
         # # Features Selection
         # if features_selection_n:
-        #     X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
+        #     X = SelectKBest(chi2, k=fs_th).fit_transform(X, y)
 
         # Features selection with XGBoost
         if fs_th and fs_th > 0:
+            print("Started Feature Selection for antibiotic: {}".format(antibiotic))
+            now = time.time()
             model.set_params(**model_params)
             model.fit(X, y.values.ravel())
             selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=fs_th)
             select_X = selection.transform(X)
-            print("Finished Feature Selection for antibiotic: {}".format(antibiotic))
+            print("Finished Feature Selection for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60, 4)))
         else:  # NO FS
             select_X = X
 
@@ -111,6 +112,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         selection_model.set_params(**model_params)
         # cross validation using selection_model
         print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
+        now = time.time()
         cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
         classes = np.unique(y.values.ravel())
         susceptible_ind = list(classes).index("S")
@@ -133,7 +135,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         model_parmas = json.dumps(model.get_params())
         number_of_features = select_X.shape[1]
         write_data_to_excel(results_df, results_file_path, classes, model_parmas, number_of_features, kmers_original_count, kmers_final_count, all_results_dic)
-        print("Finished running train_test_and_write_results_cv for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60), 4))
+        print("Finished running train_test_and_write_results_cv for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60, 4)))
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
 
