@@ -103,6 +103,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             model.fit(X, y.values.ravel())
             selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=fs_th)
             select_X = selection.transform(X)
+            print("Finished Feature Selection for antibiotic: {}".format(antibiotic))
         else:  # NO FS
             select_X = X
 
