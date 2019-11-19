@@ -22,7 +22,6 @@ def get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_t
     try:
         now = time.time()
         kmers_df = pd.read_csv(os.path.join(path, dataset_file_name), compression='gzip')
-        kmers_df = kmers_df.astype({x: 'Int16' for x in kmers_df.columns if 'Unnamed' not in x})
         kmers_original_count = kmers_df.shape[0]
         print("kmers_df shape: {}".format(kmers_df.shape))
         # # remove too rare and too common kmers
@@ -116,7 +115,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         classes = np.unique(y.values.ravel())
         susceptible_ind = list(classes).index("S")
         resistance_ind = list(classes).index("R")
-        print("Started running Cross Validation for {} folds with {} processes ; X.shape: {}".format(k_folds, num_of_processes, str(select_X.shape)))
+        print("Started running Cross Validation for {} folds with {} processes ; X.shape: {}".format(k_folds, num_of_processes, str(X.shape)))
         now = time.time()
         temp_scores = cross_val_predict(selection_model, X, y.values.ravel(), cv=cv,
                                         fit_params={'sample_weight': sample_weight}, method='predict_proba',
@@ -210,13 +209,13 @@ model = xgboost.XGBClassifier(random_state=random_seed)
 if os.name == 'nt':
     model_params = {'n_estimators': 2, 'learning_rate': 0.5}
     num_of_processes = 1
-    features_selection_n = [0, 500, 1000]  # number of features to leave after feature selection
+    features_selection_n = [500, 1000]  # number of features to leave after feature selection
     antibiotic_list = ['levofloxacin', 'ceftazidime']
 else:
     # model_params = {}
     model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.15}
     num_of_processes = 10
-    features_selection_n = [500, 3000, 5000]  # number of features to leave after feature selection
+    features_selection_n = [500, 3000, 5000, 0]  # number of features to leave after feature selection
     if BACTERIA == "mycobacterium_tuberculosis":
         antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
     elif BACTERIA == "pseudomonas_aureginosa":
