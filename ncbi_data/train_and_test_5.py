@@ -1,7 +1,4 @@
 import sys
-
-from xgboost import XGBClassifier
-
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 
 import json
@@ -10,7 +7,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
 import xgboost
-from sklearn.feature_selection import SelectKBest, chi2, SelectFromModel
+from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
 import matplotlib.pyplot as plt
@@ -86,63 +83,51 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         files_names = list(X.index)
         strains_list = list(final_df[strain_column])
 
+        # Features Selection
+        print(f"Started Feature selection for antibiotic: {antibiotic}")
+        now = time.time()
+        if features_selection_n:
+            X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
+        print("Finished running Feature selection for antibiotic: {} in {} minutes ; X.shape: {}".format(antibiotic, round((time.time() - now) / 60, 4), X.shape))
+
         # Create weight according to the ratio of each class
         resistance_weight = (y['label'] == "S").sum() / (y['label'] == "R").sum() \
             if (y['label'] == "S").sum() / (y['label'] == "R").sum() > 0 else 1
         sample_weight = np.array([resistance_weight if i == "R" else 1 for i in y['label']])
         print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
 
-        # # Features Selection
-        # if features_selection_n:
-        #     X = SelectKBest(chi2, k=fs_th).fit_transform(X, y)
-
-        # Features selection with XGBoost
-        for fs_th in features_selection_n:
-            if fs_th and fs_th > 0:
-                print("Started Feature Selection for antibiotic: {}".format(antibiotic))
-                now = time.time()
-                model.set_params(**model_params)
-                model.fit(X, y.values.ravel())
-                selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=fs_th)
-                cur_X = selection.transform(X)
-                print("Finished Feature Selection for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60, 4)))
-
-            selection_model = xgboost.XGBClassifier(random_state=random_seed)
-            selection_model.set_params(**model_params)
-            # cross validation using selection_model
-            cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
-            classes = np.unique(y.values.ravel())
-            susceptible_ind = list(classes).index("S")
-            resistance_ind = list(classes).index("R")
-            print("Started running Cross Validation for {} folds with {} processes ; X.shape: {}".format(k_folds, num_of_processes, str(cur_X.shape)))
-            now = time.time()
-            temp_scores = cross_val_predict(selection_model, cur_X, y.values.ravel(), cv=cv,
-                                            fit_params={'sample_weight': sample_weight}, method='predict_proba',
-                                            n_jobs=num_of_processes)
-            predictions = []
-            for p in temp_scores:
-                if p[susceptible_ind] > p[resistance_ind]:
-                    predictions.append("S")
-                else:
-                    predictions.append("R")
-            results_df = pd.DataFrame({
-                'Strain': strains_list, 'File name': files_names, 'Label': y.values.ravel(),
-                'Susceptible score': [x[susceptible_ind] for x in temp_scores],
-                'Resistance score': [x[resistance_ind] for x in temp_scores],
-                'Prediction': predictions
-            })
-            model_parmas = json.dumps(model.get_params())
-            number_of_features = X.shape[1]
-            write_data_to_excel(results_df, results_file_path, classes, model_parmas, number_of_features, kmers_original_count, kmers_final_count, all_results_dic, fs_th)
-            print("Finished running train_test_and_write_results_cv for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60, 4)))
+        model.set_params(**model_params)
+        cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
+        print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
+        now = time.time()
+        classes = np.unique(y.values.ravel())
+        susceptible_ind = list(classes).index("S")
+        resistance_ind = list(classes).index("R")
+        temp_scores = cross_val_predict(model, X, y.values.ravel(), cv=cv,
+                                        fit_params={'sample_weight': sample_weight}, method='predict_proba',
+                                        n_jobs=num_of_processes)
+        predictions = []
+        for p in temp_scores:
+            if p[susceptible_ind] > p[resistance_ind]:
+                predictions.append("S")
+            else:
+                predictions.append("R")
+        results_df = pd.DataFrame({
+            'Strain': strains_list, 'File name': files_names, 'Label': y.values.ravel(),
+            'Susceptible score': [x[susceptible_ind] for x in temp_scores],
+            'Resistance score': [x[resistance_ind] for x in temp_scores],
+            'Prediction': predictions
+        })
+        model_parmas = json.dumps(model.get_params())
+        write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count, all_results_dic)
+        print("Finished running train_test_and_write_results_cv for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60, 4)))
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
 
 
-def write_data_to_excel(results_df, results_file_path, classes, model_parmas, number_of_features, kmers_original_count, kmers_final_count, all_results_dic, fs_th):
+def write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count, all_results_dic):
     try:
-        final_path = results_file_path.replace(".xlsx", f"_{fs_th}.xlsx")
-        writer = pd.ExcelWriter(final_path, engine='xlsxwriter')
+        writer = pd.ExcelWriter(results_file_path, engine='xlsxwriter')
         name = 'Sheet1'
         col_ind = 0
         row_ind = 0
@@ -156,11 +141,10 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas, nu
         row_ind += confusion_matrix_df.shape[0] + 2
         accuracy = metrics.accuracy_score(y_true, y_pred)
         f1_score = metrics.f1_score(y_true, y_pred, labels=classes, pos_label="R")
-        all_results_dic["feature_selection"].append(fs_th)
         all_results_dic["antibiotic"].append(antibiotic)
         all_results_dic["accuracy"].append(accuracy)
         all_results_dic["f1_score"].append(f1_score)
-        evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score], ["model_parmas", model_parmas], ["Number of Features", number_of_features],
+        evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score], ["model_parmas", model_parmas],
                            ["kmers_original_count", kmers_original_count], ["kmers_final_count", kmers_final_count]]
         evaluation_df = pd.DataFrame(evaluation_list, columns=["metric", "value"])
         evaluation_df.to_excel(writer, sheet_name=name, startcol=col_ind, startrow=row_ind, index=False)
@@ -169,13 +153,13 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas, nu
         # percent_format = workbook.add_format({'num_format': '0.00%'})
         worksheet.set_column('A:Z', 15)
         workbook.close()
-        write_roc_curve(y_pred, y_true, final_path)
+        write_roc_curve(y_pred, y_true, results_file_path)
         print('Finished creating results file!')
     except Exception as e:
         print("Error in write_roc_curve.error message: {}".format(e))
 
 
-def write_roc_curve(y_pred, y_true, final_path):
+def write_roc_curve(y_pred, y_true, results_file_path):
     try:
         labels = [int(i == "R") for i in y_true]
         predictions = [int(i == "R") for i in y_pred]
@@ -185,7 +169,7 @@ def write_roc_curve(y_pred, y_true, final_path):
         plt.xlabel("False Positive Rate")
         plt.ylabel("True Positive Rate")
         plt.plot(fpr, tpr, label="auc=" + str(auc))
-        plt.savefig(final_path.replace(".xlsx", ".png"),  bbox_inches="tight")
+        plt.savefig(results_file_path.replace(".xlsx", ".png"),  bbox_inches="tight")
     except Exception as e:
         print("Error in write_roc_curve.error message: {}".format(e))
 
@@ -203,18 +187,17 @@ random_seed = 1
 k_folds = 10  # relevant only if test_mode = "cv"
 rare_th = None  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
+features_selection_n = 1000  # number of features to leave after feature selection
+# model = GradientBoostingClassifier(random_state=random_seed)
 model = xgboost.XGBClassifier(random_state=random_seed)
-
 if os.name == 'nt':
     model_params = {'n_estimators': 2, 'learning_rate': 0.5}
     num_of_processes = 1
-    features_selection_n = [500, 1000]  # number of features to leave after feature selection
     antibiotic_list = ['levofloxacin', 'ceftazidime']
 else:
     # model_params = {}
-    model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.15}
+    model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
     num_of_processes = 10
-    features_selection_n = [500, 3000, 5000, 0]  # number of features to leave after feature selection
     if BACTERIA == "mycobacterium_tuberculosis":
         antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
     elif BACTERIA == "pseudomonas_aureginosa":
@@ -237,19 +220,17 @@ path = os.path.join(prefix, 'results_files', BACTERIA)
 
 # Config END
 # *********************************************************************************************************************************
-print("Start")
 kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
+all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
 results_path = os.path.join(path, "CV_Results")
 if not os.path.exists(results_path):
     os.makedirs(results_path)
-all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": [], "feature_selection": []}
 for antibiotic in antibiotic_list:
-    results_file_name = f"{antibiotic}_RESULTS.xlsx"
+    results_file_name = "{}_RESULTS.xlsx".format(antibiotic)
     final_df = get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_column, strain_column, remove_intermediate)
     train_test_and_write_results_cv(final_df, os.path.join(results_path, results_file_name), model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
 all_results_df = pd.DataFrame(all_results_dic)
-all_results_file_name = f"ALL_RESULTS.xlsx"
-writer = pd.ExcelWriter(os.path.join(results_path, all_results_file_name), engine='xlsxwriter')
+writer = pd.ExcelWriter(os.path.join(results_path, "ALL_RESULTS.xlsx"), engine='xlsxwriter')
 all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
 workbook = writer.book
 workbook.close()
