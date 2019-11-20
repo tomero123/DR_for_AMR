@@ -85,15 +85,19 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         strains_list = list(final_df[strain_column])
 
         # Features Selection
-        print(f"Started Feature selection for antibiotic: {antibiotic}")
-        now = time.time()
         if features_selection_n:
             # X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
             model.set_params(**model_params)
+            print(f"Started Feature selection model fit antibiotic: {antibiotic}")
+            now = time.time()
             model.fit(X, y.values.ravel())
+            print("Finished running Feature selection model fit for antibiotic: {} in {} minutes ; X.shape: {}".format(antibiotic, round((time.time() - now) / 60, 4), X.shape))
+            print(f"Started Feature selection SelectFromModel for antibiotic: {antibiotic}")
+            now = time.time()
             selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
             X = selection.transform(X)
-        print("Finished running Feature selection for antibiotic: {} in {} minutes ; X.shape: {}".format(antibiotic, round((time.time() - now) / 60, 4), X.shape))
+            print("Finished running Feature selection SelectFromModel for antibiotic: {} in {} minutes ; X.shape: {}".format(antibiotic, round((time.time() - now) / 60, 4), X.shape))
+
 
         # Create weight according to the ratio of each class
         resistance_weight = (y['label'] == "S").sum() / (y['label'] == "R").sum() \
@@ -190,9 +194,9 @@ remove_intermediate = True
 # Model params
 random_seed = 1
 k_folds = 10  # relevant only if test_mode = "cv"
-rare_th = None  # remove kmer if it appears in number of strains which is less or equal than rare_th
+rare_th = 5  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
-features_selection_n = 1000  # number of features to leave after feature selection
+features_selection_n = 300  # number of features to leave after feature selection
 # model = GradientBoostingClassifier(random_state=random_seed)
 model = xgboost.XGBClassifier(random_state=random_seed)
 if os.name == 'nt':
@@ -204,9 +208,11 @@ else:
     model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
     num_of_processes = 10
     if BACTERIA == "mycobacterium_tuberculosis":
-        antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
+        # antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
+        antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide']
     elif BACTERIA == "pseudomonas_aureginosa":
-        antibiotic_list = ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem', 'ciprofloxacin', 'gentamicin', 'tobramycin']
+        # antibiotic_list = ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem', 'ciprofloxacin', 'gentamicin', 'tobramycin']
+        antibiotic_list = ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem']
 # *********************************************************************************************************************************
 # Constant PARAMS
 if os.name == 'nt':
