@@ -8,6 +8,7 @@ import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
 import xgboost
 from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.feature_selection import SelectFromModel
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
 import matplotlib.pyplot as plt
@@ -87,7 +88,11 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         print(f"Started Feature selection for antibiotic: {antibiotic}")
         now = time.time()
         if features_selection_n:
-            X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
+            # X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
+            model.set_params(**model_params)
+            model.fit(X, y.values.ravel())
+            selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
+            X = selection.transform(X)
         print("Finished running Feature selection for antibiotic: {} in {} minutes ; X.shape: {}".format(antibiotic, round((time.time() - now) / 60, 4), X.shape))
 
         # Create weight according to the ratio of each class
@@ -222,7 +227,7 @@ path = os.path.join(prefix, 'results_files', BACTERIA)
 # *********************************************************************************************************************************
 kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
 all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
-results_path = os.path.join(path, "CV_Results_TEMP")
+results_path = os.path.join(path, "CV_Results_FS_XGB_201119")
 if not os.path.exists(results_path):
     os.makedirs(results_path)
 for antibiotic in antibiotic_list:
