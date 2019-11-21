@@ -231,6 +231,7 @@ path = os.path.join(prefix, 'results_files', BACTERIA)
 
 # Config END
 # *********************************************************************************************************************************
+print(f"Started bacteria: {BACTERIA}")
 kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
 all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
 results_path = os.path.join(path, "CV_Results_20112019")
