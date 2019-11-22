@@ -91,12 +91,12 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             print(f"Started Feature selection model fit antibiotic: {antibiotic}")
             now = time.time()
             model.fit(X, y.values.ravel())
-            print("Finished running Feature selection model fit for antibiotic: {} in {} minutes ; X.shape: {}".format(antibiotic, round((time.time() - now) / 60, 4), X.shape))
+            print(f"Finished running Feature selection model fit for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X.shape: {X.shape}")
             print(f"Started Feature selection SelectFromModel for antibiotic: {antibiotic}")
             now = time.time()
             selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
             X = selection.transform(X)
-            print("Finished running Feature selection SelectFromModel for antibiotic: {} in {} minutes ; X.shape: {}".format(antibiotic, round((time.time() - now) / 60, 4), X.shape))
+            print(f"Finished running Feature selection SelectFromModel for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X.shape: {X.shape}")
 
 
         # Create weight according to the ratio of each class
@@ -129,7 +129,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
         })
         model_parmas = json.dumps(model.get_params())
         write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count, all_results_dic)
-        print("Finished running train_test_and_write_results_cv for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now) / 60, 4)))
+        print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
 
@@ -231,7 +231,8 @@ path = os.path.join(prefix, 'results_files', BACTERIA)
 
 # Config END
 # *********************************************************************************************************************************
-print(f"Started bacteria: {BACTERIA}")
+print(f"Started bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
+now_global = time.time()
 kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
 all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
 results_path = os.path.join(path, "CV_Results_20112019")
@@ -246,4 +247,4 @@ writer = pd.ExcelWriter(os.path.join(results_path, "ALL_RESULTS.xlsx"), engine='
 all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
 workbook = writer.book
 workbook.close()
-print('DONE!')
+print(f'DONE! Finished running bacteria: {BACTERIA}, antibiotics: {str(antibiotic_list)} in {round((time.time() - now_global) / 60, 4)} minutes')
