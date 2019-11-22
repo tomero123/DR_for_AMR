@@ -235,7 +235,7 @@ print(f"Started bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
 now_global = time.time()
 kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
 all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
-results_path = os.path.join(path, "CV_Results_20112019")
+results_path = os.path.join(path, "CV_Results_20112019_FS_300")
 if not os.path.exists(results_path):
     os.makedirs(results_path)
 for antibiotic in antibiotic_list:
