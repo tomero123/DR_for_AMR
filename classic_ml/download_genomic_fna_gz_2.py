@@ -5,7 +5,7 @@ import pandas as pd
 from pathos.multiprocessing import ProcessPool
 import os
 
-from ncbi_data.ncbi_utils import download_ftp_file
+from classic_ml.utils import download_ftp_file
 
 # PARAMS
 BACTERIA = "mycobacterium_tuberculosis" if len(sys.argv) < 2 else sys.argv[1]

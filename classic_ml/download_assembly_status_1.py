@@ -5,7 +5,7 @@ import os
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
 
-from ncbi_data.ncbi_utils import open_ftp_file
+from classic_ml.utils import open_ftp_file
 
 # PARAMS
 

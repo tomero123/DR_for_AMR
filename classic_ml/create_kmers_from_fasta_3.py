@@ -6,7 +6,7 @@ import gzip
 from functools import partial
 import os
 
-from ncbi_data.ncbi_utils import create_kmers_file
+from classic_ml.utils import create_kmers_file
 
 # PARAMS
 BACTERIA = "mycobacterium_tuberculosis" if len(sys.argv) < 2 else sys.argv[1]
