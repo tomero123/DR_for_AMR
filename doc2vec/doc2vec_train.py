@@ -64,8 +64,8 @@ if __name__ == '__main__':
     K = 3 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
     PROCESSING_MODE = "overlapping"  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
-    #workers = multiprocessing.cpu_count()
-    workers = 1
+    workers = multiprocessing.cpu_count()
+    # workers = 1
     print('num of workers is %s' % workers)
 
     prefix = '..' if os.name == 'nt' else '.'
