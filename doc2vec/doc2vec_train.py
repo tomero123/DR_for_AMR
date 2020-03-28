@@ -1,7 +1,5 @@
 import sys
 
-from utils import get_file_name
-
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 import gc
 import multiprocessing
@@ -10,6 +8,8 @@ import pickle
 from gensim.corpora import dictionary
 from gensim.models.deprecated.doc2vec import Doc2Vec
 from gensim.models.doc2vec import TaggedDocument
+
+from utils import get_file_name
 
 
 class GenomeDocs(object):
