@@ -74,5 +74,5 @@ if __name__ == '__main__':
     files_list = [x for x in files_list if ".pkl" in x]
 
     model_save_name = get_file_name("", ".m")
-    trainer = Doc2VecTrainer(input_folder, files_list[:50], model_save_name)
+    trainer = Doc2VecTrainer(input_folder, files_list[:5], model_save_name)
     trainer.run()
