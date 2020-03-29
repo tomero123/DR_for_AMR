@@ -5,6 +5,7 @@ import gc
 import multiprocessing
 import os
 import pickle
+import time
 from gensim.corpora import dictionary
 from gensim.models.deprecated.doc2vec import Doc2Vec
 from gensim.models.doc2vec import TaggedDocument
@@ -27,8 +28,9 @@ class GenomeDocs(object):
 
 
 class Doc2VecTrainer(object):
-    def __init__(self, input_folder, files_list, model_save_name, workers=1, load_existing=False):
+    def __init__(self, input_folder, models_folder, files_list, model_save_name, workers=1, load_existing=False):
         self.input_folder = input_folder
+        self.models_folder = models_folder
         self.files_list = files_list
         self.model_save_name = model_save_name
         self.workers = workers
@@ -51,8 +53,11 @@ class Doc2VecTrainer(object):
 
             model.train(corpus_data, total_examples=model.corpus_count, epochs=20)
 
-            model.save("d2v_" + model_save_name)
-            model.save_word2vec_format("w2v_" + model_save_name)
+            if not os.path.exists(self.models_folder):
+                os.makedirs(self.models_folder)
+
+            model.save(os.path.join(self.models_folder,"d2v" + model_save_name))
+            model.save_word2vec_format(os.path.join(self.models_folder, "w2v" + model_save_name))
 
         print('total docs learned %s' % (len(model.docvecs)))
 
@@ -66,13 +71,18 @@ if __name__ == '__main__':
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     # workers = 1
-    print('num of workers is %s' % workers)
+    # PARAMS END
 
+    now = time.time()
+    print(f"Started training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} num of workers: {workers}")
     prefix = '..' if os.name == 'nt' else '.'
     input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
+    models_folder = os.path.join(prefix, "results_files", BACTERIA, "models", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
     files_list = os.listdir(input_folder)
     files_list = [x for x in files_list if ".pkl" in x]
+    #
 
-    model_save_name = get_file_name("", ".m")
-    trainer = Doc2VecTrainer(input_folder, files_list[:5], model_save_name)
+    model_save_name = get_file_name("", "model")
+    trainer = Doc2VecTrainer(input_folder, models_folder, files_list[:5], model_save_name)
     trainer.run()
+    print(f"Finished training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes")
