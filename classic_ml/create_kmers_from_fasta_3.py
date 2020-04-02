@@ -1,6 +1,6 @@
 import sys
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
-sys.path.append("/home/tomeror/tomer_thesis/")
+sys.path.append("/home/tomeror/tomer_thesis")
 
 from pathos.multiprocessing import ProcessPool
 import gzip
