@@ -1,2 +1,7 @@
 pathos==0.2.3
 biopython==1.73
+gensim==3.8.1
+numpy==1.16.4
+pandas==1.0.3
+xgboost==0.81
+scikit-learn==0.20.2

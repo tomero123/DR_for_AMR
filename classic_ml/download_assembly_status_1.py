@@ -10,7 +10,7 @@ from classic_ml.utils import open_ftp_file
 # PARAMS
 
 BACTERIA = "mycobacterium_tuberculosis" if len(sys.argv) < 2 else sys.argv[1]
-NUM_OF_PROCESSES = 1
+NUM_OF_PROCESSES = 8
 limit = None  # if None - take all files found else limit
 input_file_name = "mycobacterium_tuberculosis_data.csv"
 output_file_name = "{}_data.csv".format(BACTERIA)
