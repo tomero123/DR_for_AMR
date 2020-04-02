@@ -1,8 +1,8 @@
 import sys
+sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
+sys.path.append("/home/tomeror/tomer_thesis/")
 
 from doc2vec.doc2vec_train_2 import Doc2VecTrainer
-
-sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 import gc
 import multiprocessing
 import os
