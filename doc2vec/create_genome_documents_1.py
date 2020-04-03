@@ -10,7 +10,7 @@ from functools import partial
 from classic_ml.utils import create_genome_document
 
 # PARAMS
-BACTERIA = "mycobacterium_tuberculosis" if len(sys.argv) < 2 else sys.argv[1]
+BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
 K = 3 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
 NUM_OF_PROCESSES = 1 if len(sys.argv) < 4 else int(sys.argv[3])
 PROCESSING_MODE = "overlapping"  # can be "non_overlapping" or "overlapping"
@@ -21,6 +21,7 @@ input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_files")
 output_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
 files_list = os.listdir(input_folder)
 files_list = [x for x in files_list if ".fna.gz" in x]
+print(f"Total files in folder: {len(files_list)}")
 _open = partial(gzip.open, mode='rt')
 
 if __name__ == '__main__':
@@ -31,7 +32,7 @@ if __name__ == '__main__':
     output_files_list = os.listdir(output_folder)
     output_files_list = [x for x in output_files_list if ".pkl" in x]
     for ind, file_name in enumerate(files_list):
-        if file_name.replace(".fna", ".txt") not in output_files_list:
+        if file_name.replace(".fna.gz", ".pkl") not in output_files_list:
             input_list.append([ind, file_name, K, PROCESSING_MODE, SHIFT_SIZE, input_folder, output_folder])
     # input_list = input_list[0:10]
     print("Start processing {} files".format(len(input_list)))
