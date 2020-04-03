@@ -10,9 +10,9 @@ from functools import partial
 from classic_ml.utils import create_genome_document
 
 # PARAMS
-BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
-NUM_OF_PROCESSES = 1
+BACTERIA = "mycobacterium_tuberculosis" if len(sys.argv) < 2 else sys.argv[1]
 K = 3 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
+NUM_OF_PROCESSES = 1 if len(sys.argv) < 4 else int(sys.argv[3])
 PROCESSING_MODE = "overlapping"  # can be "non_overlapping" or "overlapping"
 SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
 
