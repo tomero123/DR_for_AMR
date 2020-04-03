@@ -10,7 +10,7 @@ from classic_ml.utils import download_ftp_file
 
 # PARAMS
 BACTERIA = "mycobacterium_tuberculosis" if len(sys.argv) < 2 else sys.argv[1]
-NUM_OF_PROCESSES = 8
+NUM_OF_PROCESSES = 1 if len(sys.argv) < 3 else sys.argv[2]
 limit = None  # if None - take all files found else limit
 
 prefix = '..' if os.name == 'nt' else '.'
