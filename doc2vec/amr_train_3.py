@@ -1,19 +1,13 @@
 import sys
 
-from doc2vec.Doc2VecTrainer import Doc2VecLoader
-
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
-from doc2vec.doc2vec_train_2 import Doc2VecTrainer
-import gc
 import multiprocessing
 import os
-import pickle
 import time
-from gensim.corpora import dictionary
-from gensim.models.deprecated.doc2vec import Doc2Vec
-from gensim.models.doc2vec import TaggedDocument
+
+from doc2vec.Doc2VecTrainer import Doc2VecLoader
 
 if __name__ == '__main__':
     # PARAMS
