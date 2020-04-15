@@ -7,9 +7,9 @@ import multiprocessing
 import os
 import pickle
 import time
-from gensim.corpora import dictionary
-from gensim.models.deprecated.doc2vec import Doc2Vec
-from gensim.models.doc2vec import TaggedDocument
+import gensim
+from gensim.models import doc2vec
+# from gensim.models.doc2vec import TaggedDocument
 
 from utils import get_file_name
 
@@ -25,7 +25,7 @@ class GenomeDocs(object):
                 cur_doc = pickle.load(f)
                 print(f"ind: {ind}, doc len: {len(cur_doc)}")
                 # yield dictionary.doc2bow(cur_doc)
-                yield TaggedDocument(cur_doc, [file_name])
+                yield doc2vec.TaggedDocument(cur_doc, [file_name])
 
 
 class Doc2VecTrainer(object):
@@ -46,9 +46,10 @@ class Doc2VecTrainer(object):
             # model = Doc2Vec.load(PATH_TO_EXISTING_MODEL)
         else:
             print("Started training!")
+            print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
             corpus_data = GenomeDocs(self.input_folder, self.files_list)
 
-            model = Doc2Vec(size=128, window=10, min_count=3, sample=1e-4, negative=5, workers=self.workers, dm=1)
+            model = doc2vec.Doc2Vec(size=128, window=10, min_count=3, sample=1e-4, negative=5, workers=self.workers, dm=1)
             print('building vocabulary...')
             model.build_vocab(corpus_data)
 
