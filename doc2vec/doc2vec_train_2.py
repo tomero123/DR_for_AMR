@@ -1,12 +1,12 @@
 import sys
 
-
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
 import multiprocessing
 import os
 import time
+import datetime
 
 from doc2vec.Doc2VecTrainer import Doc2VecTrainer
 from utils import get_file_name
@@ -24,6 +24,8 @@ if __name__ == '__main__':
     # PARAMS END
 
     now = time.time()
+    now_date = datetime.datetime.now()
+    print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Started training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} num of workers: {workers}")
     prefix = '..' if os.name == 'nt' else '.'
     input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")

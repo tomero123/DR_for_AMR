@@ -5,6 +5,8 @@ sys.path.append("/home/tomeror/tomer_thesis")
 import gc
 import os
 import pickle
+import pandas as pd
+import numpy as np
 from gensim.models import doc2vec
 
 
@@ -32,7 +34,7 @@ class Doc2VecTrainer(object):
 
     def run(self):
         gc.collect()
-        print("Started training!")
+        print(f"Number of documents: {len(self.files_list)}")
         print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
         corpus_data = GenomeDocs(self.input_folder, self.files_list)
 
@@ -52,13 +54,27 @@ class Doc2VecTrainer(object):
 
 
 class Doc2VecLoader(object):
-    def __init__(self, load_existing_path=None):
-        self.load_existing_path = load_existing_path
+    def __init__(self, input_folder, files_list, load_existing_path=None):
+        self.input_folder = input_folder
+        self.files_list = files_list
+        self.model = doc2vec.Doc2Vec.load(load_existing_path)
 
     def run(self):
-        print('app started')
-
         gc.collect()
-        print('loading an exiting model')
-        model = doc2vec.Doc2Vec.load(self.load_existing_path)
-        return model
+        print('Loading an exiting model')
+        print(f"Number of documents: {len(self.files_list)}")
+        print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
+        vector_size = None
+        for ind, file_name in enumerate(self.files_list):
+            with open(os.path.join(self.input_folder, file_name), 'rb') as f:
+                cur_doc = pickle.load(f)
+                cur_vec = self.model.infer_vector(cur_doc)
+                if vector_size is None:
+                    vector_size = cur_vec.shape[0]
+                    results_array = cur_vec
+                else:
+                    results_array = np.vstack((results_array, cur_vec))
+        columns_names = [f"f_{x+1}" for x in range(vector_size)]
+        em_df = pd.DataFrame(results_array, columns=columns_names)
+        em_df.insert(loc=0, column="file_name", value=self.files_list)
+        return em_df
