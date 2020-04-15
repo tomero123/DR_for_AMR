@@ -1,4 +1,7 @@
 import sys
+
+from doc2vec.Doc2VecTrainer import Doc2VecLoader
+
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
@@ -15,8 +18,8 @@ from gensim.models.doc2vec import TaggedDocument
 if __name__ == '__main__':
     # PARAMS
     BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
-    NUM_OF_PROCESSES = 1
     K = 3 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
+    MODEL_NAME = "d2v_2020_04_15_1011.model" if len(sys.argv) < 4 else int(sys.argv[3])  # Model Name
     PROCESSING_MODE = "overlapping"  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
@@ -32,6 +35,7 @@ if __name__ == '__main__':
     files_list = [x for x in files_list if ".pkl" in x]
     #
 
-    trainer = Doc2VecTrainer(input_folder, models_folder, files_list[:5], model_save_name)
-    trainer.run()
-    print(f"Finished training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes")
+    doc2vec_loader = Doc2VecLoader(os.path.join(models_folder, MODEL_NAME))
+    doc2vec_model = doc2vec_loader.run()
+    print(doc2vec_model.most_similar(['hey'])[0:2])
+    x = 1
