@@ -26,7 +26,7 @@ if __name__ == '__main__':
     now = time.time()
     now_date = datetime.datetime.now()
     print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"Started training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} num of workers: {workers}")
+    print(f"Started dov2vec training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} num of workers: {workers}")
     prefix = '..' if os.name == 'nt' else '.'
     input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
     models_folder = os.path.join(prefix, "results_files", BACTERIA, "models", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
