@@ -38,3 +38,5 @@ if __name__ == '__main__':
     trainer = Doc2VecTrainer(input_folder, models_folder, files_list, model_save_name)
     trainer.run()
     print(f"Finished training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes")
+    now_date = datetime.datetime.now()
+    print(f"Finished running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}")
