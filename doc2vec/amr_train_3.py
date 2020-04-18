@@ -54,4 +54,6 @@ if __name__ == '__main__':
     label_df = get_label_df(amr_file_path, files_list, antibiotic)
     em_df = doc2vec_loader.run()
     # print(doc2vec_model.most_similar(['GTT'])[0:2])
+    print(f"label_df shape: {label_df.shape}")
+    print(f"em_df shape: {em_df.shape}")
     x = 1
