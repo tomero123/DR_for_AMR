@@ -31,7 +31,7 @@ if __name__ == '__main__':
     # PARAMS
     BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
     K = 3 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
-    MODEL_NAME = "d2v_2020_04_15_1049.model" if len(sys.argv) < 4 else int(sys.argv[3])  # Model Name
+    MODEL_NAME = "d2v_2020_04_15_1051.model" if len(sys.argv) < 4 else int(sys.argv[3])  # Model Name
     PROCESSING_MODE = "overlapping"  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
