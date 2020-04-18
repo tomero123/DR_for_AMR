@@ -35,7 +35,7 @@ if __name__ == '__main__':
     #
 
     model_save_name = get_file_name("", "model")
-    trainer = Doc2VecTrainer(input_folder, models_folder, files_list[:5], model_save_name)
+    trainer = Doc2VecTrainer(input_folder, models_folder, files_list, model_save_name)
     trainer.run()
     print(f"Finished training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 3600, 4)} hours")
     now_date = datetime.datetime.now()
