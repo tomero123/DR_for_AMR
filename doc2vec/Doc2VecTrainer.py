@@ -65,16 +65,16 @@ class Doc2VecLoader(object):
         print(f"Number of documents: {len(self.files_list)}")
         print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
         vector_size = None
+        all_results = []
+        file_names = [x.replace(".pkl", ".txt.gz") for x in self.files_list]
         for ind, file_name in enumerate(self.files_list):
             with open(os.path.join(self.input_folder, file_name), 'rb') as f:
                 cur_doc = pickle.load(f)
                 cur_vec = self.model.infer_vector(cur_doc)
                 if vector_size is None:
                     vector_size = cur_vec.shape[0]
-                    results_array = cur_vec
-                else:
-                    results_array = np.vstack((results_array, cur_vec))
+                all_results.append(cur_vec)
         columns_names = [f"f_{x+1}" for x in range(vector_size)]
-        em_df = pd.DataFrame(results_array, columns=columns_names)
-        em_df.insert(loc=0, column="file_name", value=self.files_list)
+        em_df = pd.DataFrame(all_results, columns=columns_names)
+        em_df.insert(loc=0, column="file_name", value=file_names)
         return em_df
