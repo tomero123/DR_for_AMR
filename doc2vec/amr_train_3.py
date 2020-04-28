@@ -4,9 +4,6 @@ sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
 import multiprocessing
-import os
-import time
-import pandas as pd
 import datetime
 
 from doc2vec.Doc2VecTrainer import Doc2VecLoader
@@ -15,14 +12,9 @@ import json
 import os
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import GradientBoostingClassifier
 import xgboost
-from sklearn.feature_selection import SelectKBest, chi2
-from sklearn.feature_selection import SelectFromModel
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
-import matplotlib.pyplot as plt
-import traceback
 import time
 
 
@@ -74,7 +66,7 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas):
 
 def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic):
     try:
-        X = final_df.drop(['label', 'file_name'], axis=1).copy()
+        X = final_df.drop(['label', 'file_name', 'Strain'], axis=1).copy()
         y = final_df[['label']].copy()
 
         files_names = list(final_df['file_name'])
