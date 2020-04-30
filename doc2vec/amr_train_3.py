@@ -115,9 +115,9 @@ if __name__ == '__main__':
     num_of_processes = 10
     k_folds = 10
     if os.name == 'nt':
-        MODEL_NAME = "d2v_2020_04_18_1235.model"  # Model Name
+        D2V_MODEL_NAME = "d2v_2020_04_18_1235.model"  # Model Name
     else:
-        MODEL_NAME = "d2v_2020_04_15_1051.model" if len(sys.argv) < 4 else int(sys.argv[3])  # Model Name
+        D2V_MODEL_NAME = "d2v_2020_04_15_1051.model" if len(sys.argv) < 4 else int(sys.argv[3])  # Model Name
     PROCESSING_MODE = "overlapping"  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
@@ -136,16 +136,18 @@ if __name__ == '__main__':
     input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
     models_folder = os.path.join(prefix, "results_files", BACTERIA, "models", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
     amr_file_path = os.path.join(prefix, 'results_files', BACTERIA, amr_data_file_name)
-    results_file_path = models_folder.replace("models", "embeddings_classification_results")
-    if not os.path.exists(results_file_path):
-        os.makedirs(results_file_path)
+    results_file_folder = models_folder.replace("models", "embeddings_classification_results")
+    if not os.path.exists(results_file_folder):
+        os.makedirs(results_file_folder)
+    results_file_name = D2V_MODEL_NAME.replace("d2v", antibiotic).replace(".model", ".xlsx")
+    results_file_path = os.path.join(results_file_folder, results_file_name)
     files_list = os.listdir(input_folder)
     files_list = [x for x in files_list if ".pkl" in x]
     # get AMR data df
     label_df = get_label_df(amr_file_path, files_list, antibiotic)
     # get only the files with label for the specific antibiotic
     files_list = [x for x in files_list if x.replace(".pkl", ".txt.gz") in list(label_df['file_name'])]
-    doc2vec_loader = Doc2VecLoader(input_folder, files_list, os.path.join(models_folder, MODEL_NAME))
+    doc2vec_loader = Doc2VecLoader(input_folder, files_list, os.path.join(models_folder, D2V_MODEL_NAME))
     em_df = doc2vec_loader.run()
     final_df = em_df.join(label_df.set_index('file_name'), on='file_name')
     train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic)
