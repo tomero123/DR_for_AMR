@@ -37,7 +37,10 @@ if __name__ == '__main__':
     print(f"Loaded csv file with {n_rows} rows!")
     input_list = []
     for ind in range(n_rows):
-        folder_ind = df["RefSeq FTP"][ind].find("/genomes")
+        try:
+            folder_ind = df["RefSeq FTP"][ind].find("/genomes")
+        except Exception as e:
+            continue
         ftp_sub_folder = df["RefSeq FTP"][ind][folder_ind:]
         strain_name = df["Strain"][ind]
         status = df["status"][ind]
