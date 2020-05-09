@@ -11,8 +11,8 @@ from classic_ml.utils import open_ftp_file
 # PARAMS
 
 BACTERIA = "genome_mix" if len(sys.argv) < 2 else sys.argv[1]
-NUM_OF_PROCESSES = 1
-limit = 100  # if None - take all files found else limit
+NUM_OF_PROCESSES = 8
+limit = None  # if None - take all files found else limit
 input_file_name = "genome_mix.csv"
 output_file_name = "{}_data.csv".format(BACTERIA)
 
