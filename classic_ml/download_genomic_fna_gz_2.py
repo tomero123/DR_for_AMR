@@ -9,9 +9,9 @@ import os
 from classic_ml.utils import download_ftp_file
 
 # PARAMS
-BACTERIA = "mycobacterium_tuberculosis" if len(sys.argv) < 2 else sys.argv[1]
-NUM_OF_PROCESSES = 1 if len(sys.argv) < 3 else sys.argv[2]
-limit = None  # if None - take all files found else limit
+BACTERIA = "genome_mix" if len(sys.argv) < 2 else sys.argv[1]
+NUM_OF_PROCESSES = 10 if len(sys.argv) < 3 else sys.argv[2]
+limit = 10  # if None - take all files found else limit
 
 prefix = '..' if os.name == 'nt' else '.'
 DEST_PATH = os.path.join(prefix, "results_files", BACTERIA, "genome_files")
@@ -31,7 +31,10 @@ if __name__ == '__main__':
     files_list = os.listdir(DEST_PATH)
     files_list = [x for x in files_list if ".fna.gz" in x]
     for ind in range(n_rows):
-        folder_ind = df["RefSeq FTP"][ind].find("/genomes")
+        try:
+            folder_ind = df["RefSeq FTP"][ind].find("/genomes")
+        except Exception as e:
+            continue
         ftp_sub_folder = df["RefSeq FTP"][ind][folder_ind:]
         strain_name = df["Strain"][ind]
         ftp_file_name = ftp_sub_folder.split("/")[-1] + "_genomic.fna.gz"
