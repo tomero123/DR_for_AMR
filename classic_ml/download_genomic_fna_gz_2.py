@@ -11,7 +11,7 @@ from classic_ml.utils import download_ftp_file
 # PARAMS
 BACTERIA = "genome_mix" if len(sys.argv) < 2 else sys.argv[1]
 NUM_OF_PROCESSES = 10 if len(sys.argv) < 3 else sys.argv[2]
-limit = 10  # if None - take all files found else limit
+limit = None  # if None - take all files found else limit
 
 prefix = '..' if os.name == 'nt' else '.'
 DEST_PATH = os.path.join(prefix, "results_files", BACTERIA, "genome_files")
