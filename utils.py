@@ -202,8 +202,8 @@ def create_genome_document(input_list):
                         document_list.append(key)
                 with open(os.path.join(output_folder, file_name.replace(".fna.gz", f"_ind_{k_ind+1}.pkl")), 'wb') as outfile:
                     pickle.dump(document_list, outfile)
-                with open(os.path.join(output_folder, file_name.replace(".fna.gz", f"_ind_{k_ind+1}.json")), 'w') as outfile:
-                    json.dump(document_list, outfile)
+                # with open(os.path.join(output_folder, file_name.replace(".fna.gz", f"_ind_{k_ind+1}.json")), 'w') as outfile:
+                #     json.dump(document_list, outfile)
 
         else:
             raise Exception(f"PROCESSING_MODE: {PROCESSING_MODE} is invalid!")
