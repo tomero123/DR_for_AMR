@@ -13,12 +13,15 @@ from utils import create_genome_document
 BACTERIA = "genome_mix" if len(sys.argv) < 2 else sys.argv[1]
 K = 3 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
 NUM_OF_PROCESSES = 1 if len(sys.argv) < 4 else int(sys.argv[3])
-PROCESSING_MODE = "overlapping"  # can be "non_overlapping" or "overlapping"
+PROCESSING_MODE = "non_overlapping"  # can be "non_overlapping" or "overlapping"
 SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
 
 prefix = '..' if os.name == 'nt' else '.'
 input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_files")
-output_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
+if PROCESSING_MODE == "overlapping":
+    output_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
+elif PROCESSING_MODE == "non_overlapping":
+    output_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", "non_overlapping", f"K_{K}")
 files_list = os.listdir(input_folder)
 files_list = [x for x in files_list if ".fna.gz" in x]
 print(f"Total files in folder: {len(files_list)}")
