@@ -181,8 +181,8 @@ def create_genome_document(input_list):
         input_folder = input_list[5]
         output_folder = input_list[6]
         print(f"Started processing: {file_name}")
-        fasta_sequences = SeqIO.parse(_open(os.path.join(input_folder, file_name)), 'fasta')
         if PROCESSING_MODE == "overlapping":
+            fasta_sequences = SeqIO.parse(_open(os.path.join(input_folder, file_name)), 'fasta')
             document_list = []
             for fasta in fasta_sequences:
                 name, sequence = fasta.id, str(fasta.seq)
@@ -193,19 +193,22 @@ def create_genome_document(input_list):
                 pickle.dump(document_list, outfile)
         elif PROCESSING_MODE == "non_overlapping":
             for k_ind in range(K):
+                fasta_sequences = SeqIO.parse(_open(os.path.join(input_folder, file_name)), 'fasta')
                 document_list = []
                 for fasta in fasta_sequences:
                     name, sequence = fasta.id, str(fasta.seq)
-                    for start_ind in range(len(sequence) - K + 1):
+                    for start_ind in range(k_ind, len(sequence) - K + 1)[::K]:
                         key = sequence[start_ind:start_ind + K]
                         document_list.append(key)
-                with open(os.path.join(output_folder, file_name.replace(".fna.gz", f"_ind_{k_ind}.pkl")), 'wb') as outfile:
+                with open(os.path.join(output_folder, file_name.replace(".fna.gz", f"_ind_{k_ind+1}.pkl")), 'wb') as outfile:
                     pickle.dump(document_list, outfile)
+                with open(os.path.join(output_folder, file_name.replace(".fna.gz", f"_ind_{k_ind+1}.json")), 'w') as outfile:
+                    json.dump(document_list, outfile)
 
         else:
             raise Exception(f"PROCESSING_MODE: {PROCESSING_MODE} is invalid!")
     except Exception as e:
-        print(f"ERROR at create_kmers_file for: {file_name}, index: {ind}, message: {e}")
+        print(f"ERROR at create_genome_document for: {file_name}, index: {ind}, message: {e}")
 
 
 def get_file_name(prefix, ext):
