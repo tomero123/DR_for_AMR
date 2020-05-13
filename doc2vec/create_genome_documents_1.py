@@ -7,7 +7,7 @@ from pathos.multiprocessing import ProcessPool
 import gzip
 from functools import partial
 
-from classic_ml.utils import create_genome_document
+from utils import create_genome_document
 
 # PARAMS
 BACTERIA = "genome_mix" if len(sys.argv) < 2 else sys.argv[1]
@@ -44,9 +44,3 @@ if __name__ == '__main__':
         for i in input_list:
             create_genome_document(i)
     print("DONE!")
-
-
-# documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(common_texts)]
-# model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
-#
-# x = 1

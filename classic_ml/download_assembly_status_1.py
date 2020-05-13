@@ -6,7 +6,7 @@ import os
 import pandas as pd
 from pathos.multiprocessing import ProcessPool
 
-from classic_ml.utils import open_ftp_file
+from utils import open_ftp_file
 
 # PARAMS
 

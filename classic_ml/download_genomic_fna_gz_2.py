@@ -6,7 +6,7 @@ import pandas as pd
 from pathos.multiprocessing import ProcessPool
 import os
 
-from classic_ml.utils import download_ftp_file
+from utils import download_ftp_file
 
 # PARAMS
 BACTERIA = "genome_mix" if len(sys.argv) < 2 else sys.argv[1]
