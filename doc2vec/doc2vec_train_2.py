@@ -15,10 +15,10 @@ from utils import get_file_name
 
 if __name__ == '__main__':
     # PARAMS
-    BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
+    BACTERIA = "genome_mix" if len(sys.argv) < 2 else sys.argv[1]
     NUM_OF_PROCESSES = 1
     K = 3 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
-    PROCESSING_MODE = "overlapping"  # can be "non_overlapping" or "overlapping"
+    PROCESSING_MODE = "non_overlapping"  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     # workers = 1
@@ -29,8 +29,12 @@ if __name__ == '__main__':
     print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Started dov2vec training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} num of workers: {workers}")
     prefix = '..' if os.name == 'nt' else '.'
-    input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
-    models_folder = os.path.join(prefix, "results_files", BACTERIA, "models", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
+    if PROCESSING_MODE == "overlapping":
+        input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
+        models_folder = os.path.join(prefix, "results_files", BACTERIA, "models", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
+    elif PROCESSING_MODE == "non_overlapping":
+        input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", "non_overlapping", f"K_{K}")
+        models_folder = os.path.join(prefix, "results_files", BACTERIA, "models", "non_overlapping", f"K_{K}")
     files_list = os.listdir(input_folder)
     files_list = [x for x in files_list if ".pkl" in x]
     #
