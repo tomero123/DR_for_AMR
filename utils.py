@@ -190,7 +190,7 @@ def create_genome_document(input_list):
                     key = sequence[start_ind:start_ind + K]
                     document_list.append(key)
             with open(os.path.join(output_folder, file_name.replace(".fna.gz", ".pkl")), 'wb') as outfile:
-                pickle.dump(document_list, outfile)
+                pickle.dump(document_list, outfile, protocol=pickle.HIGHEST_PROTOCOL)
         elif PROCESSING_MODE == "non_overlapping":
             for k_ind in range(K):
                 fasta_sequences = SeqIO.parse(_open(os.path.join(input_folder, file_name)), 'fasta')
