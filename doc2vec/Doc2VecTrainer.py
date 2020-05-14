@@ -11,32 +11,35 @@ from gensim.models import doc2vec
 
 
 class GenomeDocs(object):
-    def __init__(self, input_folder, files_list):
+    def __init__(self, input_folder, files_list, document_id_dic):
         self.input_folder = input_folder
         self.files_list = files_list
+        self.document_id_dic = document_id_dic
 
     def __iter__(self):
         for ind, file_name in enumerate(self.files_list):
             with open(os.path.join(self.input_folder, file_name), 'rb') as f:
                 cur_doc = pickle.load(f)
                 print(f"ind: {ind}, doc len: {len(cur_doc)}")
-                # yield dictionary.doc2bow(cur_doc)
-                yield doc2vec.TaggedDocument(cur_doc, [file_name])
+                document_id = self.document_id_dic[file_name]
+                yield doc2vec.TaggedDocument(cur_doc, [document_id])
 
 
 class Doc2VecTrainer(object):
-    def __init__(self, input_folder, models_folder, files_list, model_save_name, workers=1):
+    def __init__(self, input_folder, models_folder, files_list, model_save_name, processing_mode, workers=1):
         self.input_folder = input_folder
         self.models_folder = models_folder
         self.files_list = files_list
         self.model_save_name = model_save_name
         self.workers = workers
+        self.processing_mode = processing_mode
+        self.document_id_dic = self.get_document_id_dic()
 
     def run(self):
         gc.collect()
         print(f"Number of documents: {len(self.files_list)}")
         print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
-        corpus_data = GenomeDocs(self.input_folder, self.files_list)
+        corpus_data = GenomeDocs(self.input_folder, self.files_list, self.document_id_dic)
 
         model = doc2vec.Doc2Vec(size=128, window=10, min_count=3, sample=1e-4, negative=5, workers=self.workers, dm=1)
         print('building vocabulary...')
@@ -51,6 +54,15 @@ class Doc2VecTrainer(object):
         model.save_word2vec_format(os.path.join(self.models_folder, "w2v" + self.model_save_name))
 
         print('total docs learned %s' % (len(model.docvecs)))
+
+    def get_document_id_dic(self):
+        document_id_dic = {}
+        for file_name in self.files_list:
+            document_id = file_name.replace(".pkl", "")
+            if self.processing_mode == "non_overlapping":
+                document_id = document_id[:document_id.rfind("ind") - 1]
+            document_id_dic[file_name] = document_id
+        return document_id_dic
 
 
 class Doc2VecLoader(object):
