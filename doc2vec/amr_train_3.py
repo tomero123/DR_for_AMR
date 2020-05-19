@@ -34,7 +34,7 @@ def get_label_df(amr_file_path, files_list, antibiotic):
     return label_df
 
 
-def write_data_to_excel(results_df, results_file_path, classes, model_parmas):
+def write_data_to_excel(results_df, results_file_path, classes, model_parmas, all_results_dic):
     try:
         writer = pd.ExcelWriter(results_file_path, engine='xlsxwriter')
         name = 'Sheet1'
@@ -50,6 +50,9 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas):
         row_ind += confusion_matrix_df.shape[0] + 2
         accuracy = metrics.accuracy_score(y_true, y_pred)
         f1_score = metrics.f1_score(y_true, y_pred, labels=classes, pos_label="R")
+        all_results_dic["antibiotic"].append(antibiotic)
+        all_results_dic["accuracy"].append(accuracy)
+        all_results_dic["f1_score"].append(f1_score)
         evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score], ["model_parmas", model_parmas]]
         evaluation_df = pd.DataFrame(evaluation_list, columns=["metric", "value"])
         evaluation_df.to_excel(writer, sheet_name=name, startcol=col_ind, startrow=row_ind, index=False)
@@ -64,7 +67,7 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas):
         print("Error in write_roc_curve.error message: {}".format(e))
 
 
-def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic):
+def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic):
     try:
         X = final_df.drop(['label', 'file_name', 'Strain'], axis=1).copy()
         y = final_df[['label']].copy()
@@ -101,7 +104,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             'Prediction': predictions
         })
         model_parmas = json.dumps(model.get_params())
-        write_data_to_excel(results_df, results_file_path, classes, model_parmas)
+        write_data_to_excel(results_df, results_file_path, classes, model_parmas, all_results_dic)
         print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
@@ -135,6 +138,7 @@ if __name__ == '__main__':
     now_total = time.time()
     now_date = datetime.datetime.now()
     print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}")
+    all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
     for antibiotic in antibiotic_list:
         now = time.time()
         print(f"Started xgboost training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}")
@@ -151,9 +155,14 @@ if __name__ == '__main__':
         doc2vec_loader = Doc2VecLoader(input_folder, files_list, os.path.join(models_folder, D2V_MODEL_NAME))
         em_df = doc2vec_loader.run()
         final_df = em_df.join(label_df.set_index('file_name'), on='file_name')
-        train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic)
+        train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic)
         print(f"label_df shape: {label_df.shape}")
         print(f"em_df shape: {em_df.shape}")
         print(f"Finished training xgboost for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes")
+    all_results_df = pd.DataFrame(all_results_dic)
+    writer = pd.ExcelWriter(os.path.join(results_file_folder, "ALL_RESULTS.xlsx"), engine='xlsxwriter')
+    all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
+    workbook = writer.book
+    workbook.close()
     now_date = datetime.datetime.now()
     print(f"Finished running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')} after {round((time.time() - now_total) / 3600, 4)} hours")
