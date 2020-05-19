@@ -218,5 +218,12 @@ def get_file_name(prefix, ext):
     day = str(time.day) if time.day > 9 else '0' + str(time.day)
     hour = str(time.hour) if time.hour > 9 else '0' + str(time.hour)
     minute = str(time.minute) if time.minute > 9 else '0' + str(time.minute)
-    file_name = "{}_{}_{}_{}_{}{}.{}".format(prefix, year, month, day, hour, minute, ext)
+    if prefix is not None and ext is not None:
+        file_name = "{}_{}_{}_{}_{}{}.{}".format(prefix, year, month, day, hour, minute, ext)
+    elif prefix is None and ext is not None:
+        file_name = "{}_{}_{}_{}{}.{}".format(year, month, day, hour, minute, ext)
+    elif prefix is not None and ext is None:
+        file_name = "{}_{}_{}_{}_{}{}".format(prefix, year, month, day, hour, minute)
+    else:
+        file_name = "{}_{}_{}_{}{}".format(year, month, day, hour, minute)
     return file_name

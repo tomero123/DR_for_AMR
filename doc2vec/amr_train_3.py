@@ -1,5 +1,7 @@
 import sys
 
+from utils import get_file_name
+
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
@@ -133,7 +135,8 @@ if __name__ == '__main__':
     input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
     models_folder = os.path.join(prefix, "results_files", BACTERIA, "models", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
     amr_file_path = os.path.join(prefix, 'results_files', BACTERIA, amr_data_file_name)
-    results_file_folder = models_folder.replace("models", "embeddings_classification_results")
+    current_date_folder = get_file_name(None, None)
+    results_file_folder = os.path.join(models_folder.replace("models", "embeddings_classification_results"), current_date_folder)
 
     now_total = time.time()
     now_date = datetime.datetime.now()
