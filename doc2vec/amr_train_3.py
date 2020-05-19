@@ -1,15 +1,10 @@
 import sys
 
-from utils import get_file_name
-
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
 import multiprocessing
 import datetime
-
-from doc2vec.Doc2VecTrainer import Doc2VecLoader
-
 import json
 import os
 import pandas as pd
@@ -18,6 +13,9 @@ import xgboost
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
 import time
+
+from doc2vec.Doc2VecTrainer import Doc2VecLoader
+from utils import get_file_name
 
 
 def get_label_df(amr_file_path, files_list, antibiotic):
