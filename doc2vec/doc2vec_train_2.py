@@ -1,5 +1,4 @@
 import sys
-
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
@@ -9,13 +8,13 @@ import time
 import datetime
 
 from doc2vec.Doc2VecTrainer import Doc2VecTrainer
-
 from utils import get_file_name
+from enums import Bacteria
 
 
 if __name__ == '__main__':
     # PARAMS
-    BACTERIA = "genome_mix" if len(sys.argv) < 2 else sys.argv[1]
+    BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) < 2 else sys.argv[1]
     NUM_OF_PROCESSES = 1
     K = 3 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
     PROCESSING_MODE = "non_overlapping"  # can be "non_overlapping" or "overlapping"

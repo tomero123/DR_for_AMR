@@ -8,9 +8,10 @@ import json
 import pandas as pd
 from tqdm import tqdm
 
+from enums import Bacteria
 
 # PARAMS
-BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
+BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) < 2 else sys.argv[1]
 K = 20 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
 limit = None  # if None - take all files from kmers_files else limit
 

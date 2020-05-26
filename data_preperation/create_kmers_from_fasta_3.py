@@ -8,9 +8,10 @@ from functools import partial
 import os
 
 from utils import create_kmers_file
+from enums import Bacteria
 
 # PARAMS
-BACTERIA = "mycobacterium_tuberculosis" if len(sys.argv) < 2 else sys.argv[1]
+BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) < 2 else sys.argv[1]
 NUM_OF_PROCESSES = 8
 K = 10 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
 

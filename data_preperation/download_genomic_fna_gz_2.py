@@ -7,9 +7,10 @@ from pathos.multiprocessing import ProcessPool
 import os
 
 from utils import download_ftp_file
+from enums import Bacteria
 
 # PARAMS
-BACTERIA = "genome_mix" if len(sys.argv) < 2 else sys.argv[1]
+BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) < 2 else sys.argv[1]
 NUM_OF_PROCESSES = 10 if len(sys.argv) < 3 else int(sys.argv[2])
 limit = None  # if None - take all files found else limit
 

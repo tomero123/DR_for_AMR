@@ -1,5 +1,4 @@
 import sys
-
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
@@ -16,6 +15,7 @@ import time
 
 from doc2vec.Doc2VecTrainer import Doc2VecLoader
 from utils import get_file_name
+from enums import Bacteria
 
 
 def get_label_df(amr_file_path, files_list, antibiotic):
@@ -112,7 +112,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
 
 if __name__ == '__main__':
     # PARAMS
-    BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
+    BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) < 2 else sys.argv[1]
     MODEL_BACTERIA = "genome_mix" if len(sys.argv) < 3 else sys.argv[2]
     K = 3 if len(sys.argv) < 4 else int(sys.argv[3])  # Choose K size
     random_seed = 1
