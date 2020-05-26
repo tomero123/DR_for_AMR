@@ -113,15 +113,16 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
 if __name__ == '__main__':
     # PARAMS
     BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
-    K = 3 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
+    MODEL_BACTERIA = "genome_mix" if len(sys.argv) < 3 else sys.argv[2]
+    K = 3 if len(sys.argv) < 4 else int(sys.argv[3])  # Choose K size
     random_seed = 1
     num_of_processes = 10
     k_folds = 10
     if os.name == 'nt':
         D2V_MODEL_NAME = "d2v_2020_04_18_1235.model"  # Model Name
     else:
-        D2V_MODEL_NAME = "d2v_2020_04_18_1240.model" if len(sys.argv) < 4 else int(sys.argv[3])  # Model Name
-    PROCESSING_MODE = "overlapping"  # can be "non_overlapping" or "overlapping"
+        D2V_MODEL_NAME = "d2v_2020_05_15_0939.model" if len(sys.argv) < 5 else int(sys.argv[4])  # Model Name
+    PROCESSING_MODE = "non_overlapping"  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_data_summary.csv"
@@ -131,7 +132,7 @@ if __name__ == '__main__':
     # PARAMS END
     prefix = '..' if os.name == 'nt' else '.'
     input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
-    models_folder = os.path.join(prefix, "results_files", BACTERIA, "models", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
+    models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "models", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
     amr_file_path = os.path.join(prefix, 'results_files', BACTERIA, amr_data_file_name)
     current_date_folder = get_file_name(None, None)
     results_file_folder = os.path.join(models_folder.replace("models", "embeddings_classification_results"), current_date_folder)
