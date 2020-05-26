@@ -1,4 +1,7 @@
 import sys
+
+from enums import ProcessingMode
+
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
@@ -69,6 +72,8 @@ class Doc2VecLoader(object):
     def __init__(self, input_folder, files_list, k, processing_mode, load_existing_path=None):
         self.input_folder = input_folder
         self.files_list = files_list
+        self.k = k
+        self.processing_mode = processing_mode
         self.model = doc2vec.Doc2Vec.load(load_existing_path)
 
     def run(self):
@@ -86,7 +91,7 @@ class Doc2VecLoader(object):
                 if vector_size is None:
                     vector_size = cur_vec.shape[0]
                 all_results.append(cur_vec)
-        columns_names = [f"f_{x+1}" for x in range(vector_size)]
+        columns_names = [f"f_{x + 1}" for x in range(vector_size)]
         em_df = pd.DataFrame(all_results, columns=columns_names)
         em_df.insert(loc=0, column="file_name", value=file_names)
         return em_df

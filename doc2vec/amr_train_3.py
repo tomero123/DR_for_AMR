@@ -15,10 +15,10 @@ import time
 
 from doc2vec.Doc2VecTrainer import Doc2VecLoader
 from utils import get_file_name
-from enums import Bacteria
+from enums import Bacteria, ProcessingMode
 
 
-def get_label_df(amr_file_path, files_list, antibiotic):
+def get_label_df(amr_file_path, files_list, antibiotic, processing_mode, k):
     amr_df = pd.read_csv(amr_file_path)
     file_name_col = 'NCBI File Name'
     strain_col = 'Strain'
@@ -27,11 +27,25 @@ def get_label_df(amr_file_path, files_list, antibiotic):
     label_df = label_df[label_df[antibiotic] != '-']
     # Remove antibiotics with label 'I'
     label_df = label_df[label_df[antibiotic] != 'I']
+    # if NON_OVERLAPPING - duplicate rows and add "ind_x"
+    if processing_mode == ProcessingMode.NON_OVERLAPPING.value:
+        new_label_list = []
+        for ind in range(1, k + 1):
+            temp_label_df = label_df.copy()
+            temp_label_df['NCBI File Name'] = temp_label_df['NCBI File Name'].str.replace(".txt.gz", f"_ind_{ind}.txt.gz")
+            new_label_list.append(temp_label_df)
+        new_label_df = pd.concat(new_label_list)
+        new_label_df = new_label_df.sort_values(by=['NCBI File Name'])
+        new_label_df = new_label_df.reset_index()
+    elif processing_mode == ProcessingMode.OVERLAPPING.value:
+        new_label_df = label_df
+    else:
+        raise Exception(f"PROCESSING_MODE: {processing_mode} is invalid!")
     # Remove strains which are not in "files list"
-    ind_to_save = label_df[file_name_col].apply(lambda x: True if x in [x.replace(".pkl", ".txt.gz") for x in files_list] else False)
-    label_df = label_df[ind_to_save]
-    label_df.rename(columns={"NCBI File Name": "file_name", antibiotic: "label"}, inplace=True)
-    return label_df
+    ind_to_save = new_label_df[file_name_col].apply(lambda x: True if x in [x.replace(".pkl", ".txt.gz") for x in files_list] else False)
+    new_label_df = new_label_df[ind_to_save]
+    new_label_df.rename(columns={"NCBI File Name": "file_name", antibiotic: "label"}, inplace=True)
+    return new_label_df
 
 
 def write_data_to_excel(results_df, results_file_path, classes, model_parmas, all_results_dic):
@@ -67,7 +81,8 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas, al
         print("Error in write_roc_curve.error message: {}".format(e))
 
 
-def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic):
+def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed,
+                                    antibiotic, all_results_dic, processing_mode, k):
     try:
         X = final_df.drop(['label', 'file_name', 'Strain'], axis=1).copy()
         y = final_df[['label']].copy()
@@ -113,13 +128,13 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
 if __name__ == '__main__':
     # PARAMS
     BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) < 2 else sys.argv[1]
-    MODEL_BACTERIA = "genome_mix" if len(sys.argv) < 3 else sys.argv[2]
+    MODEL_BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) < 3 else sys.argv[2]
     K = 3 if len(sys.argv) < 4 else int(sys.argv[3])  # Choose K size
     random_seed = 1
     num_of_processes = 10
     k_folds = 10
     D2V_MODEL_NAME = "d2v_2020_05_15_0939.model" if len(sys.argv) < 5 else int(sys.argv[4])  # Model Name
-    PROCESSING_MODE = "non_overlapping"  # can be "non_overlapping" or "overlapping"
+    PROCESSING_MODE = ProcessingMode.NON_OVERLAPPING.value  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_data_summary.csv"
@@ -152,13 +167,13 @@ if __name__ == '__main__':
         files_list = os.listdir(input_folder)
         files_list = [x for x in files_list if ".pkl" in x]
         # get AMR data df
-        label_df = get_label_df(amr_file_path, files_list, antibiotic)
+        label_df = get_label_df(amr_file_path, files_list, antibiotic, PROCESSING_MODE, K)
         # get only the files with label for the specific antibiotic
         files_list = [x for x in files_list if x.replace(".pkl", ".txt.gz") in list(label_df['file_name'])]
         doc2vec_loader = Doc2VecLoader(input_folder, files_list, K, PROCESSING_MODE, os.path.join(models_folder, D2V_MODEL_NAME))
         em_df = doc2vec_loader.run()
         final_df = em_df.join(label_df.set_index('file_name'), on='file_name')
-        train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic)
+        train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic, PROCESSING_MODE, K)
         print(f"label_df shape: {label_df.shape}")
         print(f"em_df shape: {em_df.shape}")
         print(f"Finished training xgboost for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes")
