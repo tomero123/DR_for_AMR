@@ -118,10 +118,7 @@ if __name__ == '__main__':
     random_seed = 1
     num_of_processes = 10
     k_folds = 10
-    if os.name == 'nt':
-        D2V_MODEL_NAME = "d2v_2020_04_18_1235.model"  # Model Name
-    else:
-        D2V_MODEL_NAME = "d2v_2020_05_15_0939.model" if len(sys.argv) < 5 else int(sys.argv[4])  # Model Name
+    D2V_MODEL_NAME = "d2v_2020_05_15_0939.model" if len(sys.argv) < 5 else int(sys.argv[4])  # Model Name
     PROCESSING_MODE = "non_overlapping"  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
@@ -131,8 +128,12 @@ if __name__ == '__main__':
     model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
     # PARAMS END
     prefix = '..' if os.name == 'nt' else '.'
-    input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
-    models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "models", f"{PROCESSING_MODE}_{SHIFT_SIZE}", f"K_{K}")
+    if PROCESSING_MODE == "overlapping":
+        input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
+        models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "models", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
+    elif PROCESSING_MODE == "non_overlapping":
+        input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", "non_overlapping", f"K_{K}")
+        models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "models", "non_overlapping", f"K_{K}")
     amr_file_path = os.path.join(prefix, 'results_files', BACTERIA, amr_data_file_name)
     current_date_folder = get_file_name(None, None)
     results_file_folder = os.path.join(models_folder.replace("models", "embeddings_classification_results"), current_date_folder)
