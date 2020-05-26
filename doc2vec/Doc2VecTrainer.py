@@ -66,7 +66,7 @@ class Doc2VecTrainer(object):
 
 
 class Doc2VecLoader(object):
-    def __init__(self, input_folder, files_list, load_existing_path=None):
+    def __init__(self, input_folder, files_list, k, processing_mode, load_existing_path=None):
         self.input_folder = input_folder
         self.files_list = files_list
         self.model = doc2vec.Doc2Vec.load(load_existing_path)

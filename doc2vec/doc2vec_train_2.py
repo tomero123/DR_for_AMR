@@ -14,10 +14,10 @@ from enums import Bacteria
 
 if __name__ == '__main__':
     # PARAMS
-    BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) < 2 else sys.argv[1]
-    NUM_OF_PROCESSES = 1
-    K = 3 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
-    PROCESSING_MODE = "non_overlapping"  # can be "non_overlapping" or "overlapping"
+    BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) <= 1 else sys.argv[1]
+    PROCESSING_MODE = "overlapping" if len(sys.argv) <= 2 else sys.argv[2]  # can be "non_overlapping" or "overlapping"
+    K = 3 if len(sys.argv) <= 3 else int(sys.argv[3])  # Choose K size
+    NUM_OF_PROCESSES = 10 if len(sys.argv) <= 4 else int(sys.argv[4])
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     # workers = 1
@@ -34,6 +34,8 @@ if __name__ == '__main__':
     elif PROCESSING_MODE == "non_overlapping":
         input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", "non_overlapping", f"K_{K}")
         models_folder = os.path.join(prefix, "results_files", BACTERIA, "models", "non_overlapping", f"K_{K}")
+    else:
+        raise Exception(f"PROCESSING_MODE: {PROCESSING_MODE} is invalid!")
     files_list = os.listdir(input_folder)
     files_list = [x for x in files_list if ".pkl" in x]
     #

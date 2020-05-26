@@ -155,7 +155,7 @@ if __name__ == '__main__':
         label_df = get_label_df(amr_file_path, files_list, antibiotic)
         # get only the files with label for the specific antibiotic
         files_list = [x for x in files_list if x.replace(".pkl", ".txt.gz") in list(label_df['file_name'])]
-        doc2vec_loader = Doc2VecLoader(input_folder, files_list, os.path.join(models_folder, D2V_MODEL_NAME))
+        doc2vec_loader = Doc2VecLoader(input_folder, files_list, K, PROCESSING_MODE, os.path.join(models_folder, D2V_MODEL_NAME))
         em_df = doc2vec_loader.run()
         final_df = em_df.join(label_df.set_index('file_name'), on='file_name')
         train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic)
