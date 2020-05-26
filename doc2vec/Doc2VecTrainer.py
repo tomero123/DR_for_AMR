@@ -1,7 +1,5 @@
 import sys
 
-from enums import ProcessingMode
-
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
@@ -11,6 +9,8 @@ import pickle
 import pandas as pd
 import numpy as np
 from gensim.models import doc2vec
+
+from enums import ProcessingMode
 
 
 class GenomeDocs(object):
