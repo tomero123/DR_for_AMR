@@ -146,12 +146,13 @@ if __name__ == '__main__':
     if PROCESSING_MODE == "overlapping":
         input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
         models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "models", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
+        results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "embeddings_classification_results", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
     elif PROCESSING_MODE == "non_overlapping":
         input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", "non_overlapping", f"K_{K}")
         models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "models", "non_overlapping", f"K_{K}")
+        results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "embeddings_classification_results", "non_overlapping", f"K_{K}")
     amr_file_path = os.path.join(prefix, 'results_files', BACTERIA, amr_data_file_name)
     current_date_folder = get_file_name(None, None)
-    results_file_folder = os.path.join(models_folder.replace("models", "embeddings_classification_results"), current_date_folder)
 
     now_total = time.time()
     now_date = datetime.datetime.now()
