@@ -184,3 +184,4 @@ if __name__ == '__main__':
     workbook.close()
     now_date = datetime.datetime.now()
     print(f"Finished running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')} after {round((time.time() - now_total) / 3600, 4)} hours")
+    print("DONE!")
