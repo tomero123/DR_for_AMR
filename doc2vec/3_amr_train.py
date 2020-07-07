@@ -179,7 +179,7 @@ if __name__ == '__main__':
         print(f"em_df shape: {em_df.shape}")
         print(f"Finished training xgboost for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes")
     all_results_df = pd.DataFrame(all_results_dic)
-    writer = pd.ExcelWriter(os.path.join(results_file_folder, "ALL_RESULTS.xlsx"), engine='xlsxwriter')
+    writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_date_folder}.xlsx"), engine='xlsxwriter')
     all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
     workbook = writer.book
     workbook.close()
