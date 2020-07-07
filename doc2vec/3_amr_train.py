@@ -133,8 +133,8 @@ if __name__ == '__main__':
     random_seed = 1
     num_of_processes = 10
     k_folds = 10
-    D2V_MODEL_NAME = "d2v_2020_05_15_0939.model" if len(sys.argv) < 5 else int(sys.argv[4])  # Model Name
-    PROCESSING_MODE = ProcessingMode.NON_OVERLAPPING.value  # can be "non_overlapping" or "overlapping"
+    D2V_MODEL_NAME = "d2v_2020_05_26_1357.model" if len(sys.argv) < 5 else int(sys.argv[4])  # Model Name
+    PROCESSING_MODE = ProcessingMode.OVERLAPPING.value  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_data_summary.csv"
