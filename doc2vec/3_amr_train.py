@@ -133,7 +133,7 @@ if __name__ == '__main__':
     random_seed = 1
     num_of_processes = 10
     k_folds = 10
-    PROCESSING_MODE = ProcessingMode.NON_OVERLAPPING.value  # can be "non_overlapping" or "overlapping"
+    PROCESSING_MODE = ProcessingMode.OVERLAPPING.value  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_data_summary.csv"
