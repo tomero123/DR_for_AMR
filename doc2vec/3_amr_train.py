@@ -127,18 +127,28 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
 
 if __name__ == '__main__':
     # PARAMS
-    BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) < 2 else sys.argv[1]
+    BACTERIA = Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value if len(sys.argv) < 2 else sys.argv[1]
     MODEL_BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) < 3 else sys.argv[2]
     K = 3 if len(sys.argv) < 4 else int(sys.argv[3])  # Choose K size
     random_seed = 1
     num_of_processes = 10
     k_folds = 10
-    D2V_MODEL_NAME = "d2v_2020_05_15_0939.model" if len(sys.argv) < 5 else int(sys.argv[4])  # Model Name
     PROCESSING_MODE = ProcessingMode.NON_OVERLAPPING.value  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_data_summary.csv"
-    antibiotic_list = ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem']
+    # model name
+    if PROCESSING_MODE == ProcessingMode.NON_OVERLAPPING.value:
+        D2V_MODEL_NAME = "d2v_2020_05_15_0939.model" if len(sys.argv) < 5 else int(sys.argv[4])  # Model Name
+    elif PROCESSING_MODE == ProcessingMode.OVERLAPPING.value:
+        D2V_MODEL_NAME = "d2v_2020_05_26_1357.model" if len(sys.argv) < 5 else int(sys.argv[4])  # Model Name
+    # antibiotic list
+    if BACTERIA == Bacteria.PSEUDOMONAS_AUREGINOSA.value:
+        antibiotic_list = ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem']
+    elif BACTERIA == Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value:
+        antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide']
+    else:
+        antibiotic_list = []
     model = xgboost.XGBClassifier(random_state=random_seed)
     model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
     # PARAMS END
