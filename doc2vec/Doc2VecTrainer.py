@@ -44,7 +44,15 @@ class Doc2VecTrainer(object):
         print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
         corpus_data = GenomeDocs(self.input_folder, self.files_list, self.document_id_dic)
 
-        model = doc2vec.Doc2Vec(size=1024, window=10, min_count=3, sample=1e-4, negative=5, workers=self.workers, dm=1)
+        # params
+        vector_size = 1024
+        dm = 1
+        if self.processing_mode == ProcessingMode.NON_OVERLAPPING.value:
+            window = 5
+        else:
+            window = 25
+
+        model = doc2vec.Doc2Vec(vector_size=vector_size, window=window, min_count=3, sample=1e-4, negative=5, workers=self.workers, dm=dm)
         print('building vocabulary...')
         model.build_vocab(corpus_data)
 
