@@ -45,7 +45,7 @@ class Doc2VecTrainer(object):
         corpus_data = GenomeDocs(self.input_folder, self.files_list, self.document_id_dic)
 
         # params
-        vector_size = 512
+        vector_size = 250
         dm = 1
         min_count = 3
         sample = 1e-4
