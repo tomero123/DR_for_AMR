@@ -18,10 +18,8 @@ if __name__ == '__main__':
     VECTOR_SIZE = 1024 if len(sys.argv) <= 3 else sys.argv[3]
     WINDOW_SIZE = 5 if len(sys.argv) <= 4 else sys.argv[4]
     K = 3 if len(sys.argv) <= 5 else int(sys.argv[5])  # Choose K size
-    NUM_OF_PROCESSES = 10 if len(sys.argv) <= 6 else int(sys.argv[6])
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
-    # workers = 1
     # PARAMS END
 
     model_save_name = get_file_name("", "model")
