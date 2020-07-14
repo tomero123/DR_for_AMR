@@ -47,12 +47,17 @@ class Doc2VecTrainer(object):
         # params
         vector_size = 1024
         dm = 1
+        min_count = 3
+        sample = 1e-4
+        negative = 5
         if self.processing_mode == ProcessingMode.NON_OVERLAPPING.value:
             window = 5
         else:
             window = 25
 
-        model = doc2vec.Doc2Vec(vector_size=vector_size, window=window, min_count=3, sample=1e-4, negative=5, workers=self.workers, dm=dm)
+        model = doc2vec.Doc2Vec(vector_size=vector_size, window=window, min_count=min_count, sample=sample, negative=negative, workers=self.workers, dm=dm)
+        print(f"model params:\nvector_size: {vector_size}\nwindow: {window}\ndm: {dm}\nmin_count: {min_count}\n"
+              f"sample: {sample}\nnegative: {negative}\nworkers: {self.workers}")
         print('building vocabulary...')
         model.build_vocab(corpus_data)
 
@@ -70,7 +75,7 @@ class Doc2VecTrainer(object):
         document_id_dic = {}
         for file_name in self.files_list:
             document_id = file_name.replace(".pkl", "")
-            if self.processing_mode == "non_overlapping":
+            if self.processing_mode == ProcessingMode.NON_OVERLAPPING.value:
                 document_id = document_id[:document_id.rfind("ind") - 1]
             document_id_dic[file_name] = document_id
         return document_id_dic
