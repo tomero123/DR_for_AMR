@@ -127,72 +127,80 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
 
 if __name__ == '__main__':
     # PARAMS
-    BACTERIA = Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value if len(sys.argv) < 2 else sys.argv[1]
-    MODEL_BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) < 3 else sys.argv[2]
-    K = 3 if len(sys.argv) < 4 else int(sys.argv[3])  # Choose K size
+    MODEL_BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) <= 1 else sys.argv[1]
+    K = 3 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
     random_seed = 1
     num_of_processes = 10
     k_folds = 10
-    PROCESSING_MODE = ProcessingMode.OVERLAPPING.value  # can be "non_overlapping" or "overlapping"
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_data_summary.csv"
-    # model name
-    if PROCESSING_MODE == ProcessingMode.NON_OVERLAPPING.value:
-        D2V_MODEL_NAME = "d2v_2020_05_15_0939.model" if len(sys.argv) < 5 else int(sys.argv[4])  # Model Name
-    elif PROCESSING_MODE == ProcessingMode.OVERLAPPING.value:
-        D2V_MODEL_NAME = "d2v_2020_05_26_1357.model" if len(sys.argv) < 5 else int(sys.argv[4])  # Model Name
-    # antibiotic list
-    if BACTERIA == Bacteria.PSEUDOMONAS_AUREGINOSA.value:
-        antibiotic_list = ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem']
-    elif BACTERIA == Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value:
-        antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide']
-    else:
-        antibiotic_list = []
+    # BACTERIA list
+    BACTERIA_LIST = [Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
+                     Bacteria.PSEUDOMONAS_AUREGINOSA.value]
+    # Define list of model_names and processing method
+    D2V_MODEL_PROCESSING_MODE_LIST = [
+        ["d2v_2020_07_14_1435.model", ProcessingMode.OVERLAPPING.value],  # window: 25, vector: 1024
+        ["d2v_2020_07_14_1436.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 5, vector: 250
+        ["d2v_2020_07_14_1435.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 5, vector: 512
+        ["d2v_2020_07_14_1434.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 5, vector: 1024
+        ["d2v_2020_07_14_1511.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 10, vector: 250
+        ["d2v_2020_07_14_1510.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 10, vector: 512
+        ["d2v_2020_07_14_1558.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 10, vector: 1024
+    ]
+    # antibiotic dic
+    ANTIBIOTIC_DIC = {
+        Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem'],
+        Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value: ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide']
+    }
     model = xgboost.XGBClassifier(random_state=random_seed)
     model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
     # PARAMS END
     prefix = '..' if os.name == 'nt' else '.'
-    current_date_folder = get_file_name(None, None)
-    if PROCESSING_MODE == "overlapping":
-        input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
-        models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "models", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
-        results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "embeddings_classification_results", f"overlapping_{SHIFT_SIZE}", f"K_{K}", current_date_folder)
-    elif PROCESSING_MODE == "non_overlapping":
-        input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", "non_overlapping", f"K_{K}")
-        models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "models", "non_overlapping", f"K_{K}")
-        results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "embeddings_classification_results", "non_overlapping", f"K_{K}", current_date_folder)
-    amr_file_path = os.path.join(prefix, 'results_files', BACTERIA, amr_data_file_name)
-
-    now_total = time.time()
-    now_date = datetime.datetime.now()
-    print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}")
-    all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
-    for antibiotic in antibiotic_list:
-        now = time.time()
-        print(f"Started xgboost training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}")
-        if not os.path.exists(results_file_folder):
-            os.makedirs(results_file_folder)
-        results_file_name = D2V_MODEL_NAME.replace("d2v", antibiotic).replace(".model", ".xlsx")
-        results_file_path = os.path.join(results_file_folder, results_file_name)
-        files_list = os.listdir(input_folder)
-        files_list = [x for x in files_list if ".pkl" in x]
-        # get AMR data df
-        label_df = get_label_df(amr_file_path, files_list, antibiotic, PROCESSING_MODE, K)
-        # get only the files with label for the specific antibiotic
-        files_list = [x for x in files_list if x.replace(".pkl", ".txt.gz") in list(label_df['file_name'])]
-        doc2vec_loader = Doc2VecLoader(input_folder, files_list, K, PROCESSING_MODE, os.path.join(models_folder, D2V_MODEL_NAME))
-        em_df = doc2vec_loader.run()
-        final_df = em_df.join(label_df.set_index('file_name'), on='file_name')
-        train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic, PROCESSING_MODE, K)
-        print(f"label_df shape: {label_df.shape}")
-        print(f"em_df shape: {em_df.shape}")
-        print(f"Finished training xgboost for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes")
-    all_results_df = pd.DataFrame(all_results_dic)
-    writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_date_folder}.xlsx"), engine='xlsxwriter')
-    all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
-    workbook = writer.book
-    workbook.close()
-    now_date = datetime.datetime.now()
-    print(f"Finished running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')} after {round((time.time() - now_total) / 3600, 4)} hours")
+    for conf in D2V_MODEL_PROCESSING_MODE_LIST:
+        D2V_MODEL_NAME = conf[0]
+        PROCESSING_MODE = conf[1]
+        for BACTERIA in BACTERIA_LIST:
+            antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
+            current_date_folder = get_file_name(D2V_MODEL_NAME.replace(".model", ""), None)
+            if PROCESSING_MODE == "overlapping":
+                input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
+                models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "models", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
+                results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "embeddings_classification_results", f"overlapping_{SHIFT_SIZE}", f"K_{K}", current_date_folder)
+            elif PROCESSING_MODE == "non_overlapping":
+                input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", "non_overlapping", f"K_{K}")
+                models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "models", "non_overlapping", f"K_{K}")
+                results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "embeddings_classification_results", "non_overlapping", f"K_{K}", current_date_folder)
+            amr_file_path = os.path.join(prefix, 'results_files', BACTERIA, amr_data_file_name)
+            now_total = time.time()
+            now_date = datetime.datetime.now()
+            print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}  D2V_MODEL_NAME: {D2V_MODEL_NAME}  PROCESSING_MODE: {PROCESSING_MODE}  BACTERIA: {BACTERIA}")
+            all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
+            for antibiotic in antibiotic_list:
+                now = time.time()
+                print(f"Started xgboost training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}")
+                if not os.path.exists(results_file_folder):
+                    os.makedirs(results_file_folder)
+                results_file_name = D2V_MODEL_NAME.replace("d2v", antibiotic).replace(".model", ".xlsx")
+                results_file_path = os.path.join(results_file_folder, results_file_name)
+                files_list = os.listdir(input_folder)
+                files_list = [x for x in files_list if ".pkl" in x]
+                # get AMR data df
+                label_df = get_label_df(amr_file_path, files_list, antibiotic, PROCESSING_MODE, K)
+                # get only the files with label for the specific antibiotic
+                files_list = [x for x in files_list if x.replace(".pkl", ".txt.gz") in list(label_df['file_name'])]
+                doc2vec_loader = Doc2VecLoader(input_folder, files_list, K, PROCESSING_MODE, os.path.join(models_folder, D2V_MODEL_NAME))
+                em_df = doc2vec_loader.run()
+                final_df = em_df.join(label_df.set_index('file_name'), on='file_name')
+                train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic, PROCESSING_MODE, K)
+                print(f"label_df shape: {label_df.shape}")
+                print(f"em_df shape: {em_df.shape}")
+                print(f"Finished training xgboost for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes")
+            all_results_df = pd.DataFrame(all_results_dic)
+            writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_date_folder}.xlsx"), engine='xlsxwriter')
+            all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
+            workbook = writer.book
+            workbook.close()
+            now_date = datetime.datetime.now()
+            print(f"Finished running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')} after {round((time.time() - now_total) / 3600, 4)} hours; D2V_MODEL_NAME: {D2V_MODEL_NAME}  PROCESSING_MODE: {PROCESSING_MODE}  BACTERIA: {BACTERIA}")
     print("DONE!")
