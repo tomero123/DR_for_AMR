@@ -22,10 +22,12 @@ if __name__ == '__main__':
     # workers = 1
     # PARAMS END
 
+    model_save_name = get_file_name("", "model")
+
     now = time.time()
     now_date = datetime.datetime.now()
     print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"Started dov2vec training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} num of workers: {workers}")
+    print(f"Started dov2vec training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} num of workers: {workers} model_name: {model_save_name}")
     prefix = '..' if os.name == 'nt' else '.'
     if PROCESSING_MODE == "overlapping":
         input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_documents", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
@@ -39,9 +41,8 @@ if __name__ == '__main__':
     files_list = [x for x in files_list if ".pkl" in x]
     #
 
-    model_save_name = get_file_name("", "model")
     trainer = Doc2VecTrainer(input_folder, models_folder, files_list, model_save_name, PROCESSING_MODE, workers)
     trainer.run()
-    print(f"Finished training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 3600, 4)} hours")
+    print(f"Finished training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} model_name: {model_save_name} in {round((time.time() - now) / 3600, 4)} hours")
     now_date = datetime.datetime.now()
     print(f"Finished running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}")
