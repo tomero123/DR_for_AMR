@@ -7,7 +7,6 @@ import gc
 import os
 import pickle
 import pandas as pd
-import numpy as np
 from gensim.models import doc2vec
 
 from enums import ProcessingMode
@@ -29,13 +28,15 @@ class GenomeDocs(object):
 
 
 class Doc2VecTrainer(object):
-    def __init__(self, input_folder, models_folder, files_list, model_save_name, processing_mode, workers=1):
+    def __init__(self, input_folder, models_folder, files_list, model_save_name, processing_mode, vector_size, window_size,workers):
         self.input_folder = input_folder
         self.models_folder = models_folder
         self.files_list = files_list
         self.model_save_name = model_save_name
         self.workers = workers
         self.processing_mode = processing_mode
+        self.vector_size = vector_size
+        self.window_size = window_size
         self.document_id_dic = self.get_document_id_dic()
 
     def run(self):
@@ -45,16 +46,12 @@ class Doc2VecTrainer(object):
         corpus_data = GenomeDocs(self.input_folder, self.files_list, self.document_id_dic)
 
         # params
-        vector_size = 250
+        vector_size = self.vector_size
         dm = 1
         min_count = 3
         sample = 1e-4
         negative = 5
-        if self.processing_mode == ProcessingMode.NON_OVERLAPPING.value:
-            window = 5
-        else:
-            window = 25
-
+        window = self.window_size
         model = doc2vec.Doc2Vec(vector_size=vector_size, window=window, min_count=min_count, sample=sample, negative=negative, workers=self.workers, dm=dm)
         print(f"model params:\nvector_size: {vector_size}\nwindow: {window}\ndm: {dm}\nmin_count: {min_count}\n"
               f"sample: {sample}\nnegative: {negative}\nworkers: {self.workers}")

@@ -15,8 +15,10 @@ if __name__ == '__main__':
     # PARAMS
     BACTERIA = Bacteria.GENOME_MIX_NEW.value if len(sys.argv) <= 1 else sys.argv[1]
     PROCESSING_MODE = ProcessingMode.NON_OVERLAPPING.value if len(sys.argv) <= 2 else sys.argv[2]  # can be "non_overlapping" or "overlapping"
-    K = 3 if len(sys.argv) <= 3 else int(sys.argv[3])  # Choose K size
-    NUM_OF_PROCESSES = 10 if len(sys.argv) <= 4 else int(sys.argv[4])
+    VECTOR_SIZE = 1024 if len(sys.argv) <= 3 else sys.argv[3]
+    WINDOW_SIZE = 5 if len(sys.argv) <= 4 else sys.argv[4]
+    K = 3 if len(sys.argv) <= 5 else int(sys.argv[5])  # Choose K size
+    NUM_OF_PROCESSES = 10 if len(sys.argv) <= 6 else int(sys.argv[6])
     SHIFT_SIZE = 1  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     # workers = 1
@@ -41,7 +43,7 @@ if __name__ == '__main__':
     files_list = [x for x in files_list if ".pkl" in x]
     #
 
-    trainer = Doc2VecTrainer(input_folder, models_folder, files_list, model_save_name, PROCESSING_MODE, workers)
+    trainer = Doc2VecTrainer(input_folder, models_folder, files_list, model_save_name, PROCESSING_MODE, VECTOR_SIZE, WINDOW_SIZE, workers)
     trainer.run()
     print(f"Finished training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} model_name: {model_save_name} in {round((time.time() - now) / 3600, 4)} hours")
     now_date = datetime.datetime.now()
