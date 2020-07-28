@@ -127,7 +127,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
 
 if __name__ == '__main__':
     # PARAMS
-    MODEL_BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) <= 1 else sys.argv[1]
+    MODEL_BACTERIA = Bacteria.GENOME_MIX_NEW.value if len(sys.argv) <= 1 else sys.argv[1]
     K = 3 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
     random_seed = 1
     num_of_processes = 10
