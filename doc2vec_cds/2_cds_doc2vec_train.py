@@ -29,7 +29,7 @@ if __name__ == '__main__':
     print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Started dov2vec training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} num of workers: {workers} model_name: {model_save_name}")
     prefix = '..' if os.name == 'nt' else '.'
-    input_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_genome_files")
+    input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_files")
     if PROCESSING_MODE == ProcessingMode.OVERLAPPING.value:
         models_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_models", f"overlapping_{SHIFT_SIZE}", f"K_{K}")
     elif PROCESSING_MODE == ProcessingMode.NON_OVERLAPPING.value:
