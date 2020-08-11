@@ -6,6 +6,7 @@ class Bacteria(Enum):
     PSEUDOMONAS_AUREGINOSA = "pseudomonas_aureginosa"
     GENOME_MIX = "genome_mix"
     GENOME_MIX_NEW = "genome_mix_new"
+    TEST = "test"
 
 
 class ProcessingMode(Enum):
