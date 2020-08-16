@@ -38,7 +38,7 @@ class GenomeDocsCDS(object):
                 for doc_ind, doc in enumerate(documents_list):
                     document_id += 1
                     yield doc2vec.TaggedDocument(doc, [document_id])
-            if file_ind % 1000 == 0:
+            if file_ind % 1 == 0:
                 print(f"Finished processing file #{file_ind}, file_name:{file_name.replace('.fna.gz', '')}, number of genes: {seq_id} document_id: {document_id}")
 
     def _get_document_from_fasta(self, sequence: str):
