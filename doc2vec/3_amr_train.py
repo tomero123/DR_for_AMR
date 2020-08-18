@@ -127,8 +127,8 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
 
 if __name__ == '__main__':
     # PARAMS
-    MODEL_BACTERIA = Bacteria.GENOME_MIX_NEW.value if len(sys.argv) <= 1 else sys.argv[1]
-    K = 3 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
+    MODEL_BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) <= 1 else sys.argv[1]
+    K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
     random_seed = 1
     num_of_processes = 10
     k_folds = 10
@@ -140,13 +140,7 @@ if __name__ == '__main__':
                      Bacteria.PSEUDOMONAS_AUREGINOSA.value]
     # Define list of model_names and processing method
     D2V_MODEL_PROCESSING_MODE_LIST = [
-        ["d2v_2020_07_14_1435.model", ProcessingMode.OVERLAPPING.value],  # window: 25, vector: 1024
-        ["d2v_2020_07_14_1436.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 5, vector: 250
-        ["d2v_2020_07_14_1435.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 5, vector: 512
-        ["d2v_2020_07_14_1434.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 5, vector: 1024
-        ["d2v_2020_07_14_1511.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 10, vector: 250
-        ["d2v_2020_07_14_1510.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 10, vector: 512
-        ["d2v_2020_07_14_1558.model", ProcessingMode.NON_OVERLAPPING.value],  # window: 10, vector: 1024
+        ["d2v_2020_07_30_1234.model", ProcessingMode.NON_OVERLAPPING.value],
     ]
     # antibiotic dic
     ANTIBIOTIC_DIC = {
