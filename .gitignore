@@ -104,3 +104,4 @@ venv.bak/
 .mypy_cache/
 results_files/*
 data_files/*
+bash_files/*
