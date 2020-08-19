@@ -75,8 +75,9 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas, al
         # percent_format = workbook.add_format({'num_format': '0.00%'})
         worksheet.set_column('A:Z', 15)
         workbook.close()
+        return accuracy, f1_score
         # write_roc_curve(y_pred, y_true, results_file_path)
-        print('Finished creating results file!')
+        # print('Finished creating results file!')
     except Exception as e:
         print("Error in write_roc_curve.error message: {}".format(e))
 
@@ -119,8 +120,9 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             'Prediction': predictions
         })
         model_parmas = json.dumps(model.get_params())
-        write_data_to_excel(results_df, results_file_path, classes, model_parmas, all_results_dic)
-        print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
+        accuracy, f1_score = write_data_to_excel(results_df, results_file_path, classes, model_parmas, all_results_dic)
+        return accuracy, f1_score
+        # print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
 
@@ -186,10 +188,10 @@ if __name__ == '__main__':
                 doc2vec_loader = Doc2VecLoader(input_folder, files_list, K, PROCESSING_MODE, os.path.join(models_folder, D2V_MODEL_NAME))
                 em_df = doc2vec_loader.run()
                 final_df = em_df.join(label_df.set_index('file_name'), on='file_name')
-                train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic, PROCESSING_MODE, K)
-                print(f"label_df shape: {label_df.shape}")
-                print(f"em_df shape: {em_df.shape}")
-                print(f"Finished training xgboost for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes")
+                accuracy, f1_score = train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic, PROCESSING_MODE, K)
+                # print(f"label_df shape: {label_df.shape}")
+                # print(f"em_df shape: {em_df.shape}")
+                print(f"Finished training xgboost for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes  accuracy: {accuracy}  f1_score: {f1_score}")
             all_results_df = pd.DataFrame(all_results_dic)
             writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_date_folder}.xlsx"), engine='xlsxwriter')
             all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)

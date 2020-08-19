@@ -7,6 +7,7 @@ import gc
 import os
 import pickle
 import pandas as pd
+import time
 from gensim.models import doc2vec
 
 from enums import ProcessingMode
@@ -87,10 +88,9 @@ class Doc2VecLoader(object):
         self.model = doc2vec.Doc2Vec.load(load_existing_path)
 
     def run(self):
+        now = time.time()
         gc.collect()
-        print('Loading an exiting model')
-        print(f"Number of documents: {len(self.files_list)}")
-        print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
+        print(f"Loading doc2vec model. Number of documents: {len(self.files_list)}. doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
         vector_size = None
         all_results = []
         file_names = [x.replace(".pkl", ".txt.gz") for x in self.files_list]
@@ -104,4 +104,5 @@ class Doc2VecLoader(object):
         columns_names = [f"f_{x + 1}" for x in range(vector_size)]
         em_df = pd.DataFrame(all_results, columns=columns_names)
         em_df.insert(loc=0, column="file_name", value=file_names)
+        print(f"Finished creating embeddings in {round((time.time() - now) / 60, 4)} minutes")
         return em_df
