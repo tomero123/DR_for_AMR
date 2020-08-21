@@ -49,7 +49,7 @@ class Doc2VecTrainer(object):
         # params
         vector_size = self.vector_size
         dm = 1
-        min_count = 3
+        min_count = 100
         sample = 1e-4
         negative = 5
         window = self.window_size
@@ -97,7 +97,8 @@ class Doc2VecLoader(object):
         for ind, file_name in enumerate(self.files_list):
             with open(os.path.join(self.input_folder, file_name), 'rb') as f:
                 cur_doc = pickle.load(f)
-                cur_vec = self.model.infer_vector(cur_doc)
+                # cur_vec = self.model.infer_vector(cur_doc)
+                cur_vec = self.model.infer_vector(cur_doc,  alpha=0.1, min_alpha=0.0001, steps=100)
                 if vector_size is None:
                     vector_size = cur_vec.shape[0]
                 all_results.append(cur_vec)

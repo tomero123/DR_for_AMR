@@ -186,7 +186,7 @@ def create_genome_document(input_list):
             document_list = []
             for fasta in fasta_sequences:
                 name, sequence = fasta.id, str(fasta.seq)
-                for start_ind in range(len(sequence) - K + 1):
+                for start_ind in range(0, len(sequence) - K + 1, SHIFT_SIZE):
                     key = sequence[start_ind:start_ind + K]
                     document_list.append(key)
             with open(os.path.join(output_folder, file_name.replace(".fna.gz", ".pkl")), 'wb') as outfile:
@@ -202,9 +202,6 @@ def create_genome_document(input_list):
                         document_list.append(key)
                 with open(os.path.join(output_folder, file_name.replace(".fna.gz", f"_ind_{k_ind+1}.pkl")), 'wb') as outfile:
                     pickle.dump(document_list, outfile, protocol=pickle.HIGHEST_PROTOCOL)
-                # with open(os.path.join(output_folder, file_name.replace(".fna.gz", f"_ind_{k_ind+1}.json")), 'w') as outfile:
-                #     json.dump(document_list, outfile)
-
         else:
             raise Exception(f"PROCESSING_MODE: {PROCESSING_MODE} is invalid!")
     except Exception as e:

@@ -36,10 +36,10 @@ class GenomeDocsCDS(object):
                 name, sequence = fasta.id, str(fasta.seq)
                 documents_list = self._get_document_from_fasta(sequence)
                 for doc_ind, doc in enumerate(documents_list):
-                    document_id += 1
                     yield doc2vec.TaggedDocument(doc, [document_id])
             if file_ind % 1 == 0:
                 print(f"Finished processing file #{file_ind}, file_name:{file_name.replace('.fna.gz', '')}, number of genes: {seq_id} document_id: {document_id}")
+            document_id += 1
 
     def _get_document_from_fasta(self, sequence: str):
         '''
@@ -59,7 +59,7 @@ class GenomeDocsCDS(object):
                 documents_list.append(cur_doc)
         elif self.processing_mode == ProcessingMode.OVERLAPPING.value:
             cur_doc = []
-            for start_ind in range(len(sequence) - self.k + 1):
+            for start_ind in range(0, len(sequence) - self.k + 1, self.shift_size):
                 key = sequence[start_ind:start_ind + self.k]
                 cur_doc.append(key)
             documents_list.append(cur_doc)
@@ -104,7 +104,7 @@ class Doc2VecCDS(object):
         vector_size = self.vector_size
         window = self.window_size
         dm = 1
-        min_count = 3
+        min_count = 50
         sample = 1e-4
         negative = 5
         model = doc2vec.Doc2Vec(vector_size=vector_size, window=window, min_count=min_count,

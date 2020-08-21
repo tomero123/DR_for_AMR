@@ -64,10 +64,13 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas, al
         row_ind += confusion_matrix_df.shape[0] + 2
         accuracy = metrics.accuracy_score(y_true, y_pred)
         f1_score = metrics.f1_score(y_true, y_pred, labels=classes, pos_label="R")
+        fpr, tpr, _ = metrics.roc_curve(y_true, y_pred)
+        auc = metrics.auc(fpr, tpr)
         all_results_dic["antibiotic"].append(antibiotic)
         all_results_dic["accuracy"].append(accuracy)
         all_results_dic["f1_score"].append(f1_score)
-        evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score], ["model_parmas", model_parmas]]
+        all_results_dic["auc"].append(auc)
+        evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score], ["auc", auc], ["model_parmas", model_parmas]]
         evaluation_df = pd.DataFrame(evaluation_list, columns=["metric", "value"])
         evaluation_df.to_excel(writer, sheet_name=name, startcol=col_ind, startrow=row_ind, index=False)
         workbook = writer.book
@@ -75,9 +78,7 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas, al
         # percent_format = workbook.add_format({'num_format': '0.00%'})
         worksheet.set_column('A:Z', 15)
         workbook.close()
-        return accuracy, f1_score
-        # write_roc_curve(y_pred, y_true, results_file_path)
-        # print('Finished creating results file!')
+        return accuracy, f1_score, auc
     except Exception as e:
         print("Error in write_roc_curve.error message: {}".format(e))
 
@@ -120,8 +121,8 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, model_pa
             'Prediction': predictions
         })
         model_parmas = json.dumps(model.get_params())
-        accuracy, f1_score = write_data_to_excel(results_df, results_file_path, classes, model_parmas, all_results_dic)
-        return accuracy, f1_score
+        accuracy, f1_score, auc = write_data_to_excel(results_df, results_file_path, classes, model_parmas, all_results_dic)
+        return accuracy, f1_score, auc
         # print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
@@ -139,7 +140,8 @@ if __name__ == '__main__':
     amr_data_file_name = "amr_data_summary.csv"
     # BACTERIA list
     BACTERIA_LIST = [Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
-                     Bacteria.PSEUDOMONAS_AUREGINOSA.value]
+                     # Bacteria.PSEUDOMONAS_AUREGINOSA.value
+                     ]
     # Define list of model_names and processing method
     D2V_MODEL_PROCESSING_MODE_LIST = [
         ["d2v_2020_07_30_1234.model", ProcessingMode.NON_OVERLAPPING.value],
@@ -171,7 +173,7 @@ if __name__ == '__main__':
             now_total = time.time()
             now_date = datetime.datetime.now()
             print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}  D2V_MODEL_NAME: {D2V_MODEL_NAME}  PROCESSING_MODE: {PROCESSING_MODE}  BACTERIA: {BACTERIA}")
-            all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
+            all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": [], "auc": []}
             for antibiotic in antibiotic_list:
                 now = time.time()
                 print(f"Started xgboost training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}")
@@ -188,10 +190,10 @@ if __name__ == '__main__':
                 doc2vec_loader = Doc2VecLoader(input_folder, files_list, K, PROCESSING_MODE, os.path.join(models_folder, D2V_MODEL_NAME))
                 em_df = doc2vec_loader.run()
                 final_df = em_df.join(label_df.set_index('file_name'), on='file_name')
-                accuracy, f1_score = train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic, PROCESSING_MODE, K)
+                accuracy, f1_score, auc = train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic, PROCESSING_MODE, K)
                 # print(f"label_df shape: {label_df.shape}")
                 # print(f"em_df shape: {em_df.shape}")
-                print(f"Finished training xgboost for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes  accuracy: {accuracy}  f1_score: {f1_score}")
+                print(f"Finished training xgboost for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((time.time() - now) / 60, 4)} minutes  accuracy: {accuracy}  f1_score: {f1_score}   auc: {auc}")
             all_results_df = pd.DataFrame(all_results_dic)
             writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_date_folder}.xlsx"), engine='xlsxwriter')
             all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
