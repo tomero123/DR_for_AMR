@@ -37,7 +37,7 @@ class GenomeDocsCDS(object):
                     documents_list = self._get_document_from_fasta(sequence)
                     for doc_ind, doc in enumerate(documents_list):
                         yield doc2vec.TaggedDocument(doc, [document_id])
-                if file_ind % 1 == 0:
+                if file_ind % 100 == 0:
                     print(f"Finished processing file #{file_ind}, file_name:{file_name.replace('.fna.gz', '')}, number of genes: {seq_id} document_id: {document_id}")
             except Exception as e:
                 print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
