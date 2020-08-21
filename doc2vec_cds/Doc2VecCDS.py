@@ -28,17 +28,21 @@ class GenomeDocsCDS(object):
     def __iter__(self):
         document_id = 0
         for file_ind, file_name in enumerate(self.files_list):
-            # print(f"ind: {ind}, doc len: {len(cur_doc)}")
-            fasta_sequences = SeqIO.parse(_open(os.path.join(self.input_folder, file_name)), 'fasta')
-            seq_id = 0
-            for fasta in fasta_sequences:
-                seq_id += 1
-                name, sequence = fasta.id, str(fasta.seq)
-                documents_list = self._get_document_from_fasta(sequence)
-                for doc_ind, doc in enumerate(documents_list):
-                    yield doc2vec.TaggedDocument(doc, [document_id])
-            if file_ind % 1 == 0:
-                print(f"Finished processing file #{file_ind}, file_name:{file_name.replace('.fna.gz', '')}, number of genes: {seq_id} document_id: {document_id}")
+            try:
+                fasta_sequences = SeqIO.parse(_open(os.path.join(self.input_folder, file_name)), 'fasta')
+                seq_id = 0
+                for fasta in fasta_sequences:
+                    seq_id += 1
+                    name, sequence = fasta.id, str(fasta.seq)
+                    documents_list = self._get_document_from_fasta(sequence)
+                    for doc_ind, doc in enumerate(documents_list):
+                        yield doc2vec.TaggedDocument(doc, [document_id])
+                if file_ind % 1 == 0:
+                    print(f"Finished processing file #{file_ind}, file_name:{file_name.replace('.fna.gz', '')}, number of genes: {seq_id} document_id: {document_id}")
+            except Exception as e:
+                print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
+                print(f"name: {name}  sequence: {sequence}")
+                print(f"Error message: {e}")
             document_id += 1
 
     def _get_document_from_fasta(self, sequence: str):
