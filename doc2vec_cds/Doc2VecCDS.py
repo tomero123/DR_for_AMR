@@ -100,13 +100,16 @@ class Doc2VecCDS(object):
         print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
         corpus_data = GenomeDocsCDS(self.input_folder, self.files_list, self.processing_mode, self.k, self.shift_size)
 
-        # params
+        # PARAMS
         vector_size = self.vector_size
         window = self.window_size
         dm = 1
         min_count = 50
         sample = 1e-4
         negative = 5
+        epochs = 10
+        # PARAMS END
+
         model = doc2vec.Doc2Vec(vector_size=vector_size, window=window, min_count=min_count,
                                 sample=sample, negative=negative, workers=self.workers, dm=dm,
                                 # compute_loss=True, callbacks=[callback()]
@@ -116,7 +119,7 @@ class Doc2VecCDS(object):
 
         print('building vocabulary...')
         model.build_vocab(corpus_data)
-        model.train(corpus_data, total_examples=model.corpus_count, epochs=20)
+        model.train(corpus_data, total_examples=model.corpus_count, epochs=epochs)
 
         if not os.path.exists(self.models_folder):
             os.makedirs(self.models_folder)
