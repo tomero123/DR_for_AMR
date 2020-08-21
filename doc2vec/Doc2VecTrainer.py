@@ -53,13 +53,15 @@ class Doc2VecTrainer(object):
         sample = 1e-4
         negative = 5
         window = self.window_size
+        epochs = 20
+
         model = doc2vec.Doc2Vec(vector_size=vector_size, window=window, min_count=min_count, sample=sample, negative=negative, workers=self.workers, dm=dm)
         print(f"model params:\nvector_size: {vector_size}\nwindow: {window}\ndm: {dm}\nmin_count: {min_count}\n"
               f"sample: {sample}\nnegative: {negative}\nworkers: {self.workers}")
         print('building vocabulary...')
         model.build_vocab(corpus_data)
 
-        model.train(corpus_data, total_examples=model.corpus_count, epochs=20)
+        model.train(corpus_data, total_examples=model.corpus_count, epochs=epochs)
 
         if not os.path.exists(self.models_folder):
             os.makedirs(self.models_folder)
