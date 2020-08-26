@@ -11,10 +11,10 @@ from utils import create_genome_document
 from enums import Bacteria, ProcessingMode
 
 # PARAMS
-BACTERIA = Bacteria.GENOME_MIX_NEW.value if len(sys.argv) <= 1 else sys.argv[1]
+BACTERIA = Bacteria.TEST.value if len(sys.argv) <= 1 else sys.argv[1]
 PROCESSING_MODE = ProcessingMode.OVERLAPPING.value if len(sys.argv) <= 2 else sys.argv[2]  # can be "non_overlapping" or "overlapping"
-K = 3 if len(sys.argv) <= 3 else int(sys.argv[3])  # Choose K size
-NUM_OF_PROCESSES = 10 if len(sys.argv) <= 4 else int(sys.argv[4])
+K = 10 if len(sys.argv) <= 3 else int(sys.argv[3])  # Choose K size
+NUM_OF_PROCESSES = 1 if len(sys.argv) <= 4 else int(sys.argv[4])
 SHIFT_SIZE = 1 if len(sys.argv) <= 5 else int(sys.argv[5]) # relevant only for PROCESSING_MODE "overlapping"
 
 prefix = '..' if os.name == 'nt' else '.'
