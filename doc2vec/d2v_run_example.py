@@ -46,20 +46,25 @@ class Doc2VecTrainer(object):
         negative = 5
         window = self.window_size
         epochs = 20
-
         model = doc2vec.Doc2Vec(vector_size=vector_size, window=window, min_count=min_count, sample=sample, negative=negative, workers=self.workers, dm=dm)
         print(f"model params:\nvector_size: {vector_size}\nwindow: {window}\ndm: {dm}\nmin_count: {min_count}\n"
               f"sample: {sample}\nnegative: {negative}\nworkers: {self.workers}")
         print('building vocabulary...')
+        t2 = time.time()
         model.build_vocab(corpus_data)
-
+        t3 = time.time()
+        print(f"build_vocab took {t3 - t2} secs")
         model.train(corpus_data, total_examples=model.corpus_count, epochs=epochs)
-
+        t4 = time.time()
+        print(f"train took {t4 - t3} secs")
         if not os.path.exists(self.models_folder):
             os.makedirs(self.models_folder)
 
         model.save(os.path.join(self.models_folder, "d2v" + self.model_save_name))
         model.save_word2vec_format(os.path.join(self.models_folder, "w2v" + self.model_save_name))
+
+        t5 = time.time()
+        print(f"save took {t5 - t4} secs")
 
         print('total docs learned %s' % (len(model.docvecs)))
 
@@ -95,7 +100,8 @@ class Doc2VecLoader(object):
 
 
 if __name__ == '__main__':
-    input_folder = r"C:\tomer_thesis\results_files\test\genome_files"
+    prefix = '..' if os.name == 'nt' else '.'
+    input_folder = os.path.join(prefix, "results_files", "test", "genome_files")
     model_save_name = "example.model"
     files_list = os.listdir(input_folder)
     files_list = [x for x in files_list if ".pkl" in x]
