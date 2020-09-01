@@ -109,7 +109,7 @@ class Doc2VecCDS(object):
         window = self.window_size
         dm = 1
         min_count = 100
-        sample = 1e-5
+        sample = 1e-4
         negative = 5
         epochs = 10
         # PARAMS END
