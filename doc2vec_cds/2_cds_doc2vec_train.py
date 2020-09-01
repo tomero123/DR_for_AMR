@@ -18,7 +18,7 @@ if __name__ == '__main__':
     VECTOR_SIZE = 300 if len(sys.argv) <= 3 else int(sys.argv[3])
     WINDOW_SIZE = 5 if len(sys.argv) <= 4 else int(sys.argv[4])
     K = 10 if len(sys.argv) <= 5 else int(sys.argv[5])  # Choose K size
-    SHIFT_SIZE = 2  # relevant only for PROCESSING_MODE "overlapping"
+    SHIFT_SIZE = 2 if len(sys.argv) <= 6 else int(sys.argv[6])  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     # PARAMS END
 
