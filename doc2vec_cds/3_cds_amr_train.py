@@ -15,12 +15,10 @@ import json
 import os
 import pandas as pd
 import numpy as np
-import xgboost
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
 import time
 
-from doc2vec.Doc2VecTrainer import Doc2VecLoader
 from utils import get_file_name
 from enums import Bacteria, ProcessingMode
 
@@ -113,16 +111,15 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, k_folds,
             'Strain': strains_list,
             'File name': files_names,
             'Label': y.values.ravel(),
-            'Susceptible score': [x[susceptible_ind] for x in temp_scores],
             'Resistance score': [x[resistance_ind] for x in temp_scores],
             'Prediction': predictions
         })
 
         f = {'Strain': 'first', 'Label': 'first', 'Resistance score': 'mean'}
         results_df_agg = results_df.groupby('File name', as_index=False).agg(f)
-
+        results_df_agg['Prediction'] = np.where(results_df_agg['Resistance score'] > 0.5, 'R', 'S')
         model_parmas = json.dumps(model.get_params())
-        accuracy, f1_score, auc = write_data_to_excel(results_df, results_file_path, classes, model_parmas, all_results_dic)
+        accuracy, f1_score, auc = write_data_to_excel(results_df_agg, results_file_path, classes, model_parmas, all_results_dic)
         return accuracy, f1_score, auc
         # print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
     except Exception as e:
@@ -141,12 +138,13 @@ if __name__ == '__main__':
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_data_summary.csv"
     # BACTERIA list
-    BACTERIA_LIST = [Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
-                     # Bacteria.PSEUDOMONAS_AUREGINOSA.value
-                     ]
+    BACTERIA_LIST = [
+        Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
+        Bacteria.PSEUDOMONAS_AUREGINOSA.value
+    ]
     # Define list of model_names and processing method
     D2V_MODEL_PROCESSING_MODE_LIST = [
-        ["d2v_2020_09_01_1231.model", ProcessingMode.OVERLAPPING.value],
+        ["d2v_2020_08_21_1814.model", ProcessingMode.OVERLAPPING.value],
     ]
     # antibiotic dic
     ANTIBIOTIC_DIC = {
