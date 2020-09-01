@@ -108,8 +108,8 @@ class Doc2VecCDS(object):
         vector_size = self.vector_size
         window = self.window_size
         dm = 1
-        min_count = 50
-        sample = 1e-4
+        min_count = 100
+        sample = 1e-5
         negative = 5
         epochs = 10
         # PARAMS END
