@@ -35,22 +35,14 @@ class GenomeDocsCDS(object):
         document_id = 0
         for file_ind, file_name in enumerate(self.files_list):
             try:
-                fasta_sequences = SeqIO.parse(_open(os.path.join(self.input_folder, file_name)), 'fasta')
-                seq_id = 0
-                for fasta in fasta_sequences:
-                    x = random.random()
-                    # if x <= 0.5:
-                    #     continue
-                    seq_id += 1
-                    name, sequence = fasta.id, str(fasta.seq)
-                    documents_list = self._get_document_from_fasta(sequence)
-                    for doc_ind, doc in enumerate(documents_list):
+                with open(os.path.join(self.input_folder, file_name), 'rb') as f:
+                    cur_doc = pickle.load(f)
+                    for seq_id, doc in enumerate(cur_doc):
                         yield doc2vec.TaggedDocument(doc, [document_id])
                 if file_ind % 1 == 0:
                     print(f"Finished processing file #{file_ind}, file_name:{file_name.replace('.fna.gz', '')}, number of genes: {seq_id} document_id: {document_id}")
             except Exception as e:
-                print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
-                print(f"name: {name}  sequence: {sequence}")
+                print(f"****ERROR IN PARSING file: {file_name}")
                 print(f"Error message: {e}")
             document_id += 1
 
@@ -184,7 +176,7 @@ if __name__ == '__main__':
     input_folder = os.path.join(prefix, "results_files", "test", "cds_genome_files")
     model_save_name = "example.model"
     files_list = os.listdir(input_folder)
-    files_list = [x for x in files_list if ".fna.gz" in x]
+    files_list = [x for x in files_list if ".pkl" in x]
     VECTOR_SIZE = 300
     WINDOW_SIZE = 5
     workers = multiprocessing.cpu_count()
