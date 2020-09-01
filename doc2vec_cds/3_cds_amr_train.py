@@ -21,7 +21,7 @@ from utils import get_file_name
 from enums import Bacteria, ProcessingMode
 
 
-def get_label_dic(amr_file_path, files_list, antibiotic, processing_mode, k):
+def get_label_dic(amr_file_path, files_list, antibiotic):
     amr_df = pd.read_csv(amr_file_path)
     file_name_col = 'NCBI File Name'
     strain_col = 'Strain'
@@ -181,8 +181,9 @@ if __name__ == '__main__':
                 results_file_path = os.path.join(results_file_folder, results_file_name)
                 files_list = os.listdir(input_folder)
                 files_list = [x for x in files_list if ".fna.gz" in x]
+                print(f"len files_list: {len(files_list)}")
                 # get AMR data df
-                label_df, label_dic = get_label_dic(amr_file_path, files_list, antibiotic, PROCESSING_MODE, K)
+                label_df, label_dic = get_label_dic(amr_file_path, files_list, antibiotic)
                 t2 = time.time()
                 print(f"Finished running get_label_dic in {round((t2-t1) / 60, 4)} minutes. label_dic len: {len(label_dic)}")
                 # get only the files with label for the specific antibiotic
