@@ -5,7 +5,6 @@ sys.path.append("/home/tomeror/tomer_thesis")
 
 import gc
 import os
-import pickle
 import pandas as pd
 import gzip
 from functools import partial
