@@ -1,24 +1,22 @@
 import sys
-import traceback
-
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.utils import compute_sample_weight
-
-from doc2vec_cds.Doc2VecCDS import Doc2VecCDSLoader
 
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
+import traceback
 import multiprocessing
 import datetime
 import json
 import os
 import pandas as pd
 import numpy as np
+import time
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.utils import compute_sample_weight
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
-import time
 
+from doc2vec_cds.Doc2VecCDS import Doc2VecCDSLoader
 from utils import get_file_name
 from enums import Bacteria, ProcessingMode
 
