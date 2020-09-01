@@ -176,7 +176,7 @@ if __name__ == '__main__':
     input_folder = os.path.join(prefix, "results_files", "test", "cds_genome_files")
     model_save_name = "example.model"
     files_list = os.listdir(input_folder)
-    files_list = [x for x in files_list if ".pkl" in x]
+    files_list = [x for x in files_list if "all_files.pkl" in x]
     VECTOR_SIZE = 300
     WINDOW_SIZE = 5
     workers = multiprocessing.cpu_count()

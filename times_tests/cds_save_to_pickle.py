@@ -56,12 +56,11 @@ PROCESSING_MODE = ProcessingMode.OVERLAPPING.value
 K = 10
 SHIFT_SIZE = 1
 
-
+all_genes_list = []
 for file_ind, file_name in enumerate(files_list):
     try:
         fasta_sequences = SeqIO.parse(_open(os.path.join(input_folder, file_name)), 'fasta')
         seq_id = 0
-        all_genes_list = []
         for fasta in fasta_sequences:
             x = random.random()
             # if x <= 0.5:
@@ -71,8 +70,6 @@ for file_ind, file_name in enumerate(files_list):
             documents_list = _get_document_from_fasta(sequence, PROCESSING_MODE, K, SHIFT_SIZE)
             all_genes_list.append(documents_list[0])
 
-        with open(os.path.join(input_folder, file_name.replace(".fna.gz", ".pkl")), 'wb') as outfile:
-            pickle.dump(all_genes_list, outfile, protocol=pickle.HIGHEST_PROTOCOL)
         if file_ind % 1 == 0:
             print(f"Finished processing file #{file_ind}, file_name:{file_name.replace('.fna.gz', '')}, number of genes: {seq_id} document_id: {document_id}")
     except Exception as e:
@@ -80,3 +77,6 @@ for file_ind, file_name in enumerate(files_list):
         print(f"name: {name}  sequence: {sequence}")
         print(f"Error message: {e}")
     document_id += 1
+
+with open(os.path.join(input_folder, "all_files.pkl"), 'wb') as outfile:
+    pickle.dump(all_genes_list, outfile, protocol=pickle.HIGHEST_PROTOCOL)

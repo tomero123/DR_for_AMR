@@ -15,14 +15,14 @@ if __name__ == '__main__':
     # PARAMS
     BACTERIA = Bacteria.GENOME_MIX_NEW.value if len(sys.argv) <= 1 else sys.argv[1]
     PROCESSING_MODE = ProcessingMode.OVERLAPPING.value if len(sys.argv) <= 2 else sys.argv[2]  # can be "non_overlapping" or "overlapping"
-    VECTOR_SIZE = 1024 if len(sys.argv) <= 3 else int(sys.argv[3])
+    VECTOR_SIZE = 300 if len(sys.argv) <= 3 else int(sys.argv[3])
     WINDOW_SIZE = 5 if len(sys.argv) <= 4 else int(sys.argv[4])
     K = 10 if len(sys.argv) <= 5 else int(sys.argv[5])  # Choose K size
     SHIFT_SIZE = 2  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     # PARAMS END
 
-    model_save_name = get_file_name("", "cds_model")
+    model_save_name = get_file_name("", "model")
 
     now = time.time()
     now_date = datetime.datetime.now()

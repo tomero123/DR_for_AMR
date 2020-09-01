@@ -34,10 +34,10 @@ class GenomeDocsCDS(object):
                 for fasta in fasta_sequences:
                     seq_id += 1
                     name, sequence = fasta.id, str(fasta.seq)
-                    documents_list = self._get_document_from_fasta(sequence)
+                    documents_list = self._get_document_from_fasta(sequence, self.processing_mode, self.k, self.shift_size)
                     for doc_ind, doc in enumerate(documents_list):
                         yield doc2vec.TaggedDocument(doc, [document_id])
-                if file_ind % 100 == 0:
+                if file_ind % 1 == 0:
                     print(f"Finished processing file #{file_ind}, file_name:{file_name.replace('.fna.gz', '')}, number of genes: {seq_id} document_id: {document_id}")
             except Exception as e:
                 print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
@@ -45,7 +45,8 @@ class GenomeDocsCDS(object):
                 print(f"Error message: {e}")
             document_id += 1
 
-    def _get_document_from_fasta(self, sequence: str):
+    @staticmethod
+    def _get_document_from_fasta(sequence: str, processing_mode, k, shift_size):
         '''
         Function takes a fasta sequence and return a list of documents.
         The number of documents to be returned is deterimend by processing_mode.
@@ -54,21 +55,21 @@ class GenomeDocsCDS(object):
         :param sequence: fasta sequence (str)
         '''
         documents_list = []
-        if self.processing_mode == ProcessingMode.NON_OVERLAPPING.value:
-            for k_ind in range(self.k):
+        if processing_mode == ProcessingMode.NON_OVERLAPPING.value:
+            for k_ind in range(k):
                 cur_doc = []
-                for start_ind in range(k_ind, len(sequence) - self.k + 1)[::self.k]:
-                    key = sequence[start_ind:start_ind + self.k]
+                for start_ind in range(k_ind, len(sequence) - k + 1)[::k]:
+                    key = sequence[start_ind:start_ind + k]
                     cur_doc.append(key)
                 documents_list.append(cur_doc)
-        elif self.processing_mode == ProcessingMode.OVERLAPPING.value:
+        elif processing_mode == ProcessingMode.OVERLAPPING.value:
             cur_doc = []
-            for start_ind in range(0, len(sequence) - self.k + 1, self.shift_size):
-                key = sequence[start_ind:start_ind + self.k]
+            for start_ind in range(0, len(sequence) - k + 1, shift_size):
+                key = sequence[start_ind:start_ind + k]
                 cur_doc.append(key)
             documents_list.append(cur_doc)
         else:
-            raise Exception(f"PROCESSING_MODE: {self.processing_mode} is invalid!")
+            raise Exception(f"PROCESSING_MODE: {processing_mode} is invalid!")
         return documents_list
 
 
@@ -130,34 +131,54 @@ class Doc2VecCDS(object):
 
         model.save(os.path.join(self.models_folder, "d2v" + self.model_save_name))
         model.save_word2vec_format(os.path.join(self.models_folder, "w2v" + self.model_save_name))
-
         print('total docs learned %s' % (len(model.docvecs)))
+        print(f"Saved model to {self.models_folder}/d2v/{self.model_save_name}")
 
 
 class Doc2VecCDSLoader(object):
-    def __init__(self, input_folder, files_list, k, processing_mode, load_existing_path=None):
+    def __init__(self, input_folder, label_dic, k, processing_mode, shift_size,load_existing_path=None):
         self.input_folder = input_folder
-        self.files_list = files_list
+        self.label_dic = label_dic
         self.k = k
         self.processing_mode = processing_mode
+        self.shift_size = shift_size
         self.model = doc2vec.Doc2Vec.load(load_existing_path)
 
     def run(self):
         gc.collect()
         print('Loading an exiting model')
-        print(f"Number of documents: {len(self.files_list)}")
+        print(f"Number of documents: {len(self.label_dic)}")
         print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
         vector_size = None
-        all_results = []
-        file_names = [x.replace(".pkl", ".txt.gz") for x in self.files_list]
-        for ind, file_name in enumerate(self.files_list):
-            with open(os.path.join(self.input_folder, file_name), 'rb') as f:
-                cur_doc = pickle.load(f)
-                cur_vec = self.model.infer_vector(cur_doc)
-                if vector_size is None:
-                    vector_size = cur_vec.shape[0]
-                all_results.append(cur_vec)
+        embeddings_results = []
+        metadata_results = []
+        file_ind = 0
+        for file_name, val in self.label_dic.items():
+            file_ind += 1
+            label = val[0]
+            strain = val[1]
+            try:
+                fasta_sequences = SeqIO.parse(_open(os.path.join(self.input_folder, file_name.replace(".txt.gz", ".fna.gz"))), 'fasta')
+                seq_id = 0
+                for fasta in fasta_sequences:
+                    seq_id += 1
+                    seq_name, sequence = fasta.id, str(fasta.seq)
+                    documents_list = GenomeDocsCDS._get_document_from_fasta(sequence, self.processing_mode, self.k, self.shift_size)
+                    for doc_ind, cur_doc in enumerate(documents_list):
+                        cur_vec = self.model.infer_vector(cur_doc)
+                        if vector_size is None:
+                            vector_size = cur_vec.shape[0]
+                        embeddings_results.append(cur_vec)
+                        metadata_results.append([file_ind, file_name, seq_id, seq_name, doc_ind, strain, label])
+                if file_ind % 1 == 0:
+                    print(f"Finished processing file #{file_ind}, file_name:{file_name.replace('.fna.gz', '')}, number of genes: {seq_id}")
+            except Exception as e:
+                print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
+                print(f"name: {seq_name}  sequence: {sequence}")
+                print(f"Error message: {e}")
+
         columns_names = [f"f_{x + 1}" for x in range(vector_size)]
-        em_df = pd.DataFrame(all_results, columns=columns_names)
-        em_df.insert(loc=0, column="file_name", value=file_names)
-        return em_df
+        em_df = pd.DataFrame(embeddings_results, columns=columns_names)
+        metadata_df = pd.DataFrame(metadata_results, columns=["file_ind", "file_name", "seq_id", "seq_name", "doc_ind", "strain", "label"])
+        final_df = pd.concat([metadata_df, em_df], axis=1)
+        return final_df
