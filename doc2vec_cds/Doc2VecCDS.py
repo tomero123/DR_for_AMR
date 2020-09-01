@@ -142,6 +142,7 @@ class Doc2VecCDSLoader(object):
         self.processing_mode = processing_mode
         self.shift_size = shift_size
         self.model = doc2vec.Doc2Vec.load(load_existing_path)
+        self.model.delete_temporary_training_data(keep_doctags_vectors=False, keep_inference=True)
 
     def run(self):
         gc.collect()
