@@ -37,7 +37,7 @@ class GenomeDocsCDS(object):
                     for doc_ind, doc in enumerate(documents_list):
                         yield doc2vec.TaggedDocument(doc, [document_id])
                 if file_ind % 1 == 0:
-                    print(f"Finished processing file #{file_ind}, file_name:{file_name.replace('.fna.gz', '')}, number of genes: {seq_id} document_id: {document_id}")
+                    print(f"Finished processing file #{file_ind}, file_name:{file_name}, number of genes: {seq_id} document_id: {document_id}")
             except Exception as e:
                 print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
                 print(f"name: {name}  sequence: {sequence}")
@@ -157,7 +157,7 @@ class Doc2VecCDSLoader(object):
             label = val[0]
             strain = val[1]
             try:
-                fasta_sequences = SeqIO.parse(_open(os.path.join(self.input_folder, file_name.replace(".txt.gz", ".fna.gz"))), 'fasta')
+                fasta_sequences = SeqIO.parse(_open(os.path.join(self.input_folder, file_name + "_cds_from_genomic.fna.gz")), 'fasta')
                 seq_id = 0
                 for fasta in fasta_sequences:
                     seq_id += 1
@@ -170,7 +170,7 @@ class Doc2VecCDSLoader(object):
                         embeddings_results.append(cur_vec)
                         metadata_results.append([file_ind, file_name, seq_id, seq_name, doc_ind, strain, label])
                 if file_ind % 1 == 0:
-                    print(f"Finished processing file #{file_ind}, file_name:{file_name.replace('.fna.gz', '')}, number of genes: {seq_id}")
+                    print(f"Finished processing file #{file_ind}, file_name:{file_name}, number of genes: {seq_id}")
             except Exception as e:
                 print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
                 print(f"name: {seq_name}  sequence: {sequence}")

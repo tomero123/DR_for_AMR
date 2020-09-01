@@ -31,7 +31,7 @@ def get_label_dic(amr_file_path, files_list, antibiotic):
     # Remove antibiotics with label 'I'
     label_df = label_df[label_df[antibiotic] != 'I']
     # Remove strains which are not in "files list"
-    ind_to_save = label_df[file_name_col].apply(lambda x: True if x in [x.replace(".fna.gz", ".txt.gz") for x in files_list] else False)
+    ind_to_save = label_df[file_name_col].apply(lambda x: True if x in [x.replace("_cds_from_genomic.fna.gz", "") for x in files_list] else False)
     new_label_df = label_df[ind_to_save]
     new_label_df.rename(columns={"NCBI File Name": "file_name", antibiotic: "label"}, inplace=True)
     label_dic = {}
@@ -185,9 +185,10 @@ if __name__ == '__main__':
                 # get AMR data df
                 label_df, label_dic = get_label_dic(amr_file_path, files_list, antibiotic)
                 t2 = time.time()
-                print(f"Finished running get_label_dic in {round((t2-t1) / 60, 4)} minutes. label_dic len: {len(label_dic)}")
+                print(f"Finished running get_label_"
+                      f"dic in {round((t2-t1) / 60, 4)} minutes. label_dic len: {len(label_dic)}")
                 # get only the files with label for the specific antibiotic
-                files_list = [x for x in files_list if x.replace(".fna.gz", ".txt.gz") in list(label_dic.keys())]
+                files_list = [x for x in files_list if x.replace("_cds_from_genomic.fna.gz", "") in list(label_dic.keys())]
                 now = time.time()
                 doc2vec_loader = Doc2VecCDSLoader(input_folder, label_dic, K, PROCESSING_MODE, SHIFT_SIZE, os.path.join(models_folder, D2V_MODEL_NAME))
                 final_df = doc2vec_loader.run()
