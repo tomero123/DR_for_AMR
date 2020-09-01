@@ -184,7 +184,7 @@ if __name__ == '__main__':
                 # get AMR data df
                 label_df, label_dic = get_label_dic(amr_file_path, files_list, antibiotic, PROCESSING_MODE, K)
                 t2 = time.time()
-                print(f"Finished running get_label_dic in {round((t2-t1) / 60, 4)} minutes")
+                print(f"Finished running get_label_dic in {round((t2-t1) / 60, 4)} minutes. label_dic len: {len(label_dic)}")
                 # get only the files with label for the specific antibiotic
                 files_list = [x for x in files_list if x.replace(".fna.gz", ".txt.gz") in list(label_dic.keys())]
                 now = time.time()
