@@ -139,7 +139,7 @@ if __name__ == '__main__':
     ]
     # Define list of model_names and processing method
     D2V_MODEL_PROCESSING_MODE_LIST = [
-        ["d2v_2020_08_11_2132.model", ProcessingMode.OVERLAPPING.value],
+        ["d2v_2020_09_01_1931.model", ProcessingMode.OVERLAPPING.value],
     ]
     # model = xgboost.XGBClassifier(random_state=random_seed)
     # model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
