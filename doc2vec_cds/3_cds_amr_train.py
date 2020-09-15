@@ -144,7 +144,7 @@ if __name__ == '__main__':
     ]
     # model = xgboost.XGBClassifier(random_state=random_seed)
     # model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
-    model = KNeighborsClassifier(n_neighbors=5)
+    model = KNeighborsClassifier(n_neighbors=11)
     # PARAMS END
     # IF RUNNING LOCAL (WINDOWS)
     if os.name == 'nt':
