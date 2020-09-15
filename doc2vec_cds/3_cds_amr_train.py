@@ -18,11 +18,10 @@ from sklearn import metrics
 
 from doc2vec_cds.Doc2VecCDS import Doc2VecCDSLoader
 from utils import get_file_name
-from enums import Bacteria, ProcessingMode
+from enums import Bacteria, ProcessingMode, ANTIBIOTIC_DIC
 
 
-def get_label_dic(amr_file_path, files_list, antibiotic):
-    amr_df = pd.read_csv(amr_file_path)
+def get_label_dic(amr_df, files_list, antibiotic):
     file_name_col = 'NCBI File Name'
     strain_col = 'Strain'
     label_df = amr_df[[file_name_col, strain_col, antibiotic]]
@@ -80,18 +79,16 @@ def write_data_to_excel(results_df, results_file_path, classes, model_parmas, al
 def train_test_and_write_results_cv(final_df, results_file_path, model, k_folds, num_of_processes, random_seed,
                                     antibiotic, all_results_dic, processing_mode, k):
     try:
-        X = final_df.drop(['file_ind', 'file_name', 'seq_id', 'seq_name', 'doc_ind', 'strain', 'label'], axis=1).copy()
+        X = final_df.drop(['file_ind', 'file_name', 'seq_id', 'seq_name', 'doc_ind', 'Strain', 'label'], axis=1).copy()
         y = final_df[['label']].copy()
 
         files_names = list(final_df['file_name'])
-        strains_list = list(final_df['strain'])
+        strains_list = list(final_df['Strain'])
 
         # Create weight according to the ratio of each class
         sample_weight = compute_sample_weight(class_weight='balanced', y=y['label'])
 
         cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
-        print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
-        now = time.time()
         classes = np.unique(y.values.ravel())
         susceptible_ind = list(classes).index("S")
         resistance_ind = list(classes).index("R")
@@ -127,7 +124,7 @@ def train_test_and_write_results_cv(final_df, results_file_path, model, k_folds,
 
 if __name__ == '__main__':
     # PARAMS
-    MODEL_BACTERIA = Bacteria.GENOME_MIX_NEW.value if len(sys.argv) <= 1 else sys.argv[1]
+    MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
     K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
     random_seed = 1
     num_of_processes = 10
@@ -137,18 +134,13 @@ if __name__ == '__main__':
     amr_data_file_name = "amr_data_summary.csv"
     # BACTERIA list
     BACTERIA_LIST = [
-        Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
-        Bacteria.PSEUDOMONAS_AUREGINOSA.value
+        Bacteria.PSEUDOMONAS_AUREGINOSA.value,
+        # Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
     ]
     # Define list of model_names and processing method
     D2V_MODEL_PROCESSING_MODE_LIST = [
-        ["d2v_2020_08_21_1814.model", ProcessingMode.OVERLAPPING.value],
+        ["d2v_2020_08_11_2132.model", ProcessingMode.OVERLAPPING.value],
     ]
-    # antibiotic dic
-    ANTIBIOTIC_DIC = {
-        Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem'],
-        Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value: ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide']
-    }
     # model = xgboost.XGBClassifier(random_state=random_seed)
     # model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
     model = KNeighborsClassifier(n_neighbors=5)
@@ -158,6 +150,7 @@ if __name__ == '__main__':
         D2V_MODEL_NAME = conf[0]
         PROCESSING_MODE = conf[1]
         for BACTERIA in BACTERIA_LIST:
+            all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": [], "auc": []}
             antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
             current_date_folder = get_file_name(D2V_MODEL_NAME.replace(".model", ""), None)
             if PROCESSING_MODE == ProcessingMode.OVERLAPPING.value:
@@ -171,32 +164,41 @@ if __name__ == '__main__':
             now_total = time.time()
             now_date = datetime.datetime.now()
             print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}  D2V_MODEL_NAME: {D2V_MODEL_NAME}  PROCESSING_MODE: {PROCESSING_MODE}  BACTERIA: {BACTERIA}")
-            all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": [], "auc": []}
+            # Get embeddings df
+            files_list = os.listdir(input_folder)
+            files_list = [x for x in files_list if ".fna.gz" in x]
+            print(f"len files_list: {len(files_list)}")
+            labeled_files_list = set()
+            # get AMR data df
+            amr_df = pd.read_csv(amr_file_path)
+            for antibiotic in antibiotic_list:
+                labeled_files_list.update(
+                    set(amr_df['NCBI File Name'][
+                            (amr_df[antibiotic] != '-') &
+                            (amr_df['NCBI File Name'].isin([x.replace("_cds_from_genomic.fna.gz", "") for x in files_list]))
+                        ])
+                )
+            labeled_files_list = list(labeled_files_list)
+            # get only the files with label for the specific antibiotic
+            now = time.time()
+            doc2vec_loader = Doc2VecCDSLoader(input_folder, labeled_files_list, K, PROCESSING_MODE, SHIFT_SIZE,
+                                              os.path.join(models_folder, D2V_MODEL_NAME))
+            embedding_df = doc2vec_loader.run()
+            print(f"Finished extracting embeddings in {round((time.time() - now) / 60, 4)} minutes")
             for antibiotic in antibiotic_list:
                 t1 = time.time()
-                print(f"Started xgboost training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}")
                 if not os.path.exists(results_file_folder):
                     os.makedirs(results_file_folder)
                 results_file_name = D2V_MODEL_NAME.replace("d2v", antibiotic).replace(".model", ".xlsx")
                 results_file_path = os.path.join(results_file_folder, results_file_name)
-                files_list = os.listdir(input_folder)
-                files_list = [x for x in files_list if ".fna.gz" in x]
-                print(f"len files_list: {len(files_list)}")
-                # get AMR data df
-                label_df, label_dic = get_label_dic(amr_file_path, files_list, antibiotic)
+                label_df, label_dic = get_label_dic(amr_df, files_list, antibiotic)
+                final_df = embedding_df.merge(label_df, on='file_name', how='inner')
                 t2 = time.time()
-                print(f"Finished running get_label_"
-                      f"dic in {round((t2-t1) / 60, 4)} minutes. label_dic len: {len(label_dic)}")
-                # get only the files with label for the specific antibiotic
-                files_list = [x for x in files_list if x.replace("_cds_from_genomic.fna.gz", "") in list(label_dic.keys())]
-                now = time.time()
-                doc2vec_loader = Doc2VecCDSLoader(input_folder, label_dic, K, PROCESSING_MODE, SHIFT_SIZE, os.path.join(models_folder, D2V_MODEL_NAME))
-                final_df = doc2vec_loader.run()
-                t3 = time.time()
-                print(f"Finished extracting embeddings in {round((t3 - t2) / 60, 4)} minutes")
+                print(f"Finished creating final_df for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t2-t1) / 60, 4)} minutes")
+                print(f"Started classifier training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}")
                 accuracy, f1_score, auc = train_test_and_write_results_cv(final_df, results_file_path, model, k_folds, num_of_processes, random_seed, antibiotic, all_results_dic, PROCESSING_MODE, K)
-                t4 = time.time()
-                print(f"Finished training xgboost for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t4-t3) / 60, 4)} minutes  accuracy: {accuracy}  f1_score: {f1_score}   auc: {auc}")
+                t3 = time.time()
+                print(f"Finished training classifier for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t3-t2) / 60, 4)} minutes  accuracy: {accuracy}  f1_score: {f1_score}   auc: {auc}")
             all_results_df = pd.DataFrame(all_results_dic)
             writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_date_folder}.xlsx"), engine='xlsxwriter')
             all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)

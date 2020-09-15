@@ -135,9 +135,9 @@ class Doc2VecCDS(object):
 
 
 class Doc2VecCDSLoader(object):
-    def __init__(self, input_folder, label_dic, k, processing_mode, shift_size,load_existing_path=None):
+    def __init__(self, input_folder, labeled_files_list, k, processing_mode, shift_size,load_existing_path=None):
         self.input_folder = input_folder
-        self.label_dic = label_dic
+        self.labeled_files_list = labeled_files_list
         self.k = k
         self.processing_mode = processing_mode
         self.shift_size = shift_size
@@ -147,16 +147,12 @@ class Doc2VecCDSLoader(object):
     def run(self):
         gc.collect()
         print('Loading an exiting model')
-        print(f"Number of documents: {len(self.label_dic)}")
+        print(f"Number of documents: {len(self.labeled_files_list)}")
         print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
         vector_size = None
         embeddings_results = []
         metadata_results = []
-        file_ind = 0
-        for file_name, val in self.label_dic.items():
-            file_ind += 1
-            label = val[0]
-            strain = val[1]
+        for file_ind, file_name in enumerate(self.labeled_files_list):
             try:
                 fasta_sequences = SeqIO.parse(_open(os.path.join(self.input_folder, file_name + "_cds_from_genomic.fna.gz")), 'fasta')
                 seq_id = 0
@@ -169,7 +165,7 @@ class Doc2VecCDSLoader(object):
                         if vector_size is None:
                             vector_size = cur_vec.shape[0]
                         embeddings_results.append(cur_vec)
-                        metadata_results.append([file_ind, file_name, seq_id, seq_name, doc_ind, strain, label])
+                        metadata_results.append([file_ind, file_name, seq_id, seq_name, doc_ind])
                 if file_ind % 1 == 0:
                     print(f"Finished processing file #{file_ind}, file_name:{file_name}, number of genes: {seq_id}")
             except Exception as e:
@@ -179,6 +175,6 @@ class Doc2VecCDSLoader(object):
 
         columns_names = [f"f_{x + 1}" for x in range(vector_size)]
         em_df = pd.DataFrame(embeddings_results, columns=columns_names)
-        metadata_df = pd.DataFrame(metadata_results, columns=["file_ind", "file_name", "seq_id", "seq_name", "doc_ind", "strain", "label"])
+        metadata_df = pd.DataFrame(metadata_results, columns=["file_ind", "file_name", "seq_id", "seq_name", "doc_ind"])
         final_df = pd.concat([metadata_df, em_df], axis=1)
         return final_df
