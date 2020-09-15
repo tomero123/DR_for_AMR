@@ -132,6 +132,7 @@ if __name__ == '__main__':
     SHIFT_SIZE = 2  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_data_summary.csv"
+    prefix = '.'
     # BACTERIA list
     BACTERIA_LIST = [
         Bacteria.PSEUDOMONAS_AUREGINOSA.value,
@@ -139,13 +140,16 @@ if __name__ == '__main__':
     ]
     # Define list of model_names and processing method
     D2V_MODEL_PROCESSING_MODE_LIST = [
-        ["d2v_2020_08_11_2132.model", ProcessingMode.OVERLAPPING.value],
+        ["d2v_2020_09_01_1931.model", ProcessingMode.OVERLAPPING.value],
     ]
     # model = xgboost.XGBClassifier(random_state=random_seed)
     # model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
     model = KNeighborsClassifier(n_neighbors=5)
     # PARAMS END
-    prefix = '..' if os.name == 'nt' else '.'
+    # IF RUNNING LOCAL (WINDOWS)
+    if os.name == 'nt':
+        D2V_MODEL_PROCESSING_MODE_LIST = [["d2v_2020_08_11_2132.model", ProcessingMode.OVERLAPPING.value]]
+        prefix = '..'
     for conf in D2V_MODEL_PROCESSING_MODE_LIST:
         D2V_MODEL_NAME = conf[0]
         PROCESSING_MODE = conf[1]
