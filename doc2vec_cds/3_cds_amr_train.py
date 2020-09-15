@@ -179,6 +179,7 @@ if __name__ == '__main__':
                         ])
                 )
             labeled_files_list = list(labeled_files_list)
+            print(f"len labeled_files_list: {len(labeled_files_list)}")
             # get only the files with label for the specific antibiotic
             now = time.time()
             doc2vec_loader = Doc2VecCDSLoader(input_folder, labeled_files_list, K, PROCESSING_MODE, SHIFT_SIZE,
