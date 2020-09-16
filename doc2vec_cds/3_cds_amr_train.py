@@ -163,11 +163,14 @@ if __name__ == '__main__':
             elif PROCESSING_MODE == ProcessingMode.NON_OVERLAPPING.value:
                 models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "cds_models", "non_overlapping", f"K_{K}")
                 results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_embeddings_classification_results", "non_overlapping", f"K_{K}", current_date_folder)
+            else:
+                raise Exception(f"PROCESSING_MODE: {PROCESSING_MODE} is invalid!")
             input_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_genome_files")
             amr_file_path = os.path.join(prefix, 'results_files', BACTERIA, amr_data_file_name)
             now_total = time.time()
             now_date = datetime.datetime.now()
             print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}  D2V_MODEL_NAME: {D2V_MODEL_NAME}  PROCESSING_MODE: {PROCESSING_MODE}  BACTERIA: {BACTERIA}")
+            print(f"results_file_folder path: {results_file_folder}")
             # Get embeddings df
             files_list = os.listdir(input_folder)
             files_list = [x for x in files_list if ".fna.gz" in x]
