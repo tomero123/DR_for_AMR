@@ -135,9 +135,9 @@ class Doc2VecCDS(object):
 
 
 class Doc2VecCDSLoader(object):
-    def __init__(self, input_folder, labeled_files_list, k, processing_mode, shift_size,load_existing_path=None):
+    def __init__(self, input_folder, labeled_files_dic, k, processing_mode, shift_size,load_existing_path=None):
         self.input_folder = input_folder
-        self.labeled_files_list = labeled_files_list
+        self.labeled_files_dic = labeled_files_dic
         self.k = k
         self.processing_mode = processing_mode
         self.shift_size = shift_size
@@ -147,12 +147,13 @@ class Doc2VecCDSLoader(object):
     def run(self):
         gc.collect()
         print('Loading an exiting model')
-        print(f"Number of documents: {len(self.labeled_files_list)}")
+        print(f"Number of documents: {len(self.labeled_files_dic)}")
         print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
         vector_size = None
         embeddings_results = []
         metadata_results = []
-        for file_ind, file_name in enumerate(self.labeled_files_list):
+        metadata_results_full = []
+        for file_name, file_id in self.labeled_files_dic.items():
             try:
                 fasta_sequences = SeqIO.parse(_open(os.path.join(self.input_folder, file_name + "_cds_from_genomic.fna.gz")), 'fasta')
                 seq_id = 0
@@ -165,9 +166,10 @@ class Doc2VecCDSLoader(object):
                         if vector_size is None:
                             vector_size = cur_vec.shape[0]
                         embeddings_results.append(cur_vec)
-                        metadata_results.append([file_ind, file_name, seq_id, seq_name, doc_ind])
-                if file_ind % 1 == 0:
-                    print(f"Finished processing file #{file_ind}, file_name:{file_name}, number of genes: {seq_id}")
+                        metadata_results.append([file_id, seq_id, doc_ind])
+                        metadata_results_full.append([file_id, file_name, seq_id, seq_name, doc_ind])
+                if file_id % 1 == 0:
+                    print(f"Finished processing file #{file_id}, file_name:{file_name}, number of genes: {seq_id}")
             except Exception as e:
                 print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
                 print(f"name: {seq_name}  sequence: {sequence}")
@@ -175,6 +177,7 @@ class Doc2VecCDSLoader(object):
 
         columns_names = [f"f_{x + 1}" for x in range(vector_size)]
         em_df = pd.DataFrame(embeddings_results, columns=columns_names)
-        metadata_df = pd.DataFrame(metadata_results, columns=["file_ind", "file_name", "seq_id", "seq_name", "doc_ind"])
+        metadata_df = pd.DataFrame(metadata_results, columns=["file_id", "seq_id", "doc_ind"])
+        metadata_df_full = pd.DataFrame(metadata_results_full, columns=["file_ind", "file_name", "seq_id", "seq_name", "doc_ind"])
         final_df = pd.concat([metadata_df, em_df], axis=1)
-        return final_df
+        return final_df, metadata_df_full

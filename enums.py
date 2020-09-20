@@ -19,3 +19,6 @@ ANTIBIOTIC_DIC = {
     Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem'],
     Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value: ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide']
 }
+
+EMBEDDING_DF_FILE_NAME = "embedding_df.h5"
+METADATA_DF_FILE_NAME = "metadata_df.csv"
