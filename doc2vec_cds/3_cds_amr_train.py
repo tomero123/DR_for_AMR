@@ -12,8 +12,6 @@ import pandas as pd
 import numpy as np
 import time
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.utils import compute_sample_weight
-from sklearn.model_selection import StratifiedKFold, cross_val_predict, train_test_split
 from sklearn import metrics
 
 from doc2vec_cds.Doc2VecCDS import Doc2VecCDSLoader
@@ -62,11 +60,9 @@ def write_data_to_excel(writer, agg_method, results_df, classes, model_parmas, a
         evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score], ["auc", auc], ["model_parmas", model_parmas]]
         evaluation_df = pd.DataFrame(evaluation_list, columns=["metric", "value"])
         evaluation_df.to_excel(writer, sheet_name=agg_method, startcol=col_ind, startrow=row_ind, index=False)
-        workbook = writer.book
         worksheet = writer.sheets[agg_method]
         # percent_format = workbook.add_format({'num_format': '0.00%'})
         worksheet.set_column('A:Z', 15)
-        workbook.close()
         return accuracy, f1_score, auc
     except Exception as e:
         print(f"ERROR at write_data_to_excel, message: {e}")
@@ -103,7 +99,7 @@ def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, mod
         temp_scores = model.predict_proba(X_test)
         true_results = y_test.values.ravel()
 
-        test_agg_list = ["mean_all", "mean_highest$100", "mean_highest$300", "mean_highest$600"]
+        test_agg_list = ["mean_highest$100", "mean_highest$300", "mean_highest$600", "mean_all"]
         results_dic = {}
         writer = pd.ExcelWriter(results_file_path, engine='xlsxwriter')
 
@@ -114,19 +110,20 @@ def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, mod
         })
 
         for agg_method in test_agg_list:
-            results_df_agg = get_results_agg_df(agg_method, results_df)
+            results_df_agg = get_results_agg_df(agg_method, results_df, amr_df)
             model_parmas = json.dumps(model.get_params())
             accuracy, f1_score, auc = write_data_to_excel(writer, agg_method, results_df_agg, classes, model_parmas, all_results_dic)
             print(f"antibiotic: {antibiotic}  aggregation method: {agg_method} accuracy: {accuracy}  f1_score: {f1_score}  auc: {auc}")
             results_dic[agg_method] = [accuracy, f1_score, auc]
+
+        writer.save()
         return results_dic
-        # print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
         traceback.print_exc()
 
 
-def get_results_agg_df(agg_method, results_df):
+def get_results_agg_df(agg_method, results_df, amr_df):
     try:
         # test_agg_list = ["mean_all", "mean_highest$100", "mean_highest$300", "mean_highest$600"]
         f = {'Label': 'first', 'Resistance score': 'mean'}
@@ -138,7 +135,8 @@ def get_results_agg_df(agg_method, results_df):
         else:
             raise Exception(f"agg_method: {agg_method} is invalid!")
         results_df_agg['Prediction'] = np.where(results_df_agg['Resistance score'] > 0.5, 'R', 'S')
-        return results_df_agg
+        final_df = results_df_agg.merge(amr_df[['file_id', 'NCBI File Name']], on='file_id', how='inner')
+        return final_df
     except Exception as e:
         print(f"ERROR at get_results_agg_df, message: {e}")
         traceback.print_exc()
@@ -239,8 +237,9 @@ if __name__ == '__main__':
             all_results_df = pd.DataFrame(all_results_dic)
             writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_date_folder}.xlsx"), engine='xlsxwriter')
             all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
-            workbook = writer.book
-            workbook.close()
+            # workbook = writer.book
+            # workbook.close()
+            writer.save()
             now_date = datetime.datetime.now()
             print(f"Finished running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')} after {round((time.time() - now_total) / 3600, 4)} hours; D2V_MODEL_NAME: {D2V_MODEL_NAME}  PROCESSING_MODE: {PROCESSING_MODE}  BACTERIA: {BACTERIA}")
     print("DONE!")
