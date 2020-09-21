@@ -224,3 +224,14 @@ def get_file_name(prefix, ext):
     else:
         file_name = "{}_{}_{}_{}{}".format(year, month, day, hour, minute)
     return file_name
+
+
+def get_time_as_str():
+    time = datetime.datetime.now()
+    year = str(time.year) if time.year > 9 else '0' + str(time.year)
+    month = str(time.month) if time.month > 9 else '0' + str(time.month)
+    day = str(time.day) if time.day > 9 else '0' + str(time.day)
+    hour = str(time.hour) if time.hour > 9 else '0' + str(time.hour)
+    minute = str(time.minute) if time.minute > 9 else '0' + str(time.minute)
+    file_name = "{}_{}_{}_{}{}".format(year, month, day, hour, minute)
+    return file_name

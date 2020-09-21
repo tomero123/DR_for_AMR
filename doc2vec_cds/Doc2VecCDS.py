@@ -5,6 +5,7 @@ sys.path.append("/home/tomeror/tomer_thesis")
 
 import gc
 import os
+import json
 import pandas as pd
 import gzip
 from functools import partial
@@ -85,17 +86,18 @@ class callback(CallbackAny2Vec):
 
 
 class Doc2VecCDS(object):
-    def __init__(self, input_folder, models_folder, files_list, model_save_name, processing_mode, k, shift_size, vector_size, window_size, workers):
+    def __init__(self, input_folder, models_folder, files_list, folder_time, processing_mode, k, shift_size, vector_size, window_size, workers, conf_dict):
         self.input_folder = input_folder
         self.models_folder = models_folder
         self.files_list = files_list
-        self.model_save_name = model_save_name
+        self.folder_time = folder_time
         self.workers = workers
         self.processing_mode = processing_mode
         self.k = k
         self.shift_size = shift_size
         self.vector_size = vector_size
         self.window_size = window_size
+        self.conf_dict = conf_dict
         # self.document_id_dic = self.get_document_id_dic()
 
     def run(self):
@@ -114,12 +116,20 @@ class Doc2VecCDS(object):
         epochs = 10
         # PARAMS END
 
+        self.conf_dict["vector_size"] = vector_size
+        self.conf_dict["window"] = window
+        self.conf_dict["dm"] = dm
+        self.conf_dict["min_count"] = min_count
+        self.conf_dict["sample"] = sample
+        self.conf_dict["negative"] = negative
+        self.conf_dict["epochs"] = epochs
+
         model = doc2vec.Doc2Vec(vector_size=vector_size, window=window, min_count=min_count,
                                 sample=sample, negative=negative, workers=self.workers, dm=dm,
                                 # compute_loss=True, callbacks=[callback()]
                                 )
         print(f"model params:\nvector_size: {vector_size}\nwindow: {window}\ndm: {dm}\nmin_count: {min_count}\n"
-              f"sample: {sample}\nnegative: {negative}\nworkers: {self.workers}")
+              f"sample: {sample}\nnegative: {negative}\nworkers: {self.workers}\nepochs: {epochs}")
 
         print('building vocabulary...')
         model.build_vocab(corpus_data)
@@ -128,20 +138,22 @@ class Doc2VecCDS(object):
         if not os.path.exists(self.models_folder):
             os.makedirs(self.models_folder)
 
-        model.save(os.path.join(self.models_folder, "d2v" + self.model_save_name))
-        model.save_word2vec_format(os.path.join(self.models_folder, "w2v" + self.model_save_name))
+        model.save(os.path.join(self.models_folder, "d2v.model"))
+        model.save_word2vec_format(os.path.join(self.models_folder, "w2v.model"))
+        with open(os.path.join(self.models_folder, "model_conf.json"), "w") as write_file:
+            json.dump(self.conf_dict, write_file)
         print('total docs learned %s' % (len(model.docvecs)))
-        print(f"Saved model to {self.models_folder}/d2v/{self.model_save_name}")
+        print(f"Saved model to {self.models_folder}")
 
 
 class Doc2VecCDSLoader(object):
-    def __init__(self, input_folder, labeled_files_dic, k, processing_mode, shift_size,load_existing_path=None):
+    def __init__(self, input_folder, labeled_files_dic, k, processing_mode, shift_size, models_folder):
         self.input_folder = input_folder
         self.labeled_files_dic = labeled_files_dic
         self.k = k
         self.processing_mode = processing_mode
         self.shift_size = shift_size
-        self.model = doc2vec.Doc2Vec.load(load_existing_path)
+        self.model = doc2vec.Doc2Vec.load(os.path.join(models_folder, "d2v.model"))
         self.model.delete_temporary_training_data(keep_doctags_vectors=False, keep_inference=True)
 
     def run(self):
