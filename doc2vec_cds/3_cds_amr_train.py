@@ -28,6 +28,7 @@ if __name__ == '__main__':
     prefix = '.'
     # BACTERIA list
     BACTERIA_LIST = [
+        Bacteria.TEST.value,
         Bacteria.PSEUDOMONAS_AUREGINOSA.value,
         # Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
     ]
