@@ -21,7 +21,7 @@ if __name__ == '__main__':
     MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
     K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
     SHIFT_SIZE = 2  # relevant only for PROCESSING_MODE "overlapping"
-    LOAD_EMBEDDING_DF = True
+    LOAD_EMBEDDING_DF = False
     KNN_K_SIZE = 7
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_labels.csv"
@@ -74,7 +74,11 @@ if __name__ == '__main__':
             # get AMR data df
             amr_df = pd.read_csv(amr_file_path)
             full_labeled_files_dic = dict(zip(amr_df["NCBI File Name"], amr_df["file_id"]))
-            labeled_files_dic = dict((k, full_labeled_files_dic[k]) for k in [x.replace("_cds_from_genomic.fna.gz", "") for x in files_list])
+            labeled_files_dic = {}
+            for x in files_list:
+                genome_file_name = x.replace("_cds_from_genomic.fna.gz", "")
+                if genome_file_name in full_labeled_files_dic:
+                    labeled_files_dic[genome_file_name] = full_labeled_files_dic[genome_file_name]
             print(f"len labeled_files_list: {len(labeled_files_dic)}")
             if not os.path.exists(embedding_df_folder):
                 os.makedirs(embedding_df_folder)
