@@ -9,12 +9,11 @@ import os
 import pandas as pd
 import time
 import json
-from sklearn.neighbors import KNeighborsClassifier
 
 from doc2vec_cds.cds_utils import get_label_df, train_test_and_write_results_cv
 from doc2vec_cds.Doc2VecCDS import Doc2VecCDSLoader
-from enums import Bacteria, ProcessingMode, ANTIBIOTIC_DIC, EMBEDDING_DF_FILE_NAME, METADATA_DF_FILE_NAME
-from utils import get_file_name, get_time_as_str
+from enums import Bacteria, ANTIBIOTIC_DIC, EMBEDDING_DF_FILE_NAME, METADATA_DF_FILE_NAME
+from utils import get_time_as_str
 
 if __name__ == '__main__':
     # PARAMS
@@ -35,9 +34,7 @@ if __name__ == '__main__':
     D2V_MODELS_LIST = [
         "2020_09_01_1931_PM_overlapping_K_10_SS_2",
     ]
-    # model = xgboost.XGBClassifier(random_state=random_seed)
-    # model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
-    model = KNeighborsClassifier(n_neighbors=KNN_K_SIZE)
+
     # PARAMS END
     # IF RUNNING LOCAL (WINDOWS)
     if os.name == 'nt':
@@ -107,7 +104,7 @@ if __name__ == '__main__':
                 t2 = time.time()
                 print(f"Finished creating final_df for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t2-t1) / 60, 4)} minutes")
                 print(f"Started classifier training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}")
-                results_dic = train_test_and_write_results_cv(final_df, antibiotic, results_file_path, model, all_results_dic, amr_df, USE_FAISS_KNN)
+                results_dic = train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all_results_dic, amr_df, KNN_K_SIZE, USE_FAISS_KNN)
                 t3 = time.time()
 
                 print(f"Finished training classifier for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t3-t2) / 60, 4)} minutes")

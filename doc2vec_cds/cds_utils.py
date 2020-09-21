@@ -1,5 +1,7 @@
 import sys
 
+from sklearn.neighbors import KNeighborsClassifier
+
 from doc2vec_cds.FaissKNeighbors import FaissKNeighbors
 
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
@@ -63,7 +65,7 @@ def write_data_to_excel(writer, antibiotic, agg_method, results_df, classes, mod
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, model, all_results_dic, amr_df, use_faiss_knn):
+def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all_results_dic, amr_df, knn_k_size, use_faiss_knn):
     try:
         non_features_columns = ['file_id', 'seq_id', 'doc_ind', 'label']
         train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 1]["file_id"])
@@ -90,12 +92,13 @@ def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, mod
         #                                 n_jobs=num_of_processes)
         # true_results = y.values.ravel()
         if use_faiss_knn and os.name != 'nt':
-            model_faiss = FaissKNeighbors(7)
-            model_faiss.fit(X_train, y_train.values.ravel())
-            temp_scores = model_faiss.predict_proba(X_test)
+            model = FaissKNeighbors(knn_k_size, resistance_ind)
         else:
-            model.fit(X_train, y_train.values.ravel())
-            temp_scores = model.predict_proba(X_test)
+            # model = xgboost.XGBClassifier(random_state=random_seed)
+            # model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
+            model = KNeighborsClassifier(n_neighbors=knn_k_size)
+        model.fit(X_train, y_train.values.ravel())
+        temp_scores = model.predict_proba(X_test)
         true_results = y_test.values.ravel()
 
         test_agg_list = ["mean_highest$100", "mean_highest$300", "mean_highest$600", "mean_all"]
