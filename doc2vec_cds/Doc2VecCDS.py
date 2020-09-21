@@ -165,8 +165,10 @@ class Doc2VecCDSLoader(object):
         embeddings_results = []
         metadata_results = []
         metadata_results_full = []
+        file_ind = 0
         for file_name, file_id in self.labeled_files_dic.items():
             try:
+                file_ind += 1
                 fasta_sequences = SeqIO.parse(_open(os.path.join(self.input_folder, file_name + "_cds_from_genomic.fna.gz")), 'fasta')
                 seq_id = 0
                 for fasta in fasta_sequences:
@@ -181,7 +183,7 @@ class Doc2VecCDSLoader(object):
                         metadata_results.append([file_id, seq_id, doc_ind])
                         metadata_results_full.append([file_id, file_name, seq_id, seq_name, doc_ind])
                 if file_id % 1 == 0:
-                    print(f"Finished processing file #{file_id}, file_name:{file_name}, number of genes: {seq_id}")
+                    print(f"Finished processing file#{file_ind} file_id: {file_id}, file_name: {file_name}, number of genes: {seq_id}")
             except Exception as e:
                 print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
                 print(f"name: {seq_name}  sequence: {sequence}")
