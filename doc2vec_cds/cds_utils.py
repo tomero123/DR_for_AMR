@@ -1,8 +1,11 @@
 import sys
 
+from doc2vec_cds.FaissKNeighbors import FaissKNeighbors
+
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
+import os
 import traceback
 import json
 import pandas as pd
@@ -60,7 +63,7 @@ def write_data_to_excel(writer, antibiotic, agg_method, results_df, classes, mod
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, model, all_results_dic, amr_df):
+def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, model, all_results_dic, amr_df, use_faiss_knn):
     try:
         non_features_columns = ['file_id', 'seq_id', 'doc_ind', 'label']
         train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 1]["file_id"])
@@ -86,8 +89,13 @@ def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, mod
         #                                 method='predict_proba',
         #                                 n_jobs=num_of_processes)
         # true_results = y.values.ravel()
-        model.fit(X_train, y_train.values.ravel())
-        temp_scores = model.predict_proba(X_test)
+        if use_faiss_knn and os.name != 'nt':
+            model_faiss = FaissKNeighbors(7)
+            model_faiss.fit(X_train, y_train.values.ravel())
+            temp_scores = model_faiss.predict_proba(X_test)
+        else:
+            model.fit(X_train, y_train.values.ravel())
+            temp_scores = model.predict_proba(X_test)
         true_results = y_test.values.ravel()
 
         test_agg_list = ["mean_highest$100", "mean_highest$300", "mean_highest$600", "mean_all"]

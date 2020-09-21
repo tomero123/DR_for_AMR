@@ -20,14 +20,15 @@ if __name__ == '__main__':
     # PARAMS
     MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
     LOAD_EMBEDDING_DF = True
+    USE_FAISS_KNN = True
     KNN_K_SIZE = 7
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_labels.csv"
     prefix = '.'
     # BACTERIA list
     BACTERIA_LIST = [
-        # Bacteria.TEST.value,
-        Bacteria.PSEUDOMONAS_AUREGINOSA.value,
+        Bacteria.TEST.value,
+        # Bacteria.PSEUDOMONAS_AUREGINOSA.value,
         # Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
     ]
     # Define list of model_names and processing method
@@ -41,6 +42,8 @@ if __name__ == '__main__':
     # IF RUNNING LOCAL (WINDOWS)
     if os.name == 'nt':
         D2V_MODELS_LIST = ["2020_09_21_1227_PM_overlapping_K_10_SS_2"]
+        prefix = '..'
+    if "SSH_CONNECTION" in os.environ:
         prefix = '..'
     for d2v_model_folder_name in D2V_MODELS_LIST:
         models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "cds_models", d2v_model_folder_name)
@@ -104,8 +107,9 @@ if __name__ == '__main__':
                 t2 = time.time()
                 print(f"Finished creating final_df for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t2-t1) / 60, 4)} minutes")
                 print(f"Started classifier training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}")
-                results_dic = train_test_and_write_results_cv(final_df, antibiotic, results_file_path, model, all_results_dic, amr_df)
+                results_dic = train_test_and_write_results_cv(final_df, antibiotic, results_file_path, model, all_results_dic, amr_df, USE_FAISS_KNN)
                 t3 = time.time()
+
                 print(f"Finished training classifier for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t3-t2) / 60, 4)} minutes")
             all_results_df = pd.DataFrame(all_results_dic)
             writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_date_folder}.xlsx"), engine='xlsxwriter')
