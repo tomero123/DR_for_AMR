@@ -92,6 +92,7 @@ def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all
         #                                 n_jobs=num_of_processes)
         # true_results = y.values.ravel()
         if use_faiss_knn and os.name != 'nt':
+            print(f"Using FaissKNeighbors with K: {knn_k_size}")
             model = FaissKNeighbors(knn_k_size, resistance_ind)
         else:
             # model = xgboost.XGBClassifier(random_state=random_seed)
