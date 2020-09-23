@@ -40,8 +40,8 @@ if __name__ == '__main__':
     if os.name == 'nt':
         D2V_MODELS_LIST = ["2020_09_21_1227_PM_overlapping_K_10_SS_2"]
         prefix = '..'
-    if "SSH_CONNECTION" in os.environ:
-        prefix = '..'
+    # if "SSH_CONNECTION" in os.environ:
+    #     prefix = '..'
     for d2v_model_folder_name in D2V_MODELS_LIST:
         models_folder = os.path.join(prefix, "results_files", MODEL_BACTERIA, "cds_models", d2v_model_folder_name)
         with open(os.path.join(models_folder, "model_conf.json"), "r") as read_file:
