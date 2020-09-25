@@ -18,9 +18,10 @@ from utils import get_time_as_str
 if __name__ == '__main__':
     # PARAMS
     MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
+    MODEL_CLASSIFIER = "knn" if len(sys.argv) <= 2 else sys.argv[2]  # can be "knn" or "xgboost"
+    KNN_K_SIZE = 5 if len(sys.argv) <= 3 else sys.argv[3]
     LOAD_EMBEDDING_DF = True
     USE_FAISS_KNN = True
-    KNN_K_SIZE = 5
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_labels.csv"
     prefix = '.'
@@ -104,7 +105,7 @@ if __name__ == '__main__':
                 t2 = time.time()
                 print(f"Finished creating final_df for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t2-t1) / 60, 4)} minutes")
                 print(f"Started classifier training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}")
-                results_dic = train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all_results_dic, amr_df, KNN_K_SIZE, USE_FAISS_KNN)
+                results_dic = train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, KNN_K_SIZE, USE_FAISS_KNN)
                 t3 = time.time()
 
                 print(f"Finished training classifier for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t3-t2) / 60, 4)} minutes")

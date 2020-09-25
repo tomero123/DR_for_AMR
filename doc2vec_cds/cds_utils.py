@@ -1,9 +1,5 @@
 import sys
 
-from sklearn.neighbors import KNeighborsClassifier
-
-from doc2vec_cds.FaissKNeighbors import FaissKNeighbors
-
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
@@ -12,7 +8,11 @@ import traceback
 import json
 import pandas as pd
 import numpy as np
+import xgboost
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
+
+from doc2vec_cds.FaissKNeighbors import FaissKNeighbors
 
 
 def get_label_df(amr_df, files_list, antibiotic):
@@ -35,7 +35,7 @@ def write_data_to_excel(writer, antibiotic, agg_method, results_df, model_parmas
     try:
         col_ind = 0
         row_ind = 0
-        results_df.to_excel(writer, sheet_name=agg_method, startcol=col_ind, startrow=row_ind, index=False)
+        results_df.sort_values(by="Resistance score", ascending=False).to_excel(writer, sheet_name=agg_method, startcol=col_ind, startrow=row_ind, index=False)
         col_ind += results_df.shape[1] + 1
         y_true = list(results_df['Label'])
         y_pred_score = list(results_df['Resistance score'])
@@ -73,7 +73,7 @@ def write_data_to_excel(writer, antibiotic, agg_method, results_df, model_parmas
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all_results_dic, amr_df, knn_k_size, use_faiss_knn):
+def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all_results_dic, amr_df, model_classifier, knn_k_size, use_faiss_knn):
     try:
         non_features_columns = ['file_id', 'seq_id', 'doc_ind', 'label']
         train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 1]["file_id"])
@@ -89,19 +89,17 @@ def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all
         print(f"X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
 
         test_files_ids = list(final_df_test['file_id'])
-        # strains_list = list(final_df['Strain'])
-        # cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
-        # temp_scores = cross_val_predict(model, X, y.values.ravel(), cv=cv,
-        #                                 method='predict_proba',
-        #                                 n_jobs=num_of_processes)
-        # true_results = y.values.ravel()
-        if use_faiss_knn and os.name != 'nt':
-            print(f"Using FaissKNeighbors with K: {knn_k_size}")
-            model = FaissKNeighbors(knn_k_size)
+        if model_classifier == "knn":
+            if use_faiss_knn and os.name != 'nt':
+                print(f"Using FaissKNeighbors with K: {knn_k_size}")
+                model = FaissKNeighbors(knn_k_size)
+            else:
+                model = KNeighborsClassifier(n_neighbors=knn_k_size)
+        elif model_classifier == "xgboost":
+            model = xgboost.XGBClassifier(max_depth=4, n_estimators=300, subsample=0.8, max_features=0.8, learning_rate=0.1, n_jobs=10)
         else:
-            # model = xgboost.XGBClassifier(random_state=random_seed)
-            # model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
-            model = KNeighborsClassifier(n_neighbors=knn_k_size)
+            raise Exception(f"model_classifier: {model_classifier} is invalid!")
+
         model.fit(X_train, y_train.values.ravel())
         temp_scores = model.predict_proba(X_test)
         true_results = y_test.values.ravel()
