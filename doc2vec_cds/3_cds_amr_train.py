@@ -20,7 +20,7 @@ if __name__ == '__main__':
     MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
     LOAD_EMBEDDING_DF = True
     USE_FAISS_KNN = True
-    KNN_K_SIZE = 7
+    KNN_K_SIZE = 21
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_labels.csv"
     prefix = '.'
@@ -53,7 +53,7 @@ if __name__ == '__main__':
             current_date_folder = get_time_as_str()
             embedding_df_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_embeddings_df", d2v_model_folder_name)
             results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_embeddings_classification_results", d2v_model_folder_name, current_date_folder)
-            all_results_dic = {"antibiotic": [], "agg_method": [], "accuracy": [], "f1_score": [], "auc": []}
+            all_results_dic = {"antibiotic": [], "agg_method": [], "accuracy": [], "f1_score": [], "auc": [], "recall": [], "precision": []}
             antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
             input_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_genome_files")
             amr_file_path = os.path.join(prefix, 'results_files', BACTERIA, amr_data_file_name)

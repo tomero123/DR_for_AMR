@@ -1,13 +1,14 @@
 import numpy as np
-import faiss
+import os
+if os.name != 'nt':
+    import faiss
 
 
 class FaissKNeighbors:
-    def __init__(self, k, resistance_ind):
+    def __init__(self, k):
         self.index = None
         self.y = None
         self.k = k
-        self.resistance_ind = resistance_ind
 
     def fit(self, X, y):
         self.index = faiss.IndexFlatL2(X.shape[1])
@@ -23,17 +24,11 @@ class FaissKNeighbors:
     def predict_proba(self, X):
         distances, indices = self.index.search(np.ascontiguousarray(X.astype(np.float32)), k=self.k)
         votes = self.y[indices]
-        s_score = (votes == "S").sum(axis=1) / len(votes[0])
-        r_score = (votes == "R").sum(axis=1) / len(votes[0])
-        if self.resistance_ind == 1:
-            return np.vstack((s_score, r_score)).T
-        elif self.resistance_ind == 0:
-            return np.vstack((r_score, s_score)).T
-        else:
-            raise Exception(f"resistance_ind should be either 0 or 1 and it actual: {self.resistance_ind}")
+        s_score = (votes == 1).sum(axis=1) / len(votes[0])
+        r_score = (votes == 0).sum(axis=1) / len(votes[0])
+        return np.vstack((s_score, r_score)).T
 
     def get_params(self):
         return {
             "k": self.k,
-            "resistance_ind": self.resistance_ind
         }

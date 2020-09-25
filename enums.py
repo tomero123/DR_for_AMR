@@ -16,7 +16,7 @@ class ProcessingMode(Enum):
 
 # antibiotic dic
 ANTIBIOTIC_DIC = {
-    Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem'],
+    Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['imipenem', 'ceftazidime', 'meropenem', 'levofloxacin', 'amikacin'],
     Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value: ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide'],
     Bacteria.TEST.value: ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem'],
 }
