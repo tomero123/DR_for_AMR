@@ -20,7 +20,7 @@ if __name__ == '__main__':
     MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
     LOAD_EMBEDDING_DF = True
     USE_FAISS_KNN = True
-    KNN_K_SIZE = 21
+    KNN_K_SIZE = 5
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_labels.csv"
     prefix = '.'
