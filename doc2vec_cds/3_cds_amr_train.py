@@ -19,7 +19,7 @@ if __name__ == '__main__':
     # PARAMS
     MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
     MODEL_CLASSIFIER = "knn" if len(sys.argv) <= 2 else sys.argv[2]  # can be "knn" or "xgboost"
-    KNN_K_SIZE = 5 if len(sys.argv) <= 3 else sys.argv[3]
+    KNN_K_SIZE = 5 if len(sys.argv) <= 3 else int(sys.argv[3])
     LOAD_EMBEDDING_DF = True
     USE_FAISS_KNN = True
     workers = multiprocessing.cpu_count()
