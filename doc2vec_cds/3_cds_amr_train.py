@@ -10,10 +10,10 @@ import pandas as pd
 import time
 import json
 
-from doc2vec_cds.cds_utils import get_label_df, train_test_and_write_results_cv
+from doc2vec_cds.cds_utils import get_label_df, train_test_and_write_results_cv, get_current_results_folder
 from doc2vec_cds.Doc2VecCDS import Doc2VecCDSLoader
 from enums import Bacteria, ANTIBIOTIC_DIC, EMBEDDING_DF_FILE_NAME, METADATA_DF_FILE_NAME
-from utils import get_time_as_str
+from MyLogger import Logger
 
 if __name__ == '__main__':
     # PARAMS
@@ -51,9 +51,13 @@ if __name__ == '__main__':
         K = model_conf["k"]
         SHIFT_SIZE = model_conf["shift_size"]
         for BACTERIA in BACTERIA_LIST:
-            current_date_folder = get_time_as_str()
+            current_results_folder = get_current_results_folder(MODEL_CLASSIFIER, KNN_K_SIZE)
             embedding_df_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_embeddings_df", d2v_model_folder_name)
-            results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_embeddings_classification_results", d2v_model_folder_name, current_date_folder)
+            results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_embeddings_classification_results", d2v_model_folder_name, current_results_folder)
+            if not os.path.exists(results_file_folder):
+                os.makedirs(results_file_folder)
+            log_path = os.path.join(results_file_folder, f"log_{current_results_folder}.txt")
+            sys.stdout = Logger(log_path)
             all_results_dic = {"antibiotic": [], "agg_method": [], "accuracy": [], "f1_score": [], "auc": [], "recall": [], "precision": []}
             antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
             input_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_genome_files")
@@ -96,9 +100,7 @@ if __name__ == '__main__':
 
             for antibiotic in antibiotic_list:
                 t1 = time.time()
-                if not os.path.exists(results_file_folder):
-                    os.makedirs(results_file_folder)
-                results_file_name = f"{antibiotic}_{current_date_folder}.xlsx"
+                results_file_name = f"{antibiotic}_{current_results_folder}.xlsx"
                 results_file_path = os.path.join(results_file_folder, results_file_name)
                 label_df = get_label_df(amr_df, files_list, antibiotic)
                 final_df = embedding_df.merge(label_df[['file_id', 'label']], on='file_id', how='inner')
@@ -110,7 +112,7 @@ if __name__ == '__main__':
 
                 print(f"Finished training classifier for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t3-t2) / 60, 4)} minutes")
             all_results_df = pd.DataFrame(all_results_dic)
-            writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_date_folder}.xlsx"), engine='xlsxwriter')
+            writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_results_folder}.xlsx"), engine='xlsxwriter')
             all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
             # workbook = writer.book
             # workbook.close()

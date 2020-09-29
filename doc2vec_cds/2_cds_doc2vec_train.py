@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
@@ -10,6 +11,7 @@ import datetime
 from doc2vec_cds.Doc2VecCDS import Doc2VecCDS
 from utils import get_time_as_str
 from enums import Bacteria, ProcessingMode
+from MyLogger import Logger
 
 if __name__ == '__main__':
     # PARAMS
@@ -34,11 +36,16 @@ if __name__ == '__main__':
         "k": K,
         "shift_size": SHIFT_SIZE
     }
-    print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"Started dov2vec training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} num of workers: {workers} model_folder_name: {model_folder_name}")
+
     prefix = '..' if os.name == 'nt' else '.'
     input_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_genome_files")
     models_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_models", model_folder_name)
+    if not os.path.exists(models_folder):
+        os.makedirs(models_folder)
+    log_path = os.path.join(models_folder, f"log_{model_folder_name}.txt")
+    sys.stdout = Logger(log_path)
+    print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Started dov2vec training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} num of workers: {workers} model_folder_name: {model_folder_name}")
     files_list = os.listdir(input_folder)
     files_list = [x for x in files_list if ".fna.gz" in x]
     #

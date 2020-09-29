@@ -135,9 +135,6 @@ class Doc2VecCDS(object):
         model.build_vocab(corpus_data)
         model.train(corpus_data, total_examples=model.corpus_count, epochs=epochs)
 
-        if not os.path.exists(self.models_folder):
-            os.makedirs(self.models_folder)
-
         model.save(os.path.join(self.models_folder, "d2v.model"))
         model.save_word2vec_format(os.path.join(self.models_folder, "w2v.model"))
         with open(os.path.join(self.models_folder, "model_conf.json"), "w") as write_file:
