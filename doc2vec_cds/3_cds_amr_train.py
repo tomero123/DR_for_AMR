@@ -33,7 +33,7 @@ if __name__ == '__main__':
     ]
     # Define list of model_names and processing method
     D2V_MODELS_LIST = [
-        "2020_09_01_1931_PM_overlapping_K_10_SS_2",
+        "2020_09_28_1100_PM_overlapping_K_10_SS_10",
     ]
 
     # PARAMS END
