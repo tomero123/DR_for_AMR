@@ -6,6 +6,7 @@ sys.path.append("/home/tomeror/tomer_thesis")
 import os
 import traceback
 import json
+import pickle
 import pandas as pd
 import numpy as np
 import xgboost
@@ -102,6 +103,12 @@ def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all
             raise Exception(f"model_classifier: {model_classifier} is invalid!")
 
         model.fit(X_train, y_train.values.ravel())
+
+        # Save model
+        model_file_path = results_file_path.replace(".xlsx", "_MODEL.p")
+        with open(model_file_path, 'wb') as f:
+            pickle.dump(model, f)
+
         temp_scores = model.predict_proba(X_test)
         true_results = y_test.values.ravel()
 
