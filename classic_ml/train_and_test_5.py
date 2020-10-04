@@ -2,229 +2,47 @@ import sys
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
-import json
 import os
 import pandas as pd
-import numpy as np
-from sklearn.ensemble import GradientBoostingClassifier
 import xgboost
-from sklearn.feature_selection import SelectKBest, chi2
-from sklearn.feature_selection import SelectFromModel
-from sklearn.model_selection import StratifiedKFold, cross_val_predict
-from sklearn import metrics
-import matplotlib.pyplot as plt
-import traceback
 import time
 
-
-def get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract):
-    try:
-        now = time.time()
-        kmers_df = pd.read_csv(os.path.join(path, dataset_file_name), compression='gzip')
-        kmers_original_count = kmers_df.shape[0]
-        print("kmers_df shape: {}".format(kmers_df.shape))
-        # # remove too rare and too common kmers
-        if rare_th:
-            non_zero_strains_count = kmers_df.astype(bool).sum(axis=1)
-            kmers_df = kmers_df[non_zero_strains_count > rare_th]
-            print("rare_th: {} ; kmers_df shape after rare kmers removal: {}".format(rare_th, kmers_df.shape))
-        if common_th_subtract:
-            non_zero_strains_count = kmers_df.astype(bool).sum(axis=1)
-            kmers_df = kmers_df[non_zero_strains_count < kmers_df.shape[1] - common_th_subtract]
-            print("common kmers value: {} ; kmers_df shape after common kmers removal: {}".format(kmers_df.shape[1] - common_th_subtract, kmers_df.shape))
-        kmers_final_count = kmers_df.shape[0]
-        with open(os.path.join(path, kmers_map_file_name), 'r') as f:
-            all_kmers_map = json.loads(f.read())
-        kmers_df = kmers_df.rename(columns=all_kmers_map)
-        kmers_df = kmers_df.set_index(['Unnamed: 0'])
-        # Transpose to have strains as rows and kmers as columns
-        kmers_df = kmers_df.T
-        print("kmers_df shape: {}".format(kmers_df.shape))
-        print("Finished running get_kmers_df in {} minutes".format(round((time.time() - now)/60), 4))
-        return kmers_df, kmers_original_count, kmers_final_count
-    except Exception as e:
-        print(f"ERROR at get_kmers_df, message: {e}")
-        traceback.print_exc()
-
-
-def get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_column, strain_column, remove_intermediate):
-    try:
-        print("Started running get_final_df for antibiotic: {}".format(antibiotic))
-        now = time.time()
-        amr_df = pd.read_csv(os.path.join(path, amr_data_file_name))
-        # Get label of specific antibiotic
-        label_df = amr_df[[ncbi_file_name_column, strain_column, antibiotic]]
-        # Remove antibiotics without resistance data
-        label_df = label_df[label_df[antibiotic] != '-']
-        # Remove antibiotics with label 'I'
-        if remove_intermediate:
-            label_df = label_df[label_df[antibiotic] != 'I']
-        label_df = label_df.rename(columns={antibiotic: "label"})
-        label_df = label_df.set_index(['NCBI File Name'])
-        print("label_df shape: {}".format(label_df.shape))
-        if os.name == 'nt':
-            # LOCAL ONLY!!!!$#!@!#@#$@!#@!
-            final_df = kmers_df.join(label_df, how="left")
-            final_df["label"] = ["S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "S", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R", "R"]
-        else:
-            # Join (inner) between kmers_df and label_df
-            final_df = kmers_df.join(label_df, how="inner")
-        print("final_df for antibiotic: {} have {} Strains with label and {} features".format(antibiotic, final_df.shape[0], final_df.shape[1] - 2))
-        print("Finished running get_final_df for antibiotic: {} in {} minutes".format(antibiotic, round((time.time() - now)/60), 4))
-        return final_df
-    except Exception as e:
-        print(f"ERROR at get_final_df, message: {e}")
-        traceback.print_exc()
-
-
-def train_test_and_write_results_cv(final_df, results_file_path, model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic):
-    try:
-        X = final_df.drop(['label', strain_column], axis=1).copy()
-        y = final_df[['label']].copy()
-
-        files_names = list(X.index)
-        strains_list = list(final_df[strain_column])
-
-        # Features Selection
-        if features_selection_n:
-            # X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
-            model.set_params(**model_params)
-            print(f"Started Feature selection model fit antibiotic: {antibiotic}")
-            now = time.time()
-            model.fit(X, y.values.ravel())
-            # Write csv of data after FS
-            d = model.feature_importances_
-            most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
-            temp_df = X.iloc[:, most_important_index]
-            temp_df["label"] = y.values.ravel()
-            temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
-            importance_list = []
-            for ind in most_important_index:
-                importance_list.append([X.columns[ind], d[ind]])
-            importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
-            importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
-            print(f"Finished running Feature selection model fit for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X.shape: {X.shape}")
-            print(f"Started Feature selection SelectFromModel for antibiotic: {antibiotic}")
-            now = time.time()
-            selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
-            X = selection.transform(X)
-            print(f"Finished running Feature selection SelectFromModel for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X.shape: {X.shape}")
-
-        # Create weight according to the ratio of each class
-        resistance_weight = (y['label'] == "S").sum() / (y['label'] == "R").sum() \
-            if (y['label'] == "S").sum() / (y['label'] == "R").sum() > 0 else 1
-        sample_weight = np.array([resistance_weight if i == "R" else 1 for i in y['label']])
-        print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
-
-        model.set_params(**model_params)
-        cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
-        print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
-        now = time.time()
-        classes = np.unique(y.values.ravel())
-        susceptible_ind = list(classes).index("S")
-        resistance_ind = list(classes).index("R")
-        temp_scores = cross_val_predict(model, X, y.values.ravel(), cv=cv,
-                                        fit_params={'sample_weight': sample_weight}, method='predict_proba',
-                                        n_jobs=num_of_processes)
-        predictions = []
-        for p in temp_scores:
-            if p[susceptible_ind] > p[resistance_ind]:
-                predictions.append("S")
-            else:
-                predictions.append("R")
-        results_df = pd.DataFrame({
-            'Strain': strains_list, 'File name': files_names, 'Label': y.values.ravel(),
-            'Susceptible score': [x[susceptible_ind] for x in temp_scores],
-            'Resistance score': [x[resistance_ind] for x in temp_scores],
-            'Prediction': predictions
-        })
-        model_parmas = json.dumps(model.get_params())
-        write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count, all_results_dic)
-        print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
-    except Exception as e:
-        print(f"ERROR at train_test_and_write_results_cv, message: {e}")
-
-
-def write_data_to_excel(results_df, results_file_path, classes, model_parmas, kmers_original_count, kmers_final_count, all_results_dic):
-    try:
-        writer = pd.ExcelWriter(results_file_path, engine='xlsxwriter')
-        name = 'Sheet1'
-        col_ind = 0
-        row_ind = 0
-        results_df.to_excel(writer, sheet_name=name, startcol=col_ind, startrow=row_ind, index=False)
-        col_ind += results_df.shape[1] + 1
-        y_true = list(results_df['Label'])
-        y_pred = list(results_df['Prediction'])
-        confusion_matrix = metrics.confusion_matrix(y_true, y_pred, labels=classes)
-        confusion_matrix_df = pd.DataFrame(confusion_matrix, columns=[x + "_Prediction" for x in classes], index=[x + "_Actual" for x in classes])
-        confusion_matrix_df.to_excel(writer, sheet_name=name, startcol=col_ind, startrow=row_ind, index=True)
-        row_ind += confusion_matrix_df.shape[0] + 2
-        accuracy = metrics.accuracy_score(y_true, y_pred)
-        f1_score = metrics.f1_score(y_true, y_pred, labels=classes, pos_label="R")
-        all_results_dic["antibiotic"].append(antibiotic)
-        all_results_dic["accuracy"].append(accuracy)
-        all_results_dic["f1_score"].append(f1_score)
-        evaluation_list = [["accuracy", accuracy], ["f1_score", f1_score], ["model_parmas", model_parmas],
-                           ["kmers_original_count", kmers_original_count], ["kmers_final_count", kmers_final_count]]
-        evaluation_df = pd.DataFrame(evaluation_list, columns=["metric", "value"])
-        evaluation_df.to_excel(writer, sheet_name=name, startcol=col_ind, startrow=row_ind, index=False)
-        workbook = writer.book
-        worksheet = writer.sheets[name]
-        # percent_format = workbook.add_format({'num_format': '0.00%'})
-        worksheet.set_column('A:Z', 15)
-        workbook.close()
-        write_roc_curve(y_pred, y_true, results_file_path)
-        print('Finished creating results file!')
-    except Exception as e:
-        print("Error in write_roc_curve.error message: {}".format(e))
-
-
-def write_roc_curve(y_pred, y_true, results_file_path):
-    try:
-        labels = [int(i == "R") for i in y_true]
-        predictions = [int(i == "R") for i in y_pred]
-        fpr, tpr, _ = metrics.roc_curve(labels, predictions)
-        auc = round(metrics.roc_auc_score(labels, predictions), 3)
-        plt.figure(figsize=(10, 10))
-        plt.xlabel("False Positive Rate")
-        plt.ylabel("True Positive Rate")
-        plt.plot(fpr, tpr, label="auc=" + str(auc))
-        plt.savefig(results_file_path.replace(".xlsx", ".png"),  bbox_inches="tight")
-    except Exception as e:
-        print("Error in write_roc_curve.error message: {}".format(e))
-
+from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_results_cv, get_kmers_df, \
+    get_current_results_folder, get_label_df
+from MyLogger import Logger
+from enums import Bacteria, ANTIBIOTIC_DIC
 
 # *********************************************************************************************************************************
 # Config
-
-BACTERIA = "pseudomonas_aureginosa" if len(sys.argv) < 2 else sys.argv[1]
-K = 10 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
+BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
+K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
 
 remove_intermediate = True
 
 # Model params
 random_seed = 1
-k_folds = 10  # relevant only if test_mode = "cv"
 rare_th = 5  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
-features_selection_n = 1000  # number of features to leave after feature selection
-# model = GradientBoostingClassifier(random_state=random_seed)
-model = xgboost.XGBClassifier(random_state=random_seed)
+features_selection_n = 300  # number of features to leave after feature selection
+model = xgboost.XGBClassifier(
+    random_state=random_seed,
+    max_depth=4,
+    n_estimators=300,
+    subsample=0.8,
+    colsample_bytree=0.8,  # like max_features in sklearn
+    learning_rate=0.1,
+    n_jobs=10
+)
 if os.name == 'nt':
-    model_params = {'n_estimators': 2, 'learning_rate': 0.5}
-    num_of_processes = 1
+    model = xgboost.XGBClassifier(
+        n_estimators=2,
+        learning_rate=0.5,
+        colsample_bytree=0.8,
+    )
     antibiotic_list = ['levofloxacin', 'ceftazidime']
 else:
-    # model_params = {}
-    model_params = {'max_depth': 4, 'n_estimators': 300, 'max_features': 0.8, 'subsample': 0.8, 'learning_rate': 0.1}
-    num_of_processes = 10
-    if BACTERIA == "mycobacterium_tuberculosis":
-        # antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide', 'rifampicin', 'kanamycin', 'ofloxacin']
-        # antibiotic_list = ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide']
-        antibiotic_list = ['isoniazid', 'ethambutol']
-    elif BACTERIA == "pseudomonas_aureginosa":
-        # antibiotic_list = ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem', 'ciprofloxacin', 'gentamicin', 'tobramycin']
-        antibiotic_list = ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem']
+    antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
+
 # *********************************************************************************************************************************
 # Constant PARAMS
 if os.name == 'nt':
@@ -233,27 +51,39 @@ if os.name == 'nt':
 else:
     dataset_file_name = f'all_kmers_file_K_{K}.csv.gz'
     kmers_map_file_name = f'all_kmers_map_K_{K}.txt'
-amr_data_file_name = 'amr_data_summary.csv'
 
-ncbi_file_name_column = 'NCBI File Name'
-strain_column = 'Strain'
+
+amr_data_file_name = 'amr_labels.csv'
 
 prefix = '..' if os.name == 'nt' else '.'
 path = os.path.join(prefix, 'results_files', BACTERIA)
 
 # Config END
 # *********************************************************************************************************************************
-print(f"Started bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
+
 now_global = time.time()
 kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
-all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": []}
-results_path = os.path.join(path, "CV_Results_20112019_FS_300")
+all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": [], "auc": [], "recall": [], "precision": []}
+
+amr_df = pd.read_csv(os.path.join(path, amr_data_file_name))
+results_file_folder = get_current_results_folder(features_selection_n)
+results_path = os.path.join(path, "classic_ml_results", results_file_folder)
 if not os.path.exists(results_path):
     os.makedirs(results_path)
+log_path = os.path.join(results_path, f"log_{results_file_folder}.txt")
+sys.stdout = Logger(log_path)
+
+print(f"Started bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
 for antibiotic in antibiotic_list:
-    results_file_name = "{}_RESULTS.xlsx".format(antibiotic)
-    final_df = get_final_df(path, kmers_df, amr_data_file_name, antibiotic, ncbi_file_name_column, strain_column, remove_intermediate)
-    train_test_and_write_results_cv(final_df, os.path.join(results_path, results_file_name), model, model_params, k_folds, num_of_processes, random_seed, strain_column, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
+    print(f"Started running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic}")
+    now = time.time()
+    label_df = get_label_df(amr_df, antibiotic)
+    final_df = get_final_df(antibiotic, kmers_df, label_df)
+    print(f"Finished running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
+    results_file_name = f"{antibiotic}_RESULTS_{results_file_folder}.xlsx"
+    results_file_path = os.path.join(results_path, results_file_name)
+    train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
+print(all_results_dic)
 all_results_df = pd.DataFrame(all_results_dic)
 writer = pd.ExcelWriter(os.path.join(results_path, "ALL_RESULTS.xlsx"), engine='xlsxwriter')
 all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
