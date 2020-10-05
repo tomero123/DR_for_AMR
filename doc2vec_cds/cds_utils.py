@@ -105,9 +105,10 @@ def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all
         model.fit(X_train, y_train.values.ravel())
 
         # Save model
-        model_file_path = results_file_path.replace(".xlsx", "_MODEL.p")
-        with open(model_file_path, 'wb') as f:
-            pickle.dump(model, f)
+        if not use_faiss_knn:
+            model_file_path = results_file_path.replace(".xlsx", "_MODEL.p")
+            with open(model_file_path, 'wb') as f:
+                pickle.dump(model, f)
 
         temp_scores = model.predict_proba(X_test)
         true_results = y_test.values.ravel()
