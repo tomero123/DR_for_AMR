@@ -78,7 +78,7 @@ def get_final_df(antibiotic, kmers_df, label_df):
             final_df["file_id"] = list(range(5,55))
         else:
             # Join (inner) between kmers_df and label_df
-            final_df = kmers_df.join(label_df, how="inner")
+            final_df = kmers_df.merge(label_df, how="inner", right_on="file_name", left_index=True)
         print("final_df for antibiotic: {} have {} Strains with label and {} features".format(antibiotic, final_df.shape[0], final_df.shape[1] - 2))
         return final_df
     except Exception as e:
