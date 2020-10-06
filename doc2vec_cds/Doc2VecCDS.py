@@ -115,7 +115,7 @@ class Doc2VecCDS(object):
         min_count = 100
         sample = 1e-4
         negative = 5
-        epochs = 3
+        epochs = 10
         # PARAMS END
 
         self.conf_dict["vector_size"] = vector_size
