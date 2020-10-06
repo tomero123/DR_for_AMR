@@ -112,7 +112,7 @@ class Doc2VecCDS(object):
         vector_size = self.vector_size
         window = self.window_size
         dm = 1
-        min_count = 20
+        min_count = 200
         sample = 1e-4
         negative = 5
         epochs = 3
