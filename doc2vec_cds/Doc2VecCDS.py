@@ -1,5 +1,7 @@
 import sys
 
+from doc2vec_cds.EpochSaver import EpochSaver
+
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
@@ -113,7 +115,7 @@ class Doc2VecCDS(object):
         min_count = 20
         sample = 1e-4
         negative = 5
-        epochs = 20
+        epochs = 3
         # PARAMS END
 
         self.conf_dict["vector_size"] = vector_size
@@ -124,8 +126,12 @@ class Doc2VecCDS(object):
         self.conf_dict["negative"] = negative
         self.conf_dict["epochs"] = epochs
 
+        with open(os.path.join(self.models_folder, "model_conf.json"), "w") as write_file:
+            json.dump(self.conf_dict, write_file)
+
         model = doc2vec.Doc2Vec(vector_size=vector_size, window=window, min_count=min_count,
                                 sample=sample, negative=negative, workers=self.workers, dm=dm,
+                                callbacks=[EpochSaver(os.path.join(self.models_folder, "checkpoints"))],
                                 # compute_loss=True, callbacks=[callback()]
                                 )
         print(f"model params:\nvector_size: {vector_size}\nwindow: {window}\ndm: {dm}\nmin_count: {min_count}\n"
@@ -136,9 +142,8 @@ class Doc2VecCDS(object):
         model.train(corpus_data, total_examples=model.corpus_count, epochs=epochs)
 
         model.save(os.path.join(self.models_folder, "d2v.model"))
-        model.save_word2vec_format(os.path.join(self.models_folder, "w2v.model"))
-        with open(os.path.join(self.models_folder, "model_conf.json"), "w") as write_file:
-            json.dump(self.conf_dict, write_file)
+        # model.save_word2vec_format(os.path.join(self.models_folder, "w2v.model"))
+
         print('total docs learned %s' % (len(model.docvecs)))
         print(f"Saved model to {self.models_folder}")
 
