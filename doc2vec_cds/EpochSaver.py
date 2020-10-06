@@ -20,8 +20,9 @@ class EpochSaver(CallbackAny2Vec):
             "Start next epoch ... ", sep="\n"
             )
         if os.path.isfile(os.path.join(self.savedir, f"model_epoch_{self.epoch - 1}.gz")):
-            print("Previous model deleted ")
             os.remove(os.path.join(self.savedir, f"model_epoch_{self.epoch - 1}.gz"))
+        if os.path.isfile(os.path.join(self.savedir, f"model_epoch_{self.epoch - 1}.gz.trainables.syn1neg.npz")):
             os.remove(os.path.join(self.savedir, f"model_epoch_{self.epoch - 1}.gz.trainables.syn1neg.npz"))
+        if os.path.isfile(os.path.join(self.savedir, f"model_epoch_{self.epoch - 1}.gz.wv.vectors.npz")):
             os.remove(os.path.join(self.savedir, f"model_epoch_{self.epoch - 1}.gz.wv.vectors.npz"))
         self.epoch += 1
