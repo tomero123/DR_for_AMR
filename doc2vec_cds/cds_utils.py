@@ -44,9 +44,9 @@ def write_data_to_excel(writer, antibiotic, agg_method, results_df, model_parmas
         fpr, tpr, thresholds = metrics.roc_curve(y_true, y_pred_score)
         num_pos_class = len([x for x in y_true if x == 1])
         num_neg_class = len([x for x in y_true if x == 0])
-        max_accuracy, best_threshold = get_metric_and_best_threshold_from_roc_curve(tpr, fpr, thresholds, num_pos_class, num_neg_class)
-        print(f"max_accuracy: {max_accuracy}, best_threshold: {best_threshold}")
-        y_pred = [1 if x > best_threshold else 0 for x in y_pred_score]
+        max_accuracy, resistance_threshold = get_metric_and_best_threshold_from_roc_curve(tpr, fpr, thresholds, num_pos_class, num_neg_class)
+        print(f"max_accuracy: {max_accuracy}, best_threshold: {resistance_threshold}")
+        y_pred = [1 if x > resistance_threshold else 0 for x in y_pred_score]
         confusion_matrix = metrics.confusion_matrix(y_true, y_pred)
         confusion_matrix_df = pd.DataFrame(confusion_matrix, columns=[x + "_Prediction" for x in ["S", "R"]], index=[x + "_Actual" for x in ["S", "R"]])
         confusion_matrix_df.to_excel(writer, sheet_name=agg_method, startcol=col_ind, startrow=row_ind, index=True)
@@ -63,7 +63,8 @@ def write_data_to_excel(writer, antibiotic, agg_method, results_df, model_parmas
         all_results_dic["recall"].append(recall)
         all_results_dic["f1_score"].append(f1_score)
         all_results_dic["auc"].append(auc)
-        evaluation_list = [["accuracy", accuracy], ["precision", precision], ["recall", recall], ["f1_score", f1_score], ["auc", auc], ["model_parmas", model_parmas]]
+        evaluation_list = [["accuracy", accuracy], ["precision", precision], ["recall", recall], ["f1_score", f1_score],
+                           ["auc", auc], ["model_parmas", model_parmas], ["resistance_threshold", resistance_threshold]]
         evaluation_df = pd.DataFrame(evaluation_list, columns=["metric", "value"])
         evaluation_df.to_excel(writer, sheet_name=agg_method, startcol=col_ind, startrow=row_ind, index=False)
         worksheet = writer.sheets[agg_method]

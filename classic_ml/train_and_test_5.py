@@ -85,8 +85,8 @@ for antibiotic in antibiotic_list:
     train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
 print(all_results_dic)
 all_results_df = pd.DataFrame(all_results_dic)
-writer = pd.ExcelWriter(os.path.join(results_path, "ALL_RESULTS.xlsx"), engine='xlsxwriter')
-all_results_df.to_excel(writer, sheet_name="Sheet1", index=False)
+writer = pd.ExcelWriter(os.path.join(results_path, f"ALL_RESULTS_{results_file_folder}.xlsx"), engine='xlsxwriter')
+all_results_df.iloc[::-1].to_excel(writer, sheet_name="Sheet1", index=False)
 workbook = writer.book
 workbook.close()
 print(f'DONE! Finished running bacteria: {BACTERIA}, antibiotics: {str(antibiotic_list)} in {round((time.time() - now_global) / 60, 4)} minutes')
