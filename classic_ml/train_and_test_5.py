@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import xgboost
 import time
+import json
 
 from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_results_cv, get_kmers_df, \
     get_current_results_folder, get_label_df
@@ -24,14 +25,20 @@ random_seed = 1
 rare_th = 5  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
 features_selection_n = 300  # number of features to leave after feature selection
+max_depth = 4
+n_estimators = 300
+subsample = 0.8
+colsample_bytree = 0.8  # like max_features in sklearn
+learning_rate = 0.1
+n_jobs = 10
 model = xgboost.XGBClassifier(
     random_state=random_seed,
-    max_depth=4,
-    n_estimators=300,
-    subsample=0.8,
-    colsample_bytree=0.8,  # like max_features in sklearn
-    learning_rate=0.1,
-    n_jobs=10
+    max_depth=max_depth,
+    n_estimators=n_estimators,
+    subsample=subsample,
+    colsample_bytree=colsample_bytree,  # like max_features in sklearn
+    learning_rate=learning_rate,
+    n_jobs=n_jobs
 )
 if os.name == 'nt':
     model = xgboost.XGBClassifier(
@@ -42,6 +49,15 @@ if os.name == 'nt':
     antibiotic_list = ['levofloxacin', 'ceftazidime']
 else:
     antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
+
+
+conf_dict = {
+    "bacteria": BACTERIA,
+    "K": K,
+    "model": model.__class__
+}
+conf_dict.update(model.get_params())
+
 
 # *********************************************************************************************************************************
 # Constant PARAMS
@@ -72,6 +88,9 @@ if not os.path.exists(results_path):
     os.makedirs(results_path)
 log_path = os.path.join(results_path, f"log_{results_file_folder}.txt")
 sys.stdout = Logger(log_path)
+
+with open(os.path.join(results_path, "params.json"), "w") as write_file:
+    json.dump(conf_dict, write_file)
 
 print(f"Started bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
 for antibiotic in antibiotic_list:
