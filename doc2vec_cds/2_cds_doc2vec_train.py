@@ -15,13 +15,14 @@ from MyLogger import Logger
 
 if __name__ == '__main__':
     # PARAMS
-    BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
-    PROCESSING_MODE = ProcessingMode.OVERLAPPING.value if len(sys.argv) <= 2 else sys.argv[2]  # can be "non_overlapping" or "overlapping"
+    BACTERIA = Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value if len(sys.argv) <= 1 else sys.argv[1]
+    PROCESSING_MODE = ProcessingMode.NON_OVERLAPPING.value if len(sys.argv) <= 2 else sys.argv[2]  # can be "non_overlapping" or "overlapping"
     VECTOR_SIZE = 300 if len(sys.argv) <= 3 else int(sys.argv[3])
     WINDOW_SIZE = 5 if len(sys.argv) <= 4 else int(sys.argv[4])
     K = 10 if len(sys.argv) <= 5 else int(sys.argv[5])  # Choose K size
     SHIFT_SIZE = 1 if len(sys.argv) <= 6 else int(sys.argv[6])  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
+    NUMBER_OF_TRAINING_STRAINS = 500  # if None take ALL strains
     # PARAMS END
 
     conf_str = f"_PM_{PROCESSING_MODE}_K_{K}_SS_{SHIFT_SIZE}"
@@ -48,7 +49,9 @@ if __name__ == '__main__':
     print(f"Started dov2vec training for bacteria: {BACTERIA} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} num of workers: {workers} model_folder_name: {model_folder_name}")
     files_list = os.listdir(input_folder)
     files_list = [x for x in files_list if ".fna.gz" in x]
-    #
+
+    if NUMBER_OF_TRAINING_STRAINS:
+        files_list = files_list[:NUMBER_OF_TRAINING_STRAINS]
 
     trainer = Doc2VecCDS(input_folder, models_folder, files_list, folder_time, PROCESSING_MODE, K, SHIFT_SIZE, VECTOR_SIZE, WINDOW_SIZE, workers, conf_dict)
     trainer.run()
