@@ -54,7 +54,7 @@ else:
 conf_dict = {
     "bacteria": BACTERIA,
     "K": K,
-    "model": model.__class__
+    "model": str(model.__class__)
 }
 conf_dict.update(model.get_params())
 
