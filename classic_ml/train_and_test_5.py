@@ -8,8 +8,8 @@ import xgboost
 import time
 import json
 
-from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_results_cv, get_kmers_df, \
-    get_current_results_folder, get_label_df
+from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_results, get_kmers_df, \
+    get_current_results_folder, get_label_df, train_test_and_write_results_cv
 from MyLogger import Logger
 from enums import Bacteria, ANTIBIOTIC_DIC
 
@@ -22,6 +22,7 @@ remove_intermediate = True
 
 # Model params
 random_seed = 1
+test_method = "cv"  # can be either "train_test" or "cv"
 rare_th = 5  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
 features_selection_n = 300  # number of features to leave after feature selection
@@ -51,12 +52,13 @@ else:
     antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
 
 
-conf_dict = {
+params_dict = {
     "bacteria": BACTERIA,
+    "test_method": test_method,
     "K": K,
     "model": str(model.__class__)
 }
-conf_dict.update(model.get_params())
+params_dict.update(model.get_params())
 
 
 # *********************************************************************************************************************************
@@ -89,9 +91,6 @@ if not os.path.exists(results_path):
 log_path = os.path.join(results_path, f"log_{results_file_folder}.txt")
 sys.stdout = Logger(log_path)
 
-with open(os.path.join(results_path, "params.json"), "w") as write_file:
-    json.dump(conf_dict, write_file)
-
 print(f"Started bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
 for antibiotic in antibiotic_list:
     print(f"Started running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic}")
@@ -101,11 +100,24 @@ for antibiotic in antibiotic_list:
     print(f"Finished running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
     results_file_name = f"{antibiotic}_RESULTS_{results_file_folder}.xlsx"
     results_file_path = os.path.join(results_path, results_file_name)
-    train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
+    if test_method == "train_test":
+        train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
+    elif test_method == "cv":
+        train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, random_seed)
+    else:
+        raise Exception("Invalid test_method")
 print(all_results_dic)
 all_results_df = pd.DataFrame(all_results_dic)
 writer = pd.ExcelWriter(os.path.join(results_path, f"ALL_RESULTS_{results_file_folder}.xlsx"), engine='xlsxwriter')
 all_results_df.iloc[::-1].to_excel(writer, sheet_name="Sheet1", index=False)
 workbook = writer.book
 workbook.close()
+
+
+params_dict.update(all_results_df)
+
+with open(os.path.join(results_path, "params.json"), "w") as write_file:
+    json.dump(params_dict, write_file)
+
+
 print(f'DONE! Finished running bacteria: {BACTERIA}, antibiotics: {str(antibiotic_list)} in {round((time.time() - now_global) / 60, 4)} minutes')

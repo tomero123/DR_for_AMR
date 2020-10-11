@@ -86,7 +86,7 @@ def get_final_df(antibiotic, kmers_df, label_df):
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic):
+def train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic):
     try:
         non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
         train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 1]["file_id"])
@@ -171,6 +171,84 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
         traceback.print_exc()
+
+
+def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, random_seed):
+    try:
+        k_folds = 10
+        num_of_processes = 10
+        non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
+
+        final_df['label'].replace('R', 1, inplace=True)
+        final_df['label'].replace('S', 0, inplace=True)
+        X = final_df.drop(non_features_columns, axis=1).copy()
+        y = final_df[['label']].copy()
+
+        print(f"X size: {X.shape}  y size: {y.shape}")
+
+        # Features Selection
+        if features_selection_n:
+            # X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
+            print(f"Started Feature selection model fit antibiotic: {antibiotic}")
+            now = time.time()
+            model.fit(X, y.values.ravel())
+            # Write csv of data after FS
+            d = model.feature_importances_
+            most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
+            temp_df = X.iloc[:, most_important_index]
+            temp_df["label"] = y.values.ravel()
+            temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
+            importance_list = []
+            for ind in most_important_index:
+                importance_list.append([X.columns[ind], d[ind]])
+            importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
+            importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
+            print(f"Finished running Feature selection model fit for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X.shape: {X.shape}")
+            print(f"Started Feature selection SelectFromModel for antibiotic: {antibiotic}")
+            now = time.time()
+            selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
+            X = selection.transform(X)
+            print(f"Finished running Feature selection SelectFromModel for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X.shape: {X.shape}")
+
+        # Create weight according to the ratio of each class
+        resistance_weight = (y['label'] == "S").sum() / (y['label'] == "R").sum() \
+            if (y['label'] == "S").sum() / (y['label'] == "R").sum() > 0 else 1
+        sample_weight = np.array([resistance_weight if i == "R" else 1 for i in y['label']])
+        print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
+
+        cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
+        print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
+        now = time.time()
+        classes = np.unique(y.values.ravel())
+        susceptible_ind = list(classes).index("S")
+        resistance_ind = list(classes).index("R")
+        temp_scores = cross_val_predict(model, X, y.values.ravel(), cv=cv,
+                                        fit_params={'sample_weight': sample_weight}, method='predict_proba',
+                                        n_jobs=num_of_processes)
+
+        true_results = y.values.ravel()
+
+        predictions = []
+        for p in temp_scores:
+            if p[0] > p[1]:
+                predictions.append(0)
+            else:
+                predictions.append(1)
+        results_df = pd.DataFrame({
+            'file_id': list(final_df['file_id']),
+            'Strain': list(final_df['Strain']),
+            'File name': list(final_df['file_name']),
+            'Label': true_results,
+            'Resistance score': [x[1] for x in temp_scores],
+            'Prediction': predictions
+        })
+        model_parmas = json.dumps(model.get_params())
+        write_data_to_excel(antibiotic, results_df, results_file_path, model_parmas, kmers_original_count,
+                            kmers_final_count, all_results_dic)
+        print(
+            f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
+    except Exception as e:
+        print(f"ERROR at train_test_and_write_results_cv, message: {e}")
 
 
 def write_data_to_excel(antibiotic, results_df, results_file_path, model_parmas, kmers_original_count, kmers_final_count, all_results_dic):
