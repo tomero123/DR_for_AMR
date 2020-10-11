@@ -103,7 +103,17 @@ def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all
         else:
             raise Exception(f"model_classifier: {model_classifier} is invalid!")
 
-        model.fit(X_train, y_train.values.ravel())
+
+        # Create weight according to the ratio of each class
+        resistance_weight = (y_train['label'] == "S").sum() / (y_train['label'] == "R").sum() \
+            if (y_train['label'] == "S").sum() / (y_train['label'] == "R").sum() > 0 else 1
+        sample_weight = np.array([resistance_weight if i == "R" else 1 for i in y_train['label']])
+        print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
+
+        if model_classifier == "xgboost":
+            model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
+        else:
+            model.fit(X_train, y_train.values.ravel())
 
         # Save model
         if not use_faiss_knn:
