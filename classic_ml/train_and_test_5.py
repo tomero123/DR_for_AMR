@@ -17,12 +17,12 @@ from enums import Bacteria, ANTIBIOTIC_DIC
 # Config
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
 K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
+TEST_METHOD = "cv" if len(sys.argv) <= 3 else sys.argv[3]  # can be either "train_test" or "cv"
 
 remove_intermediate = True
 
 # Model params
 random_seed = 1
-test_method = "cv"  # can be either "train_test" or "cv"
 rare_th = 5  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
 features_selection_n = 300  # number of features to leave after feature selection
@@ -54,7 +54,7 @@ else:
 
 params_dict = {
     "bacteria": BACTERIA,
-    "test_method": test_method,
+    "test_method": TEST_METHOD,
     "K": K,
     "model": str(model.__class__)
 }
@@ -100,9 +100,9 @@ for antibiotic in antibiotic_list:
     print(f"Finished running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
     results_file_name = f"{antibiotic}_RESULTS_{results_file_folder}.xlsx"
     results_file_path = os.path.join(results_path, results_file_name)
-    if test_method == "train_test":
+    if TEST_METHOD == "train_test":
         train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
-    elif test_method == "cv":
+    elif TEST_METHOD == "cv":
         train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, random_seed)
     else:
         raise Exception("Invalid test_method")
