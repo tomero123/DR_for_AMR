@@ -186,9 +186,9 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
         print(f"X size: {X.shape}  y size: {y.shape}")
 
         # Create weight according to the ratio of each class
-        resistance_weight = (y['label'] == "S").sum() / (y['label'] == "R").sum() \
-            if (y['label'] == "S").sum() / (y['label'] == "R").sum() > 0 else 1
-        sample_weight = np.array([resistance_weight if i == "R" else 1 for i in y['label']])
+        resistance_weight = (y['label'] == 0).sum() / (y['label'] == 1).sum() \
+            if (y['label'] == 0).sum() / (y['label'] == 1).sum() > 0 else 1
+        sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y['label']])
         print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
 
         # Features Selection
@@ -291,8 +291,8 @@ def write_data_to_excel(antibiotic, results_df, results_file_path, model_parmas,
 
 def write_roc_curve(y_pred, y_true, results_file_path):
     try:
-        labels = [int(i == "R") for i in y_true]
-        predictions = [int(i == "R") for i in y_pred]
+        labels = [int(i == 1) for i in y_true]
+        predictions = [int(i == 1) for i in y_pred]
         fpr, tpr, _ = metrics.roc_curve(labels, predictions)
         auc = round(metrics.roc_auc_score(labels, predictions), 3)
         plt.figure(figsize=(10, 10))
