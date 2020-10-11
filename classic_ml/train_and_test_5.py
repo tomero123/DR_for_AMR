@@ -114,7 +114,7 @@ workbook = writer.book
 workbook.close()
 
 
-params_dict.update(all_results_df)
+params_dict.update(all_results_dic)
 
 with open(os.path.join(results_path, "params.json"), "w") as write_file:
     json.dump(params_dict, write_file)
