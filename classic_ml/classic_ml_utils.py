@@ -101,12 +101,17 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, ant
         y_test = final_df_test[['label']].copy()
         print(f"X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
 
+        # Create weight according to the ratio of each class
+        resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
+            if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
+        sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
+        print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
+
         # Features Selection
         if features_selection_n:
-            # X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
             print(f"Started Feature selection model fit antibiotic: {antibiotic}")
             now = time.time()
-            model.fit(X_train, y_train.values.ravel())
+            model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
             # Write csv of data after FS
             d = model.feature_importances_
             most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
@@ -125,12 +130,6 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, ant
             X_train = selection.transform(X_train)
             X_test = selection.transform(X_test)
             print(f"Finished running Feature selection SelectFromModel for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}, X_test.shape: {X_test.shape}")
-
-        # Create weight according to the ratio of each class
-        resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
-            if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
-        sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
-        print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
 
         model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
 
@@ -186,12 +185,17 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
 
         print(f"X size: {X.shape}  y size: {y.shape}")
 
+        # Create weight according to the ratio of each class
+        resistance_weight = (y['label'] == "S").sum() / (y['label'] == "R").sum() \
+            if (y['label'] == "S").sum() / (y['label'] == "R").sum() > 0 else 1
+        sample_weight = np.array([resistance_weight if i == "R" else 1 for i in y['label']])
+        print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
+
         # Features Selection
         if features_selection_n:
-            # X = SelectKBest(chi2, k=features_selection_n).fit_transform(X, y)
             print(f"Started Feature selection model fit antibiotic: {antibiotic}")
             now = time.time()
-            model.fit(X, y.values.ravel())
+            model.fit(X, y.values.ravel(), sample_weight=sample_weight)
             # Write csv of data after FS
             d = model.feature_importances_
             most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
@@ -209,12 +213,6 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
             selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
             X = selection.transform(X)
             print(f"Finished running Feature selection SelectFromModel for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X.shape: {X.shape}")
-
-        # Create weight according to the ratio of each class
-        resistance_weight = (y['label'] == "S").sum() / (y['label'] == "R").sum() \
-            if (y['label'] == "S").sum() / (y['label'] == "R").sum() > 0 else 1
-        sample_weight = np.array([resistance_weight if i == "R" else 1 for i in y['label']])
-        print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
 
         cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
         print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
