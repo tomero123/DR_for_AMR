@@ -132,7 +132,7 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, ant
         sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
         print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
 
-        model.fit(X_train, y_train.values.ravel())
+        model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
 
         # Save model
         model_file_path = results_file_path.replace(".xlsx", "_MODEL.p")
@@ -219,9 +219,6 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
         cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
         print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
         now = time.time()
-        classes = np.unique(y.values.ravel())
-        susceptible_ind = list(classes).index("S")
-        resistance_ind = list(classes).index("R")
         temp_scores = cross_val_predict(model, X, y.values.ravel(), cv=cv,
                                         fit_params={'sample_weight': sample_weight}, method='predict_proba',
                                         n_jobs=num_of_processes)
