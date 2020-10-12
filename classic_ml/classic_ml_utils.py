@@ -86,7 +86,7 @@ def get_final_df(antibiotic, kmers_df, label_df):
         traceback.print_exc()
 
 
-def train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic):
+def train_test_and_write_results(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic):
     try:
         non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
         train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 1]["file_id"])
@@ -110,6 +110,7 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, ant
         # Features Selection
         if features_selection_n:
             print(f"Started Feature selection model fit antibiotic: {antibiotic}")
+            model.set_params(**model_params)
             now = time.time()
             model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
             # Write csv of data after FS
@@ -131,6 +132,7 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, ant
             X_test = selection.transform(X_test)
             print(f"Finished running Feature selection SelectFromModel for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}, X_test.shape: {X_test.shape}")
 
+        model.set_params(**model_params)
         model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
 
         # Save model
@@ -172,7 +174,7 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, ant
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, random_seed):
+def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, random_seed):
     try:
         k_folds = 10
         num_of_processes = 10
@@ -193,27 +195,28 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
 
         # Features Selection
         if features_selection_n:
-            print(f"Started Feature selection model fit antibiotic: {antibiotic}")
+            print(f"Started running Feature selection for antibiotic: {antibiotic}")
+            model.set_params(**model_params)
             now = time.time()
-            model.fit(X, y.values.ravel(), sample_weight=sample_weight)
+            model.fit(X, y.values.ravel(),
+                      # sample_weight=sample_weight
+                      )
             # Write csv of data after FS
-            d = model.feature_importances_
-            most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
-            temp_df = X.iloc[:, most_important_index]
-            temp_df["label"] = y.values.ravel()
-            temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
-            importance_list = []
-            for ind in most_important_index:
-                importance_list.append([X.columns[ind], d[ind]])
-            importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
-            importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
-            print(f"Finished running Feature selection model fit for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X.shape: {X.shape}")
-            print(f"Started Feature selection SelectFromModel for antibiotic: {antibiotic}")
-            now = time.time()
+            # d = model.feature_importances_
+            # most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
+            # temp_df = X.iloc[:, most_important_index]
+            # temp_df["label"] = y.values.ravel()
+            # temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
+            # importance_list = []
+            # for ind in most_important_index:
+            #     importance_list.append([X.columns[ind], d[ind]])
+            # importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
+            # importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
             selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
             X = selection.transform(X)
-            print(f"Finished running Feature selection SelectFromModel for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X.shape: {X.shape}")
+            print(f"Finished running Feature selection for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X.shape: {X.shape}")
 
+        model.set_params(**model_params)
         cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
         print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
         now = time.time()

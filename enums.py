@@ -14,6 +14,11 @@ class ProcessingMode(Enum):
     OVERLAPPING = "overlapping"
 
 
+class TestMethod(Enum):
+    CV = "cv"
+    TRAIN_TEST = "train_test"
+
+
 # antibiotic dic
 ANTIBIOTIC_DIC = {
     Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['imipenem', 'ceftazidime', 'meropenem', 'levofloxacin', 'amikacin'],

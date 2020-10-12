@@ -11,13 +11,13 @@ import json
 from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_results, get_kmers_df, \
     get_current_results_folder, get_label_df, train_test_and_write_results_cv
 from MyLogger import Logger
-from enums import Bacteria, ANTIBIOTIC_DIC
+from enums import Bacteria, ANTIBIOTIC_DIC, TestMethod
 
 # *********************************************************************************************************************************
 # Config
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
 K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
-TEST_METHOD = "cv" if len(sys.argv) <= 3 else sys.argv[3]  # can be either "train_test" or "cv"
+TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 3 else sys.argv[3]  # can be either "train_test" or "cv"
 
 remove_intermediate = True
 
@@ -29,24 +29,25 @@ features_selection_n = 300  # number of features to leave after feature selectio
 max_depth = 4
 n_estimators = 300
 subsample = 0.8
-colsample_bytree = 1  # like max_features in sklearn
+max_features = 0.8  # like max_features in sklearn
 learning_rate = 0.1
 n_jobs = 10
-model = xgboost.XGBClassifier(
-    random_state=random_seed,
-    max_depth=max_depth,
-    n_estimators=n_estimators,
-    subsample=subsample,
-    colsample_bytree=colsample_bytree,  # like max_features in sklearn
-    learning_rate=learning_rate,
-    n_jobs=n_jobs
-)
+model = xgboost.XGBClassifier(random_state=random_seed)
+model_params = {
+    "max_depth": max_depth,
+    "n_estimators": n_estimators,
+    "subsample": subsample,
+    "max_features": max_features,  # like max_features in sklearn
+    "learning_rate": learning_rate,
+    "n_jobs": n_jobs
+}
 if os.name == 'nt':
-    model = xgboost.XGBClassifier(
-        n_estimators=2,
-        learning_rate=0.5,
-        colsample_bytree=0.8,
-    )
+    model = xgboost.XGBClassifier(random_state=random_seed)
+    model_params = {
+        "n_estimators": 2,
+        "max_features": 0.8,  # like max_features in sklearn
+        "learning_rate": 0.5,
+    }
     antibiotic_list = ['levofloxacin', 'ceftazidime']
 else:
     antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
@@ -100,10 +101,10 @@ for antibiotic in antibiotic_list:
     print(f"Finished running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
     results_file_name = f"{antibiotic}_RESULTS_{results_file_folder}.xlsx"
     results_file_path = os.path.join(results_path, results_file_name)
-    if TEST_METHOD == "train_test":
-        train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
-    elif TEST_METHOD == "cv":
-        train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, random_seed)
+    if TEST_METHOD == TestMethod.TRAIN_TEST.value:
+        train_test_and_write_results(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
+    elif TEST_METHOD == TestMethod.CV.value:
+        train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, random_seed)
     else:
         raise Exception("Invalid test_method")
 print(all_results_dic)
