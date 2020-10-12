@@ -63,7 +63,6 @@ params_dict = {
 }
 params_dict.update(model.set_params(**model_params).get_params())
 
-print(f"STARTED running at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} \n params: {params_dict}")
 # *********************************************************************************************************************************
 # Constant PARAMS
 if os.name == 'nt':
@@ -94,7 +93,9 @@ if not os.path.exists(results_path):
 log_path = os.path.join(results_path, f"log_{results_file_folder}.txt")
 sys.stdout = Logger(log_path)
 
-print(f"Started bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
+print(f"STARTED running at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+print(f"Bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
+print(f"params: {params_dict}")
 for antibiotic in antibiotic_list:
     print(f"Started running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic}")
     now = time.time()
