@@ -60,7 +60,7 @@ params_dict = {
     "K": K,
     "model": str(model.__class__)
 }
-params_dict.update(model.get_params())
+params_dict.update(model.set_params(**model_params).get_params())
 
 print(f"STARTED running at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} \n params: {params_dict}")
 # *********************************************************************************************************************************
