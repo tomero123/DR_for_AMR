@@ -306,8 +306,9 @@ def write_roc_curve(y_pred, y_true, results_file_path):
         print("Error in write_roc_curve.error message: {}".format(e))
 
 
-def get_current_results_folder(features_selection_n):
+def get_current_results_folder(features_selection_n, test_method):
     current_results_folder = get_time_as_str()
     if features_selection_n:
         current_results_folder += f"_FS_{features_selection_n}"
+    current_results_folder += f"_{test_method}"
     return current_results_folder

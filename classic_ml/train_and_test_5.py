@@ -86,7 +86,7 @@ kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_f
 all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": [], "auc": [], "recall": [], "precision": []}
 
 amr_df = pd.read_csv(os.path.join(path, amr_data_file_name))
-results_file_folder = get_current_results_folder(features_selection_n)
+results_file_folder = get_current_results_folder(features_selection_n, TEST_METHOD)
 results_path = os.path.join(path, "classic_ml_results", results_file_folder)
 if not os.path.exists(results_path):
     os.makedirs(results_path)
