@@ -143,15 +143,6 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
         temp_scores = model.predict_proba(X_test)
         true_results = y_test.values.ravel()
 
-        # cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
-        # print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
-        # now = time.time()
-        # classes = np.unique(y.values.ravel())
-        # susceptible_ind = list(classes).index("S")
-        # resistance_ind = list(classes).index("R")
-        # temp_scores = cross_val_predict(model, X, y.values.ravel(), cv=cv,
-        #                                 fit_params={'sample_weight': sample_weight}, method='predict_proba',
-        #                                 n_jobs=num_of_processes)
         predictions = []
         for p in temp_scores:
             if p[0] > p[1]:
@@ -199,19 +190,19 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
             model.set_params(**model_params)
             now = time.time()
             model.fit(X, y.values.ravel(),
-                      # sample_weight=sample_weight
+                      sample_weight=sample_weight
                       )
             # Write csv of data after FS
-            # d = model.feature_importances_
-            # most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
-            # temp_df = X.iloc[:, most_important_index]
-            # temp_df["label"] = y.values.ravel()
-            # temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
-            # importance_list = []
-            # for ind in most_important_index:
-            #     importance_list.append([X.columns[ind], d[ind]])
-            # importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
-            # importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
+            d = model.feature_importances_
+            most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
+            temp_df = X.iloc[:, most_important_index]
+            temp_df["label"] = y.values.ravel()
+            temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
+            importance_list = []
+            for ind in most_important_index:
+                importance_list.append([X.columns[ind], d[ind]])
+            importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
+            importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
             selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
             X = selection.transform(X)
             print(f"Finished running Feature selection for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X.shape: {X.shape}")
