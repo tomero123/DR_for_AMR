@@ -103,11 +103,10 @@ def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all
         else:
             raise Exception(f"model_classifier: {model_classifier} is invalid!")
 
-
         # Create weight according to the ratio of each class
-        resistance_weight = (y_train['label'] == "S").sum() / (y_train['label'] == "R").sum() \
-            if (y_train['label'] == "S").sum() / (y_train['label'] == "R").sum() > 0 else 1
-        sample_weight = np.array([resistance_weight if i == "R" else 1 for i in y_train['label']])
+        resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
+            if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
+        sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
         print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
 
         if model_classifier == "xgboost":
