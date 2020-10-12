@@ -216,13 +216,8 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
                                         n_jobs=num_of_processes)
 
         true_results = y.values.ravel()
+        predictions = [1 if p[1] >= p[0] else 0 for p in temp_scores]
 
-        predictions = []
-        for p in temp_scores:
-            if p[0] > p[1]:
-                predictions.append(0)
-            else:
-                predictions.append(1)
         results_df = pd.DataFrame({
             'file_id': list(final_df['file_id']),
             'Strain': list(final_df['Strain']),

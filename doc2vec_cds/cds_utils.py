@@ -92,6 +92,7 @@ def train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all
         print(f"X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
 
         test_files_ids = list(final_df_test['file_id'])
+
         if model_classifier == "knn":
             if use_faiss_knn and os.name != 'nt':
                 print(f"Using FaissKNeighbors with K: {knn_k_size}")

@@ -17,7 +17,7 @@ from MyLogger import Logger
 
 if __name__ == '__main__':
     # PARAMS
-    MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
+    MODEL_BACTERIA = Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value if len(sys.argv) <= 1 else sys.argv[1]
     MODEL_CLASSIFIER = "xgboost" if len(sys.argv) <= 2 else sys.argv[2]  # can be "knn" or "xgboost"
     KNN_K_SIZE = 5 if len(sys.argv) <= 3 else int(sys.argv[3])
     LOAD_EMBEDDING_DF = True
@@ -28,12 +28,13 @@ if __name__ == '__main__':
     # BACTERIA list
     BACTERIA_LIST = [
         # Bacteria.TEST.value,
-        Bacteria.PSEUDOMONAS_AUREGINOSA.value,
-        # Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
+        # Bacteria.PSEUDOMONAS_AUREGINOSA.value,
+        Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
     ]
     # Define list of model_names and processing method
     D2V_MODELS_LIST = [
-        "2020_09_01_1931_PM_overlapping_K_10_SS_2"
+        "2020_10_09_1217_PM_overlapping_K_10_SS_1",
+        "2020_10_09_1217_PM_non_overlapping_K_10_SS_1"
         # "2020_09_28_1100_PM_overlapping_K_10_SS_10",
     ]
 
@@ -51,6 +52,7 @@ if __name__ == '__main__':
         PROCESSING_MODE = model_conf["processing_mode"]
         K = model_conf["k"]
         SHIFT_SIZE = model_conf["shift_size"]
+
         for BACTERIA in BACTERIA_LIST:
             current_results_folder = get_current_results_folder(MODEL_CLASSIFIER, KNN_K_SIZE)
             embedding_df_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_embeddings_df", d2v_model_folder_name)
@@ -60,6 +62,15 @@ if __name__ == '__main__':
             log_path = os.path.join(results_file_folder, f"log_{current_results_folder}.txt")
             sys.stdout = Logger(log_path)
             all_results_dic = {"antibiotic": [], "agg_method": [], "accuracy": [], "f1_score": [], "auc": [], "recall": [], "precision": []}
+
+            params_dict = {
+                "model_bacteria": MODEL_BACTERIA,
+                "d2v_model": d2v_model_folder_name,
+                "K": K,
+                "processing_mode": PROCESSING_MODE,
+                "shift_size": SHIFT_SIZE
+            }
+
             antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
             input_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_genome_files")
             amr_file_path = os.path.join(prefix, 'results_files', BACTERIA, amr_data_file_name)
@@ -112,6 +123,12 @@ if __name__ == '__main__':
                 t3 = time.time()
 
                 print(f"Finished training classifier for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t3-t2) / 60, 4)} minutes")
+
+            params_dict.update(all_results_dic)
+
+            with open(os.path.join(results_file_folder, "params.json"), "w") as write_file:
+                json.dump(params_dict, write_file)
+
             all_results_df = pd.DataFrame(all_results_dic)
             writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_results_folder}.xlsx"), engine='xlsxwriter')
             all_results_df.iloc[::-1].to_excel(writer, sheet_name="Sheet1", index=False)
