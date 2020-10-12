@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import xgboost
 import time
+import datetime
 import json
 
 from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_results, get_kmers_df, \
@@ -61,7 +62,7 @@ params_dict = {
 }
 params_dict.update(model.get_params())
 
-
+print(f"STARTED running at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} \n params: {params_dict}")
 # *********************************************************************************************************************************
 # Constant PARAMS
 if os.name == 'nt':
@@ -121,4 +122,4 @@ with open(os.path.join(results_path, "params.json"), "w") as write_file:
     json.dump(params_dict, write_file)
 
 
-print(f'DONE! Finished running bacteria: {BACTERIA}, antibiotics: {str(antibiotic_list)} in {round((time.time() - now_global) / 60, 4)} minutes')
+print(f"DONE! Finished running at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} bacteria: {BACTERIA}, antibiotics: {str(antibiotic_list)} in {round((time.time() - now_global) / 60, 4)} minutes")
