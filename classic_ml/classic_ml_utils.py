@@ -286,8 +286,7 @@ def write_data_to_excel(antibiotic, results_df, results_file_path, model_parmas,
         # percent_format = workbook.add_format({'num_format': '0.00%'})
         worksheet.set_column('A:Z', 15)
         workbook.close()
-        # write_roc_curve(y_pred, y_true, results_file_path)
-        print('Finished creating results file!')
+        print(f"Finished creating results for antibiotic: {antibiotic} ; accuracy: {accuracy}  f1_score: {f1_score}  auc: {auc} precision: {precision} recall: {recall}")
     except Exception as e:
         print("Error in write_roc_curve.error message: {}".format(e))
 
