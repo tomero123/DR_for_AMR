@@ -19,6 +19,7 @@ from enums import Bacteria, ANTIBIOTIC_DIC, TestMethod
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
 K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
 TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 3 else sys.argv[3]  # can be either "train_test" or "cv"
+RESULTS_FOLDER_NAME = None if len(sys.argv) <= 4 else sys.argv[4]
 
 remove_intermediate = True
 
@@ -86,7 +87,7 @@ kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_f
 all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": [], "auc": [], "recall": [], "precision": []}
 
 amr_df = pd.read_csv(os.path.join(path, amr_data_file_name))
-results_file_folder = get_current_results_folder(features_selection_n, TEST_METHOD)
+results_file_folder = get_current_results_folder(RESULTS_FOLDER_NAME, features_selection_n, TEST_METHOD)
 results_path = os.path.join(path, "classic_ml_results", results_file_folder)
 if not os.path.exists(results_path):
     os.makedirs(results_path)
