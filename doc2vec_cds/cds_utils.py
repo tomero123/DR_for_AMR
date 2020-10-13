@@ -260,10 +260,13 @@ def get_metric_and_best_threshold_from_roc_curve(tpr, fpr, thresholds, num_pos_c
     return max_accuracy, best_threshold
 
 
-def get_current_results_folder(model_classifier, knn_k_size):
+def get_current_results_folder(results_folder_name, model_classifier, knn_k_size):
     current_results_folder = get_time_as_str()
-    if model_classifier == "knn":
-        current_results_folder += f"_knn_{knn_k_size}"
-    elif model_classifier == "xgboost":
-        current_results_folder += "_xgboost"
+    if results_folder_name is not None:
+        current_results_folder += f"_{results_folder_name}"
+    else:
+        if model_classifier == "knn":
+            current_results_folder += f"_knn_{knn_k_size}"
+        elif model_classifier == "xgboost":
+            current_results_folder += "_xgboost"
     return current_results_folder

@@ -25,6 +25,7 @@ if __name__ == '__main__':
     MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
     MODEL_CLASSIFIER = ClassifierType.XGBOOST.value if len(sys.argv) <= 2 else sys.argv[2]  # can be "knn" or "xgboost"
     AGGREGATION_METHOD = AggregationMethod.EMBEDDINGS.value if len(sys.argv) <= 3 else sys.argv[3]  # can be "scores" or "embeddings"
+    RESULTS_FOLDER_NAME = None if len(sys.argv) <= 4 else sys.argv[4]
     EMBEDDINGS_AGGREGATION_METHOD = "max"  # can be "max" or "mean"
     LOAD_EMBEDDING_DF = True  # if True then load embedding_df if it exists otherwise calculate. If False - always calculate
 
@@ -85,7 +86,7 @@ if __name__ == '__main__':
         SHIFT_SIZE = model_conf["shift_size"]
 
         for BACTERIA in BACTERIA_LIST:
-            current_results_folder = get_current_results_folder(MODEL_CLASSIFIER, knn_k_size)
+            current_results_folder = get_current_results_folder(RESULTS_FOLDER_NAME, MODEL_CLASSIFIER, knn_k_size)
             embedding_df_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_embeddings_df", d2v_model_folder_name)
             results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_embeddings_classification_results", d2v_model_folder_name, current_results_folder)
             if not os.path.exists(results_file_folder):
