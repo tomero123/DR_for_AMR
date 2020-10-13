@@ -25,6 +25,7 @@ if __name__ == '__main__':
     MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
     MODEL_CLASSIFIER = ClassifierType.XGBOOST.value if len(sys.argv) <= 2 else sys.argv[2]  # can be "knn" or "xgboost"
     AGGREGATION_METHOD = AggregationMethod.EMBEDDINGS.value if len(sys.argv) <= 3 else sys.argv[3]  # can be "scores" or "embeddings"
+    EMBEDDINGS_AGGREGATION_METHOD = "max"  # can be "max" or "mean"
     LOAD_EMBEDDING_DF = True  # if True then load embedding_df if it exists otherwise calculate. If False - always calculate
 
     # XGBoost params - relevant only if MODEL_CLASSIFIER = ClassifierType.XGBOOST.value
@@ -168,7 +169,7 @@ if __name__ == '__main__':
                     train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, model)
                 # Aggregate all gene embeddings of the same strain and then calculate one score per each strain
                 elif AGGREGATION_METHOD == AggregationMethod.EMBEDDINGS.value:
-                    train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, model)
+                    train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, model, EMBEDDINGS_AGGREGATION_METHOD)
                 t3 = time.time()
 
                 print(f"Finished training classifier for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t3-t2) / 60, 4)} minutes")

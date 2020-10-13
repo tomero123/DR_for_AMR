@@ -190,11 +190,16 @@ def get_results_agg_df(agg_method, results_df, amr_df):
         traceback.print_exc()
 
 
-def train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, model_classifier, model):
+def train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, model_classifier, model, embeddings_aggregation_method):
     try:
         non_features_columns = ['file_id', 'label', 'NCBI File Name', 'Strain']  # 'seq_id', 'doc_ind'
         # aggregate final_df by file_id and average all embeddings
-        agg_final_df = final_df.groupby('file_id')[[x for x in final_df.columns if x.startswith("f_")]].mean()
+        if embeddings_aggregation_method == "mean":
+            agg_final_df = final_df.groupby('file_id')[[x for x in final_df.columns if x.startswith("f_")]].mean()
+        elif embeddings_aggregation_method == "max":
+            agg_final_df = final_df.groupby('file_id')[[x for x in final_df.columns if x.startswith("f_")]].max()
+        else:
+            raise Exception(f"embeddings_aggregation_method: {embeddings_aggregation_method} is invalid!")
         agg_final_df['label'] = final_df.groupby('file_id')['label'].max()
         agg_final_df.reset_index(level=0, inplace=True)
         train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 1]["file_id"])
