@@ -142,7 +142,7 @@ class Doc2VecCDS(object):
         model.train(corpus_data, total_examples=model.corpus_count, epochs=epochs)
 
         model.save(os.path.join(self.models_folder, "d2v.model"))
-        # model.save_word2vec_format(os.path.join(self.models_folder, "w2v.model"))
+        model.save_word2vec_format(os.path.join(self.models_folder, "w2v.model"))
 
         print('total docs learned %s' % (len(model.docvecs)))
         print(f"Saved model to {self.models_folder}")
