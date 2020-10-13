@@ -24,6 +24,11 @@ class AggregationMethod(Enum):
     SCORES = "scores"
 
 
+class ClassifierType(Enum):
+    XGBOOST = "xgboost"
+    KNN = "knn"
+
+
 
 # antibiotic dic
 ANTIBIOTIC_DIC = {

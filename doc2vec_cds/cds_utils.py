@@ -9,11 +9,9 @@ import json
 import pickle
 import pandas as pd
 import numpy as np
-import xgboost
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 
-from doc2vec_cds.FaissKNeighbors import FaissKNeighbors
+
 from utils import get_time_as_str
 
 
@@ -118,7 +116,7 @@ def write_data_to_excel_embeddings_agg(antibiotic, results_df, results_file_path
         print("Error in write_roc_curve.error message: {}".format(e))
 
 
-def train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, model_classifier, knn_k_size, use_faiss_knn):
+def train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, model_classifier, model):
     try:
         non_features_columns = ['file_id', 'seq_id', 'doc_ind', 'label']
         train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 1]["file_id"])
@@ -135,17 +133,6 @@ def train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_r
 
         test_files_ids = list(final_df_test['file_id'])
 
-        if model_classifier == "knn":
-            if use_faiss_knn and os.name != 'nt':
-                print(f"Using FaissKNeighbors with K: {knn_k_size}")
-                model = FaissKNeighbors(knn_k_size)
-            else:
-                model = KNeighborsClassifier(n_neighbors=knn_k_size)
-        elif model_classifier == "xgboost":
-            model = xgboost.XGBClassifier(max_depth=4, n_estimators=300, subsample=0.8, max_features=0.8, learning_rate=0.1, n_jobs=10)
-        else:
-            raise Exception(f"model_classifier: {model_classifier} is invalid!")
-
         # Create weight according to the ratio of each class
         resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
             if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
@@ -154,14 +141,11 @@ def train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_r
 
         if model_classifier == "xgboost":
             model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
-        else:
-            model.fit(X_train, y_train.values.ravel())
-
-        # Save model
-        if not use_faiss_knn:
             model_file_path = results_file_path.replace(".xlsx", "_MODEL.p")
             with open(model_file_path, 'wb') as f:
                 pickle.dump(model, f)
+        else:
+            model.fit(X_train, y_train.values.ravel())
 
         temp_scores = model.predict_proba(X_test)
         true_results = y_test.values.ravel()
@@ -206,7 +190,7 @@ def get_results_agg_df(agg_method, results_df, amr_df):
         traceback.print_exc()
 
 
-def train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, model_classifier, knn_k_size, use_faiss_knn):
+def train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, model_classifier, model):
     try:
         non_features_columns = ['file_id', 'label']  # 'seq_id', 'doc_ind'
         # aggregate final_df by file_id and average all embeddings
@@ -225,17 +209,6 @@ def train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, a
         y_test = final_df_test[['label']].copy()
         print(f"X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
 
-        if model_classifier == "knn":
-            if use_faiss_knn and os.name != 'nt':
-                print(f"Using FaissKNeighbors with K: {knn_k_size}")
-                model = FaissKNeighbors(knn_k_size)
-            else:
-                model = KNeighborsClassifier(n_neighbors=knn_k_size)
-        elif model_classifier == "xgboost":
-            model = xgboost.XGBClassifier(max_depth=4, n_estimators=300, subsample=0.8, max_features=0.8, learning_rate=0.1, n_jobs=10)
-        else:
-            raise Exception(f"model_classifier: {model_classifier} is invalid!")
-
         # Create weight according to the ratio of each class
         resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
             if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
@@ -244,14 +217,11 @@ def train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, a
 
         if model_classifier == "xgboost":
             model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
-        else:
-            model.fit(X_train, y_train.values.ravel())
-
-        # Save model
-        if not use_faiss_knn:
             model_file_path = results_file_path.replace(".xlsx", "_MODEL.p")
             with open(model_file_path, 'wb') as f:
                 pickle.dump(model, f)
+        else:
+            model.fit(X_train, y_train.values.ravel())
 
         temp_scores = model.predict_proba(X_test)
         true_results = y_test.values.ravel()
