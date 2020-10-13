@@ -33,7 +33,7 @@ if __name__ == '__main__':
     subsample = 0.8
     max_features = 0.8
     learning_rate = 0.1
-    n_jobs = 10
+    n_jobs = 20
     # knn params - relevant only if MODEL_CLASSIFIER = ClassifierType.KNN.value
     use_faiss_knn = True
     knn_k_size = 5
@@ -51,7 +51,8 @@ if __name__ == '__main__':
     D2V_MODELS_LIST = [
         # "2020_10_09_1217_PM_overlapping_K_10_SS_1",
         # "2020_10_09_1217_PM_non_overlapping_K_10_SS_1"
-        "2020_09_28_1100_PM_overlapping_K_10_SS_10",
+        # "2020_09_28_1100_PM_overlapping_K_10_SS_10",
+        "2020_09_01_1931_PM_overlapping_K_10_SS_2"
     ]
     # PARAMS END
     # IF RUNNING LOCAL (WINDOWS)
