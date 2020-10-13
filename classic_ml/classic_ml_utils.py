@@ -143,12 +143,8 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
         temp_scores = model.predict_proba(X_test)
         true_results = y_test.values.ravel()
 
-        predictions = []
-        for p in temp_scores:
-            if p[0] > p[1]:
-                predictions.append(0)
-            else:
-                predictions.append(1)
+        predictions = [1 if p[1] >= p[0] else 0 for p in temp_scores]
+
         results_df = pd.DataFrame({
             'file_id': list(final_df_test['file_id']),
             'Strain': list(final_df_test['Strain']),

@@ -10,16 +10,18 @@ import pandas as pd
 import time
 import json
 
-from doc2vec_cds.cds_utils import get_label_df, train_test_and_write_results_cv, get_current_results_folder
+from doc2vec_cds.cds_utils import get_label_df, train_test_scores_aggregation, get_current_results_folder, \
+    train_test_embeddings_aggregation
 from doc2vec_cds.Doc2VecCDS import Doc2VecCDSLoader
-from enums import Bacteria, ANTIBIOTIC_DIC, EMBEDDING_DF_FILE_NAME, METADATA_DF_FILE_NAME
+from enums import Bacteria, ANTIBIOTIC_DIC, EMBEDDING_DF_FILE_NAME, METADATA_DF_FILE_NAME, AggregationMethod
 from MyLogger import Logger
 
 if __name__ == '__main__':
     # PARAMS
-    MODEL_BACTERIA = Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value if len(sys.argv) <= 1 else sys.argv[1]
+    MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
     MODEL_CLASSIFIER = "xgboost" if len(sys.argv) <= 2 else sys.argv[2]  # can be "knn" or "xgboost"
     KNN_K_SIZE = 5 if len(sys.argv) <= 3 else int(sys.argv[3])
+    AGGREGATION_METHOD = AggregationMethod.EMBEDDINGS.value if len(sys.argv) <= 4 else sys.argv[4]  # can be "scores" or "embeddings"
     LOAD_EMBEDDING_DF = True
     USE_FAISS_KNN = True
     workers = multiprocessing.cpu_count()
@@ -28,14 +30,14 @@ if __name__ == '__main__':
     # BACTERIA list
     BACTERIA_LIST = [
         # Bacteria.TEST.value,
-        # Bacteria.PSEUDOMONAS_AUREGINOSA.value,
-        Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
+        Bacteria.PSEUDOMONAS_AUREGINOSA.value,
+        # Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value,
     ]
     # Define list of model_names and processing method
     D2V_MODELS_LIST = [
-        "2020_10_09_1217_PM_overlapping_K_10_SS_1",
-        "2020_10_09_1217_PM_non_overlapping_K_10_SS_1"
-        # "2020_09_28_1100_PM_overlapping_K_10_SS_10",
+        # "2020_10_09_1217_PM_overlapping_K_10_SS_1",
+        # "2020_10_09_1217_PM_non_overlapping_K_10_SS_1"
+        "2020_09_28_1100_PM_overlapping_K_10_SS_10",
     ]
 
     # PARAMS END
@@ -119,7 +121,10 @@ if __name__ == '__main__':
                 t2 = time.time()
                 print(f"Finished creating final_df for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t2-t1) / 60, 4)} minutes")
                 print(f"Started classifier training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}  MODEL_CLASSIFIER: {MODEL_CLASSIFIER}")
-                results_dic = train_test_and_write_results_cv(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, KNN_K_SIZE, USE_FAISS_KNN)
+                if AGGREGATION_METHOD == AggregationMethod.SCORES.value:
+                    train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, KNN_K_SIZE, USE_FAISS_KNN)
+                elif AGGREGATION_METHOD == AggregationMethod.EMBEDDINGS.value:
+                    train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, KNN_K_SIZE, USE_FAISS_KNN)
                 t3 = time.time()
 
                 print(f"Finished training classifier for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t3-t2) / 60, 4)} minutes")

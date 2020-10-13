@@ -19,6 +19,12 @@ class TestMethod(Enum):
     TRAIN_TEST = "train_test"
 
 
+class AggregationMethod(Enum):
+    EMBEDDINGS = "embeddings"
+    SCORES = "scores"
+
+
+
 # antibiotic dic
 ANTIBIOTIC_DIC = {
     Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['imipenem', 'ceftazidime', 'meropenem', 'levofloxacin', 'amikacin'],
