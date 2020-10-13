@@ -192,7 +192,7 @@ def get_results_agg_df(agg_method, results_df, amr_df):
 
 def train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, model_classifier, model):
     try:
-        non_features_columns = ['file_id', 'label']  # 'seq_id', 'doc_ind'
+        non_features_columns = ['file_id', 'label', 'NCBI File Name', 'Strain']  # 'seq_id', 'doc_ind'
         # aggregate final_df by file_id and average all embeddings
         agg_final_df = final_df.groupby('file_id')[[x for x in final_df.columns if x.startswith("f_")]].mean()
         agg_final_df['label'] = final_df.groupby('file_id')['label'].max()
@@ -201,6 +201,7 @@ def train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, a
         test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 0]["file_id"])
         agg_final_df['label'].replace('R', 1, inplace=True)
         agg_final_df['label'].replace('S', 0, inplace=True)
+        agg_final_df = agg_final_df.merge(amr_df[['file_id', 'NCBI File Name', 'Strain']], on='file_id', how='inner')
         final_df_train = agg_final_df[agg_final_df["file_id"].isin(train_file_id_list)]
         final_df_test = agg_final_df[agg_final_df["file_id"].isin(test_file_id_list)]
         X_train = final_df_train.drop(non_features_columns, axis=1).copy()
@@ -231,7 +232,7 @@ def train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, a
         results_df = pd.DataFrame({
             'file_id': list(final_df_test['file_id']),
             'Strain': list(final_df_test['Strain']),
-            'File name': list(final_df_test['file_name']),
+            'File name': list(final_df_test['NCBI File Name']),
             'Label': true_results,
             'Resistance score': [x[1] for x in temp_scores],
             'Prediction': predictions
