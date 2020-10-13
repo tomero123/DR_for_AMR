@@ -31,12 +31,6 @@ if __name__ == '__main__':
 
     now = time.time()
     now_date = datetime.datetime.now()
-    conf_dict = {
-        "bacteria": BACTERIA,
-        "processing_mode": PROCESSING_MODE,
-        "k": K,
-        "shift_size": SHIFT_SIZE
-    }
 
     prefix = '..' if os.name == 'nt' else '.'
     input_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_genome_files")
@@ -52,6 +46,15 @@ if __name__ == '__main__':
 
     if NUMBER_OF_TRAINING_STRAINS:
         files_list = files_list[:NUMBER_OF_TRAINING_STRAINS]
+
+    conf_dict = {
+        "bacteria": BACTERIA,
+        "processing_mode": PROCESSING_MODE,
+        "k": K,
+        "shift_size": SHIFT_SIZE,
+        "workers": workers,
+        "training_strains_number": len(files_list)
+    }
 
     trainer = Doc2VecCDS(input_folder, models_folder, files_list, folder_time, PROCESSING_MODE, K, SHIFT_SIZE, VECTOR_SIZE, WINDOW_SIZE, workers, conf_dict)
     trainer.run()
