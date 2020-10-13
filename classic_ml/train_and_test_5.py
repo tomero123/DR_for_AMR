@@ -19,7 +19,8 @@ from enums import Bacteria, ANTIBIOTIC_DIC, TestMethod
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
 K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
 TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 3 else sys.argv[3]  # can be either "train_test" or "cv"
-RESULTS_FOLDER_NAME = None if len(sys.argv) <= 4 else sys.argv[4]
+FEATURES_SELECTION_N = 300 if len(sys.argv) <= 4 else int(sys.argv[4])  # Choose K size # number of features to leave after feature selection
+RESULTS_FOLDER_NAME = None if len(sys.argv) <= 5 else sys.argv[5]
 
 remove_intermediate = True
 
@@ -27,7 +28,6 @@ remove_intermediate = True
 random_seed = 1
 rare_th = 5  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
-features_selection_n = 300  # number of features to leave after feature selection
 max_depth = 4
 n_estimators = 300
 subsample = 0.8
@@ -86,7 +86,7 @@ kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_f
 all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": [], "auc": [], "recall": [], "precision": []}
 
 amr_df = pd.read_csv(os.path.join(path, amr_data_file_name))
-results_file_folder = get_current_results_folder(RESULTS_FOLDER_NAME, features_selection_n, TEST_METHOD)
+results_file_folder = get_current_results_folder(RESULTS_FOLDER_NAME, FEATURES_SELECTION_N, TEST_METHOD)
 results_path = os.path.join(path, "classic_ml_results", results_file_folder)
 if not os.path.exists(results_path):
     os.makedirs(results_path)
@@ -105,9 +105,9 @@ for antibiotic in antibiotic_list:
     results_file_name = f"{antibiotic}_RESULTS_{results_file_folder}.xlsx"
     results_file_path = os.path.join(results_path, results_file_name)
     if TEST_METHOD == TestMethod.TRAIN_TEST.value:
-        train_test_and_write_results(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic)
+        train_test_and_write_results(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic)
     elif TEST_METHOD == TestMethod.CV.value:
-        train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, random_seed)
+        train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, random_seed)
     else:
         raise Exception("Invalid test_method")
 print(all_results_dic)

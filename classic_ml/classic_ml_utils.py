@@ -189,9 +189,7 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
             print(f"Started running Feature selection for antibiotic: {antibiotic}")
             model.set_params(**model_params)
             now = time.time()
-            model.fit(X, y.values.ravel(),
-                      # sample_weight=sample_weight
-                      )
+            model.fit(X, y.values.ravel(), sample_weight=sample_weight)
             # Write csv of data after FS
             d = model.feature_importances_
             most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
