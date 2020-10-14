@@ -54,7 +54,8 @@ if __name__ == '__main__':
         # "2020_10_09_1217_PM_overlapping_K_10_SS_1",
         # "2020_10_09_1217_PM_non_overlapping_K_10_SS_1"
         # "2020_09_28_1100_PM_overlapping_K_10_SS_10",
-        "2020_09_01_1931_PM_overlapping_K_10_SS_2"
+        # "2020_09_01_1931_PM_overlapping_K_10_SS_2"
+        "2020_10_13_1800_PM_overlapping_K_10_SS_5"
     ]
     # PARAMS END
     # IF RUNNING LOCAL (WINDOWS)
