@@ -42,8 +42,12 @@ def write_data_to_excel_scores_agg(writer, antibiotic, agg_method, results_df, m
         fpr, tpr, thresholds = metrics.roc_curve(y_true, y_pred_score)
         num_pos_class = len([x for x in y_true if x == 1])
         num_neg_class = len([x for x in y_true if x == 0])
-        max_accuracy, resistance_threshold = get_metric_and_best_threshold_from_roc_curve(tpr, fpr, thresholds, num_pos_class, num_neg_class)
-        print(f"max_accuracy: {max_accuracy}, best_threshold: {resistance_threshold}")
+        if agg_method != "mean_all":
+            max_accuracy, resistance_threshold = get_metric_and_best_threshold_from_roc_curve(tpr, fpr, thresholds, num_pos_class, num_neg_class)
+            print(f"max_accuracy: {max_accuracy}, best_threshold: {resistance_threshold}")
+        else:
+            resistance_threshold = 0.5
+            print("Using resistance_threshold = 0.5 for mean_all aggregation")
         y_pred = [1 if x > resistance_threshold else 0 for x in y_pred_score]
         confusion_matrix = metrics.confusion_matrix(y_true, y_pred)
         confusion_matrix_df = pd.DataFrame(confusion_matrix, columns=[x + "_Prediction" for x in ["S", "R"]], index=[x + "_Actual" for x in ["S", "R"]])
