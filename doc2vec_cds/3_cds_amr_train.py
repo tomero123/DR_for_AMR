@@ -26,7 +26,8 @@ if __name__ == '__main__':
     MODEL_CLASSIFIER = ClassifierType.XGBOOST.value if len(sys.argv) <= 2 else sys.argv[2]  # can be "knn" or "xgboost"
     AGGREGATION_METHOD = AggregationMethod.EMBEDDINGS.value if len(sys.argv) <= 3 else sys.argv[3]  # can be "scores" or "embeddings"
     RESULTS_FOLDER_NAME = None if len(sys.argv) <= 4 else sys.argv[4]
-    EMBEDDINGS_AGGREGATION_METHOD = "max"  # can be "max" or "mean"
+
+    EMBEDDINGS_AGGREGATION_METHOD = "mean"  # can be "max" or "mean"
     LOAD_EMBEDDING_DF = True  # if True then load embedding_df if it exists otherwise calculate. If False - always calculate
 
     # XGBoost params - relevant only if MODEL_CLASSIFIER = ClassifierType.XGBOOST.value
