@@ -21,6 +21,7 @@ K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
 TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 3 else sys.argv[3]  # can be either "train_test" or "cv"
 FEATURES_SELECTION_N = 300 if len(sys.argv) <= 4 else int(sys.argv[4])  # Choose K size # number of features to leave after feature selection
 RESULTS_FOLDER_NAME = None if len(sys.argv) <= 5 else sys.argv[5]
+K_FOLDS = 10 if len(sys.argv) <= 6 else int(sys.argv[6])  # relevant only if TEST_METHOD = TestMethod.CV.value
 
 remove_intermediate = True
 
@@ -107,7 +108,7 @@ for antibiotic in antibiotic_list:
     if TEST_METHOD == TestMethod.TRAIN_TEST.value:
         train_test_and_write_results(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic)
     elif TEST_METHOD == TestMethod.CV.value:
-        train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, random_seed)
+        train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, random_seed, K_FOLDS)
     else:
         raise Exception("Invalid test_method")
 print(all_results_dic)

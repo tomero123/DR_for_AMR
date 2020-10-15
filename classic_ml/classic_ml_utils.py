@@ -161,10 +161,9 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, random_seed):
+def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, random_seed, k_folds):
     try:
-        k_folds = 10
-        num_of_processes = 10
+        num_of_processes = k_folds
         non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
 
         final_df['label'].replace('R', 1, inplace=True)
