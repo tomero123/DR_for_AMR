@@ -202,6 +202,19 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
 
         model.set_params(**model_params)
         cv = StratifiedKFold(k_folds, random_state=random_seed, shuffle=True)
+
+        # write folds dict
+        folds_dic = {}
+        fold_num = 1
+        for train_ind, test_ind in cv.split(X, y.values.ravel()):
+            folds_dic[f"fold_{fold_num}"] = {}
+            folds_dic[f"fold_{fold_num}"]["train"] = str(list(train_ind))
+            folds_dic[f"fold_{fold_num}"]["test"] = str(list(test_ind))
+            fold_num += 1
+
+        with open(results_file_path.replace("RESULTS", "CV_splits").replace("xlsx", "json"), "w") as write_file:
+            json.dump(folds_dic, write_file)
+
         print("Started running Cross Validation for {} folds with {} processes".format(k_folds, num_of_processes))
         now = time.time()
         temp_scores = cross_val_predict(model, X, y.values.ravel(), cv=cv,
