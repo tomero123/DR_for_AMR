@@ -274,3 +274,20 @@ def get_current_results_folder(results_folder_name, model_classifier, knn_k_size
         elif model_classifier == "xgboost":
             current_results_folder += "_xgboost"
     return current_results_folder
+
+
+def cds_convert_results_df_to_new_format(all_results_df):
+    columns_order = ["auc", "accuracy", "f1_score", "recall", "precision"]
+    agg_method_list = list(all_results_df['agg_method'].unique())
+    new_results_dic = {}
+    new_results_columns = []
+    for ind, agg_method in enumerate(agg_method_list):
+        new_results_dic[agg_method] = []
+        for col in columns_order:
+            new_results_dic[agg_method] += list(all_results_df[col][all_results_df['agg_method'] == agg_method])
+            if ind == 0:
+                new_results_columns += [f"{col}_{x}" for x in list(all_results_df['antibiotic'][all_results_df['agg_method'] == agg_method])]
+    new_results_df = pd.DataFrame(data=new_results_dic)
+    new_results_df = new_results_df.T
+    new_results_df.columns = new_results_columns
+    return new_results_df

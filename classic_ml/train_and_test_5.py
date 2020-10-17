@@ -10,7 +10,7 @@ import datetime
 import json
 
 from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_results, get_kmers_df, \
-    get_current_results_folder, get_label_df, train_test_and_write_results_cv
+    get_current_results_folder, get_label_df, train_test_and_write_results_cv, convert_results_df_to_new_format
 from MyLogger import Logger
 from enums import Bacteria, ANTIBIOTIC_DIC, TestMethod
 
@@ -112,11 +112,18 @@ for antibiotic in antibiotic_list:
     else:
         raise Exception("Invalid test_method")
 print(all_results_dic)
+
+# Write ALL_RESULTS
 all_results_df = pd.DataFrame(all_results_dic)
 writer = pd.ExcelWriter(os.path.join(results_path, f"ALL_RESULTS_{results_file_folder}.xlsx"), engine='xlsxwriter')
 all_results_df.iloc[::-1].to_excel(writer, sheet_name="Sheet1", index=False)
-workbook = writer.book
-workbook.close()
+writer.save()
+
+# Write ALL_RESULTS_NEW_FORMAT
+all_results_df_new_format = convert_results_df_to_new_format(all_results_df)
+writer = pd.ExcelWriter(os.path.join(results_path, f"ALL_RESULTS_NEW_FORMAT_{results_file_folder}.xlsx"), engine='xlsxwriter')
+all_results_df_new_format.to_excel(writer, sheet_name="Sheet1", index=False)
+writer.save()
 
 
 params_dict.update(all_results_dic)

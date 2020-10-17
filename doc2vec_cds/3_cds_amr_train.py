@@ -14,7 +14,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from doc2vec_cds.FaissKNeighbors import FaissKNeighbors
 
 from doc2vec_cds.cds_utils import get_label_df, train_test_scores_aggregation, get_current_results_folder, \
-    train_test_embeddings_aggregation
+    train_test_embeddings_aggregation, cds_convert_results_df_to_new_format
 from doc2vec_cds.Doc2VecCDS import Doc2VecCDSLoader
 from enums import Bacteria, ANTIBIOTIC_DIC, EMBEDDING_DF_FILE_NAME, METADATA_DF_FILE_NAME, AggregationMethod, \
     ClassifierType
@@ -182,12 +182,18 @@ if __name__ == '__main__':
             with open(os.path.join(results_file_folder, "params.json"), "w") as write_file:
                 json.dump(params_dict, write_file)
 
+            # Write ALL_RESULTS
             all_results_df = pd.DataFrame(all_results_dic)
             writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_results_folder}.xlsx"), engine='xlsxwriter')
             all_results_df.iloc[::-1].to_excel(writer, sheet_name="Sheet1", index=False)
-            # workbook = writer.book
-            # workbook.close()
             writer.save()
+
+            # Write ALL_RESULTS_NEW_FORMAT
+            all_results_df_new_format = cds_convert_results_df_to_new_format(all_results_df)
+            writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_NEW_FORMAT_{current_results_folder}.xlsx"), engine='xlsxwriter')
+            all_results_df_new_format.to_excel(writer, sheet_name="Sheet1", index=False)
+            writer.save()
+
             now_date = datetime.datetime.now()
             print(f"Finished running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')} after {round((time.time() - now_total) / 3600, 4)} hours; D2V_MODEL_NAME: {d2v_model_folder_name}  PROCESSING_MODE: {PROCESSING_MODE}  BACTERIA: {BACTERIA}  MODEL_CLASSIFIER: {MODEL_CLASSIFIER}")
     print("DONE!")

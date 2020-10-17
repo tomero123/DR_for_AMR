@@ -294,3 +294,14 @@ def get_current_results_folder(results_folder_name, features_selection_n, test_m
             current_results_folder += f"_FS_{features_selection_n}"
         current_results_folder += f"_{test_method}"
     return current_results_folder
+
+
+def convert_results_df_to_new_format(all_results_df):
+    columns_order = ["auc", "accuracy", "f1_score", "recall", "precision"]
+    new_results_list = []
+    new_results_columns = []
+    for col in columns_order:
+        new_results_list += list(all_results_df[col])
+        new_results_columns += [f"{col}_{x}" for x in list(all_results_df['antibiotic'])]
+    return pd.DataFrame(data=[new_results_list], columns=new_results_columns)
+
