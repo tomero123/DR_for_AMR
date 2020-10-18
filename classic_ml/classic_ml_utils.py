@@ -118,6 +118,9 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
             most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
             temp_df = X_train.iloc[:, most_important_index]
             temp_df["label"] = y_train.values.ravel()
+            temp_df["file_id"] = list(final_df_train['file_id'])
+            temp_df["Strain"] = list(final_df_train['Strain'])
+            temp_df["file_name"] = list(final_df_train['file_name'])
             temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
             importance_list = []
             for ind in most_important_index:
@@ -190,6 +193,9 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
             most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
             temp_df = X.iloc[:, most_important_index]
             temp_df["label"] = y.values.ravel()
+            temp_df["file_id"] = list(final_df['file_id'])
+            temp_df["Strain"] = list(final_df['Strain'])
+            temp_df["file_name"] = list(final_df['file_name'])
             temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
             importance_list = []
             for ind in most_important_index:

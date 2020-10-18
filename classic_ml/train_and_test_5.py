@@ -60,7 +60,8 @@ params_dict = {
     "bacteria": BACTERIA,
     "test_method": TEST_METHOD,
     "K": K,
-    "model": str(model.__class__)
+    "model": str(model.__class__),
+    "k_folds": K_FOLDS if TEST_METHOD == TestMethod.CV.value else "NA"
 }
 params_dict.update(model.set_params(**model_params).get_params())
 
