@@ -40,7 +40,7 @@ def get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_t
         temp_count = kmers_df.shape[0]
         kmers_df = kmers_df[~kmers_df['Unnamed: 0'].str.contains("N")]
         kmers_final_count = kmers_df.shape[0]
-        print(f"Removed {kmers_final_count - temp_count} kmers that include 'N'")
+        print(f"Removed {temp_count - kmers_final_count} kmers that include 'N'")
         with open(os.path.join(path, kmers_map_file_name), 'r') as f:
             all_kmers_map = json.loads(f.read())
         kmers_df = kmers_df.rename(columns=all_kmers_map)
