@@ -8,7 +8,7 @@ import gzip
 from functools import partial
 
 from utils import create_genome_document
-from enums import Bacteria, ProcessingMode
+from constants import Bacteria, ProcessingMode
 
 # PARAMS
 BACTERIA = Bacteria.TEST.value if len(sys.argv) <= 1 else sys.argv[1]

@@ -8,7 +8,7 @@ import json
 import pandas as pd
 from tqdm import tqdm
 
-from enums import Bacteria
+from constants import Bacteria
 
 # PARAMS
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) < 2 else sys.argv[1]

@@ -18,7 +18,7 @@ import time
 
 from doc2vec.Doc2VecTrainer import Doc2VecLoader
 from utils import get_file_name, _open
-from enums import Bacteria, ProcessingMode
+from constants import Bacteria, ProcessingMode
 
 
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value

@@ -10,7 +10,7 @@ import datetime
 
 from doc2vec_cds.Doc2VecCDS import Doc2VecCDS
 from utils import get_time_as_str
-from enums import Bacteria, ProcessingMode
+from constants import Bacteria, ProcessingMode
 from MyLogger import Logger
 
 if __name__ == '__main__':

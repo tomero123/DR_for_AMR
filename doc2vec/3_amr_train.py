@@ -15,7 +15,7 @@ import time
 
 from doc2vec.Doc2VecTrainer import Doc2VecLoader
 from utils import get_file_name
-from enums import Bacteria, ProcessingMode
+from constants import Bacteria, ProcessingMode
 
 
 def get_label_df(amr_file_path, files_list, antibiotic, processing_mode, k):

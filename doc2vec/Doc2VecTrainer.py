@@ -10,7 +10,7 @@ import pandas as pd
 import time
 from gensim.models import doc2vec
 
-from enums import ProcessingMode
+from constants import ProcessingMode
 
 
 class GenomeDocs(object):

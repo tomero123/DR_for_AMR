@@ -8,7 +8,7 @@ from functools import partial
 import os
 
 from utils import create_kmers_file
-from enums import Bacteria
+from constants import Bacteria
 
 # PARAMS
 BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) < 2 else sys.argv[1]

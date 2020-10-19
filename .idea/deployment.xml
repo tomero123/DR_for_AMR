@@ -2,6 +2,13 @@
 <project version="4">
   <component name="PublishConfigData" autoUpload="Always" serverName="tomeror@132.72.67.169:22">
     <serverData>
+      <paths name="RNA server">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/local/BGU-USERS/tomeror/tomer_thesis" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="rna.ise.bgu.ac.il">
         <serverdata>
           <mappings>

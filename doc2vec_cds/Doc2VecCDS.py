@@ -11,7 +11,7 @@ import json
 import pandas as pd
 import gzip
 from functools import partial
-from enums import ProcessingMode
+from constants import ProcessingMode
 from Bio import SeqIO
 from gensim.models import doc2vec
 from gensim.models.callbacks import CallbackAny2Vec

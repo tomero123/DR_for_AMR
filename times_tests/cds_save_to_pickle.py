@@ -2,7 +2,7 @@ import gzip
 import pickle
 import sys
 
-from enums import ProcessingMode
+from constants import ProcessingMode
 
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")

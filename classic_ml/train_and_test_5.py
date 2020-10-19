@@ -12,7 +12,7 @@ import json
 from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_results, get_kmers_df, \
     get_current_results_folder, get_label_df, train_test_and_write_results_cv, convert_results_df_to_new_format
 from MyLogger import Logger
-from enums import Bacteria, ANTIBIOTIC_DIC, TestMethod
+from constants import Bacteria, ANTIBIOTIC_DIC, TestMethod
 
 # *********************************************************************************************************************************
 # Config

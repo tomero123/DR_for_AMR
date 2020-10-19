@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from enums import Bacteria, ANTIBIOTIC_DIC
+from constants import Bacteria, ANTIBIOTIC_DIC
 
 
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value

@@ -7,7 +7,7 @@ from pathos.multiprocessing import ProcessPool
 import os
 
 from utils import download_ftp_file
-from enums import Bacteria
+from constants import Bacteria
 
 # PARAMS
 BACTERIA = Bacteria.GENOME_MIX_NEW.value if len(sys.argv) < 2 else sys.argv[1]

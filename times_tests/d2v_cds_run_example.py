@@ -18,7 +18,7 @@ from Bio import SeqIO
 from gensim.models import doc2vec
 from gensim.models.callbacks import CallbackAny2Vec
 
-from enums import ProcessingMode
+from constants import ProcessingMode
 
 _open = partial(gzip.open, mode='rt')
 
