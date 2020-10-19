@@ -85,6 +85,7 @@ path = os.path.join(prefix, 'results_files', BACTERIA)
 
 now_global = time.time()
 kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
+
 all_results_dic = {"antibiotic": [], "accuracy": [], "f1_score": [], "auc": [], "recall": [], "precision": []}
 
 amr_df = pd.read_csv(os.path.join(path, amr_data_file_name))

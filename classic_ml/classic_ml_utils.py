@@ -36,7 +36,11 @@ def get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_t
             non_zero_strains_count = kmers_df.astype(bool).sum(axis=1)
             kmers_df = kmers_df[non_zero_strains_count < kmers_df.shape[1] - common_th_subtract]
             print("common kmers value: {} ; kmers_df shape after common kmers removal: {}".format(kmers_df.shape[1] - common_th_subtract, kmers_df.shape))
+        # Remove kmers with have "N" in them
+        temp_count = kmers_df.shape[0]
+        kmers_df = kmers_df[~kmers_df['Unnamed: 0'].str.contains("N")]
         kmers_final_count = kmers_df.shape[0]
+        print(f"Removed {kmers_final_count - temp_count} kmers that include 'N'")
         with open(os.path.join(path, kmers_map_file_name), 'r') as f:
             all_kmers_map = json.loads(f.read())
         kmers_df = kmers_df.rename(columns=all_kmers_map)
