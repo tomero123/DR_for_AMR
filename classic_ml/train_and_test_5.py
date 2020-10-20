@@ -22,6 +22,7 @@ TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 3 else sys.argv[3]  # can 
 FEATURES_SELECTION_N = 300 if len(sys.argv) <= 4 else int(sys.argv[4])  # Choose K size # number of features to leave after feature selection
 RESULTS_FOLDER_NAME = None if len(sys.argv) <= 5 else sys.argv[5]
 K_FOLDS = 10 if len(sys.argv) <= 6 else int(sys.argv[6])  # relevant only if TEST_METHOD = TestMethod.CV.value
+USE_PREDEFINED_FEATURES_LIST = True  # Use predefined features list INSTEAD OF DOING FEATURE SELECTION!!!
 
 remove_intermediate = True
 
@@ -108,7 +109,7 @@ for antibiotic in antibiotic_list:
     results_file_name = f"{antibiotic}_RESULTS_{results_file_folder}.xlsx"
     results_file_path = os.path.join(results_path, results_file_name)
     if TEST_METHOD == TestMethod.TRAIN_TEST.value:
-        train_test_and_write_results(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic)
+        train_test_and_write_results(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, BACTERIA, USE_PREDEFINED_FEATURES_LIST)
     elif TEST_METHOD == TestMethod.CV.value:
         train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, random_seed, K_FOLDS)
     else:

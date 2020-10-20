@@ -1,5 +1,6 @@
 import sys
 
+from constants import PREDEFINED_FEATURES_LIST
 from utils import get_time_as_str
 
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
@@ -90,7 +91,7 @@ def get_final_df(antibiotic, kmers_df, label_df):
         traceback.print_exc()
 
 
-def train_test_and_write_results(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic):
+def train_test_and_write_results(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, bacteria, use_predefined_features_list):
     try:
         non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
         train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 1]["file_id"])
@@ -111,8 +112,17 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
         sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
         print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
 
+        if use_predefined_features_list:
+            predefined_features_list = PREDEFINED_FEATURES_LIST.get(bacteria, {}).get(antibiotic, [])
+            if predefined_features_list:
+                print(f"Using predefined_features_list in size: {len(predefined_features_list)} for bacteria: {bacteria} and antibiotic: {antibiotic}")
+                X_train = X_train[predefined_features_list]
+                X_test = X_test[predefined_features_list]
+            else:
+                raise Exception(f"Couldn't find valid predefined_features_list for bacteria: {bacteria} and antibiotic: {antibiotic}")
+
         # Features Selection
-        if features_selection_n:
+        elif features_selection_n:
             print(f"Started Feature selection model fit antibiotic: {antibiotic}")
             model.set_params(**model_params)
             now = time.time()
