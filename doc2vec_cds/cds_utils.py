@@ -123,8 +123,8 @@ def write_data_to_excel_embeddings_agg(antibiotic, results_df, results_file_path
 def train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, model_classifier, model):
     try:
         non_features_columns = ['file_id', 'seq_id', 'doc_ind', 'label']
-        train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 1]["file_id"])
-        test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 0]["file_id"])
+        train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin([1, 2, 3, 4])]["file_id"])
+        test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == 5]["file_id"])
         final_df['label'].replace('R', 1, inplace=True)
         final_df['label'].replace('S', 0, inplace=True)
         final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]
@@ -206,8 +206,8 @@ def train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, a
             raise Exception(f"embeddings_aggregation_method: {embeddings_aggregation_method} is invalid!")
         agg_final_df['label'] = final_df.groupby('file_id')['label'].max()
         agg_final_df.reset_index(level=0, inplace=True)
-        train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 1]["file_id"])
-        test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_is_train"] == 0]["file_id"])
+        train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin([1, 2, 3, 4])]["file_id"])
+        test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == 5]["file_id"])
         agg_final_df['label'].replace('R', 1, inplace=True)
         agg_final_df['label'].replace('S', 0, inplace=True)
         agg_final_df = agg_final_df.merge(amr_df[['file_id', 'NCBI File Name', 'Strain']], on='file_id', how='inner')
