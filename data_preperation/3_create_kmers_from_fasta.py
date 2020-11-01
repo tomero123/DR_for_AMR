@@ -11,9 +11,9 @@ from utils import create_kmers_file
 from constants import Bacteria
 
 # PARAMS
-BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) < 2 else sys.argv[1]
-NUM_OF_PROCESSES = 8
-K = 10 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
+BACTERIA = Bacteria.GENOME_MIX.value if len(sys.argv) <= 1 else sys.argv[1]
+K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
+NUM_OF_PROCESSES = 10 if len(sys.argv) <= 3 else int(sys.argv[3])
 
 prefix = '..' if os.name == 'nt' else '.'
 input_folder = os.path.join(prefix, "results_files", BACTERIA, "genome_files")
