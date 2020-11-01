@@ -18,7 +18,7 @@ limit = None  # if None - take all files found else limit
 
 file_suffix = FILES_SUFFIX.get(FILE_TYPE)
 prefix = '..' if os.name == 'nt' else '.'
-DEST_PATH = os.path.join(prefix, "results_files", BACTERIA, FILE_TYPE)
+DEST_PATH = os.path.join(prefix, "results_files", BACTERIA, FILE_TYPE + "_files")
 CSV_FILE_PATH = os.path.join(prefix, "data_files", BACTERIA, "{}_data.csv".format(BACTERIA))
 NCBI_FTP_SITE = "ftp.ncbi.nlm.nih.gov"
 
