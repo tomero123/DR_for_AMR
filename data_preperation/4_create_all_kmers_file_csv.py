@@ -38,7 +38,7 @@ if __name__ == '__main__':
         files_list = files_list[:limit]
         print("Total files after using limit: {}".format(len(files_list)))
     # Keep only strains with amr data
-    files_list = [x for x in files_list if x.replace(".txt.gz", "") in files_with_amr_data]
+    files_list = [x for x in files_list if x.replace("_genomic.txt.gz", "") in files_with_amr_data]
     n_of_files = len(files_list)
     print("Total files with AMR data: {}".format(n_of_files))
     for ind, file_name in enumerate(tqdm(files_list)):
