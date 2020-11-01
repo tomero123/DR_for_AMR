@@ -18,7 +18,7 @@ limit = None  # if None - take all files from kmers_files else limit
 prefix = '..' if os.name == 'nt' else '.'
 results_files_path = os.path.join(prefix, 'results_files', BACTERIA)
 input_folder = os.path.join(results_files_path, 'kmers_files', f"K_{K}")
-amr_data_file_path = os.path.join(results_files_path, 'amr_data_summary.csv')
+amr_data_file_path = os.path.join(results_files_path, 'amr_labels.csv')
 
 all_kmers_file_csv_name = f"all_kmers_file_K_{K}.csv.gz"
 all_kmers_map_file_name = f"all_kmers_map_K_{K}.txt"
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         files_list = files_list[:limit]
         print("Total files after using limit: {}".format(len(files_list)))
     # Keep only strains with amr data
-    files_list = [x for x in files_list if x in files_with_amr_data]
+    files_list = [x for x in files_list if x.replace(".txt.gz", "") in files_with_amr_data]
     n_of_files = len(files_list)
     print("Total files with AMR data: {}".format(n_of_files))
     for ind, file_name in enumerate(tqdm(files_list)):
