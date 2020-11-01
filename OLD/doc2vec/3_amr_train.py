@@ -13,7 +13,7 @@ from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn import metrics
 import time
 
-from doc2vec.Doc2VecTrainer import Doc2VecLoader
+from OLD.doc2vec.Doc2VecTrainer import Doc2VecLoader
 from utils import get_file_name
 from constants import Bacteria, ProcessingMode
 

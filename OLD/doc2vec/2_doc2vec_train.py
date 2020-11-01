@@ -7,7 +7,7 @@ import os
 import time
 import datetime
 
-from doc2vec.Doc2VecTrainer import Doc2VecTrainer
+from OLD.doc2vec.Doc2VecTrainer import Doc2VecTrainer
 from utils import get_file_name
 from constants import Bacteria, ProcessingMode
 
