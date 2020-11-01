@@ -11,8 +11,8 @@ from tqdm import tqdm
 from constants import Bacteria
 
 # PARAMS
-BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) < 2 else sys.argv[1]
-K = 20 if len(sys.argv) < 3 else int(sys.argv[2])  # Choose K size
+BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
+K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
 limit = None  # if None - take all files from kmers_files else limit
 
 prefix = '..' if os.name == 'nt' else '.'
