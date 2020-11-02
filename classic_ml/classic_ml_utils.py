@@ -197,7 +197,7 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
         model_parmas = json.dumps(model.get_params())
         write_data_to_excel(antibiotic, results_list, results_file_path, model_parmas, kmers_original_count,
                             kmers_final_count, all_results_dic)
-        print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
+        print(f"***FINISHED running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes***")
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
 
@@ -263,7 +263,7 @@ def write_data_to_excel(antibiotic, results_list, results_file_path, model_parma
         # percent_format = workbook.add_format({'num_format': '0.00%'})
         worksheet.set_column('A:Z', 15)
         workbook.close()
-        print(f"Finished creating results for antibiotic: {antibiotic} ; accuracy: {accuracy}  f1_score: {f1_score}  auc: {auc} precision: {precision} recall: {recall}")
+        print(f"Finished creating results for antibiotic: {antibiotic} ; auc: {evaluation_mean[1]} accuracy: {evaluation_mean[2]} f1_score: {evaluation_mean[3]} precision: {evaluation_mean[4]} recall: {evaluation_mean[5]}")
     except Exception as e:
         print("Error in write_data_to_excel.error message: {}".format(e))
         traceback.print_exc()
