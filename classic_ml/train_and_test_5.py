@@ -23,7 +23,7 @@ TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 3 else sys.argv[3]  # can 
 FEATURES_SELECTION_N = 300 if len(sys.argv) <= 4 else int(sys.argv[4])  # Choose K size # number of features to leave after feature selection
 RESULTS_FOLDER_NAME = None if len(sys.argv) <= 5 else sys.argv[5]
 USE_PREDEFINED_FEATURES_LIST = False  # Use predefined features list INSTEAD OF DOING FEATURE SELECTION!!!
-USE_MULTIPROCESS = False
+USE_MULTIPROCESS = True
 remove_intermediate = True
 
 # Model params
