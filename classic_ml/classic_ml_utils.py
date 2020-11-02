@@ -192,7 +192,7 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
 
         if use_multiprocess:
             with multiprocessing.Pool(processes=n_folds) as pool:
-                results_list = pool.starmap_async(train_test_one_fold, inputs_list)
+                results_list = pool.starmap(train_test_one_fold, inputs_list)
         else:
             results_list = []
             for i in inputs_list:
