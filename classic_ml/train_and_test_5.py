@@ -50,16 +50,16 @@ antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
 dataset_file_name = f'all_kmers_file_K_{K}.csv.gz'
 kmers_map_file_name = f'all_kmers_map_K_{K}.txt'
 
-# if os.name == 'nt':
-#     model = xgboost.XGBClassifier(random_state=random_seed)
-#     model_params = {
-#         "n_estimators": 2,
-#         "max_features": 0.8,  # like max_features in sklearn
-#         "learning_rate": 0.5,
-#     }
-#     antibiotic_list = ['levofloxacin', 'ceftazidime']
-#     dataset_file_name = 'all_kmers_file_SMALL_50.csv.gz'
-#     kmers_map_file_name = 'all_kmers_map_SMALL_50.txt'
+if os.name == 'nt':
+    model = xgboost.XGBClassifier(random_state=random_seed)
+    model_params = {
+        "n_estimators": 2,
+        "max_features": 0.8,  # like max_features in sklearn
+        "learning_rate": 0.5,
+    }
+    antibiotic_list = ['levofloxacin', 'ceftazidime']
+    dataset_file_name = 'all_kmers_file_SMALL_50.csv.gz'
+    kmers_map_file_name = 'all_kmers_map_SMALL_50.txt'
 
 # *********************************************************************************************************************************
 

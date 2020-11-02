@@ -10,6 +10,7 @@ import os
 import pandas as pd
 import numpy as np
 import pickle
+import zlib
 from sklearn.feature_selection import SelectFromModel
 from sklearn import metrics
 import traceback
@@ -83,6 +84,7 @@ def get_final_df(antibiotic, kmers_df, label_df):
         else:
             # Join (inner) between kmers_df and label_df
             final_df = kmers_df.merge(label_df, how="inner", right_on="file_name", left_index=True)
+        # final_df = kmers_df.merge(label_df, how="inner", right_on="file_name", left_index=True)
         print("final_df for antibiotic: {} have {} Strains with label and {} features".format(antibiotic, final_df.shape[0], final_df.shape[1] - 2))
         return final_df
     except Exception as e:
@@ -178,9 +180,6 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
     except Exception as e:
         print(f"ERROR at train_test_and_write_results, message: {e}")
         traceback.print_exc()
-
-import pickle
-import zlib
 
 
 def train_test_one_fold_pickled(args):

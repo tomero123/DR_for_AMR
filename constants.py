@@ -38,8 +38,8 @@ class FileType(Enum):
 
 # antibiotic dic
 ANTIBIOTIC_DIC = {
-    # Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['imipenem', 'ceftazidime', 'meropenem', 'levofloxacin', 'amikacin'],
-    Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['imipenem'],
+    Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['imipenem', 'ceftazidime', 'meropenem', 'levofloxacin', 'amikacin'],
+    # Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['imipenem'],
     Bacteria.MYCOBACTERIUM_TUBERCULOSIS.value: ['isoniazid', 'ethambutol', 'rifampin', 'streptomycin', 'pyrazinamide'],
     Bacteria.TEST.value: ['amikacin', 'levofloxacin', 'meropenem', 'ceftazidime', 'imipenem'],
 }
