@@ -177,7 +177,7 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
         write_data_to_excel(antibiotic, results_list, results_file_path, model_parmas, kmers_original_count, kmers_final_count, all_results_dic)
         print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
     except Exception as e:
-        print(f"ERROR at train_test_and_write_results_cv, message: {e}")
+        print(f"ERROR at train_test_and_write_results, message: {e}")
         traceback.print_exc()
 
 
@@ -200,6 +200,7 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
         print(f"***FINISHED running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes***")
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
+        traceback.print_exc()
 
 
 def write_data_to_excel(antibiotic, results_list, results_file_path, model_parmas, kmers_original_count, kmers_final_count, all_results_dic):
