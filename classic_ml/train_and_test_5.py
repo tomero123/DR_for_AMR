@@ -35,7 +35,7 @@ n_estimators = 300
 subsample = 0.8
 max_features = 0.8  # like max_features in sklearn
 learning_rate = 0.1
-n_jobs = 5
+n_jobs = 1
 model = xgboost.XGBClassifier(random_state=random_seed)
 model_params = {
     "max_depth": max_depth,
