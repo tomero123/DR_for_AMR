@@ -181,7 +181,7 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, random_seed):
+def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, use_multiprocess):
     try:
         now = time.time()
         n_folds = amr_df[f"{antibiotic}_group"].max()
@@ -191,8 +191,13 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
         for train_group_list, test_group in zip(train_groups_list, test_groups_list):
             inputs_list.append([train_group_list, test_group, final_df, amr_df, results_file_path, model, model_params, antibiotic, features_selection_n])
 
-        with multiprocessing.Pool(processes=n_folds) as pool:
-            results_list = pool.starmap(train_test_one_fold, inputs_list)
+        if use_multiprocess:
+            with multiprocessing.Pool(processes=n_folds) as pool:
+                results_list = pool.starmap(train_test_one_fold, inputs_list)
+        else:
+            results_list = []
+            for i in inputs_list:
+                results_list.append(train_test_one_fold(*i))
 
         model_parmas = json.dumps(model.get_params())
         write_data_to_excel(antibiotic, results_list, results_file_path, model_parmas, kmers_original_count,
