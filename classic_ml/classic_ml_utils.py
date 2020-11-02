@@ -179,6 +179,14 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
         print(f"ERROR at train_test_and_write_results, message: {e}")
         traceback.print_exc()
 
+import pickle
+import zlib
+
+
+def train_test_one_fold_pickled(args):
+    args = pickle.loads(zlib.decompress(args))
+    return train_test_one_fold(*args)
+
 
 def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, use_multiprocess):
     try:
@@ -191,8 +199,10 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
             inputs_list.append([train_group_list, test_group, final_df, amr_df, results_file_path, model, model_params, antibiotic, features_selection_n])
 
         if use_multiprocess:
+
             with multiprocessing.Pool(processes=n_folds) as pool:
-                results_list = pool.starmap(train_test_one_fold, inputs_list)
+                results_list = pool.map(train_test_one_fold_pickled,
+                                        [zlib.compress(pickle.dumps(s)) for s in inputs_list])
         else:
             results_list = []
             for i in inputs_list:
