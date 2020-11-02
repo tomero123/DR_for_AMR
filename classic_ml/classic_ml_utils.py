@@ -122,7 +122,6 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
         # Features Selection
         elif features_selection_n:
             print(f"Started Feature selection model fit antibiotic: {antibiotic}")
-            model.set_params(**model_params)
             now = time.time()
             model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
             # Write csv of data after FS
@@ -147,7 +146,6 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
             X_test = selection.transform(X_test)
             print(f"Finished running Feature selection SelectFromModel for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}, X_test.shape: {X_test.shape}")
 
-        model.set_params(**model_params)
         model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
 
         # Save model
@@ -348,7 +346,6 @@ def train_test_one_fold(train_group_list, test_group, final_df, amr_df, results_
     # Features Selection
     if features_selection_n:
         print(f"FOLD#{test_group} Started running Feature selection for antibiotic: {antibiotic}")
-        model.set_params(**model_params)
         now = time.time()
         model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
         # Write csv of data after FS
@@ -370,8 +367,13 @@ def train_test_one_fold(train_group_list, test_group, final_df, amr_df, results_
         X_test = selection.transform(X_test)
         print(f"FOLD#{test_group} Finished running Feature selection for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}, X_test.shape: {X_test.shape}")
 
-    model.set_params(**model_params)
-    model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
+    # model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
+
+    eval_set = [(X_test, y_test)]
+    model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
+              eval_metric="error", eval_set=eval_set, verbose=True,
+              # early_stopping_rounds=10
+              )
 
     temp_scores = model.predict_proba(X_test)
     true_results = y_test.values.ravel()

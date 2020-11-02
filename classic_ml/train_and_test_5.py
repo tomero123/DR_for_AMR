@@ -36,16 +36,16 @@ subsample = 0.8
 max_features = 0.8  # like max_features in sklearn
 learning_rate = 0.1
 n_jobs = 10
-model = xgboost.XGBClassifier(random_state=random_seed)
 model_params = {
     "max_depth": max_depth,
     "n_estimators": n_estimators,
     "subsample": subsample,
     "max_features": max_features,  # like max_features in sklearn
     "learning_rate": learning_rate,
-    "n_jobs": n_jobs
+    "n_jobs": n_jobs,
+    "random_state": random_seed
 }
-
+model = xgboost.XGBClassifier(**model_params)
 antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
 dataset_file_name = f'all_kmers_file_K_{K}.csv.gz'
 kmers_map_file_name = f'all_kmers_map_K_{K}.txt'
