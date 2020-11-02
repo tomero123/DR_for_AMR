@@ -35,7 +35,7 @@ n_estimators = 300
 subsample = 0.8
 max_features = 0.8  # like max_features in sklearn
 learning_rate = 0.1
-n_jobs = 10
+n_jobs = 5
 model = xgboost.XGBClassifier(random_state=random_seed)
 model_params = {
     "max_depth": max_depth,
@@ -45,17 +45,28 @@ model_params = {
     "learning_rate": learning_rate,
     "n_jobs": n_jobs
 }
-if os.name == 'nt':
-    model = xgboost.XGBClassifier(random_state=random_seed)
-    model_params = {
-        "n_estimators": 2,
-        "max_features": 0.8,  # like max_features in sklearn
-        "learning_rate": 0.5,
-    }
-    antibiotic_list = ['levofloxacin', 'ceftazidime']
-else:
-    antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
 
+antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
+dataset_file_name = f'all_kmers_file_K_{K}.csv.gz'
+kmers_map_file_name = f'all_kmers_map_K_{K}.txt'
+
+# if os.name == 'nt':
+#     model = xgboost.XGBClassifier(random_state=random_seed)
+#     model_params = {
+#         "n_estimators": 2,
+#         "max_features": 0.8,  # like max_features in sklearn
+#         "learning_rate": 0.5,
+#     }
+#     antibiotic_list = ['levofloxacin', 'ceftazidime']
+#     dataset_file_name = 'all_kmers_file_SMALL_50.csv.gz'
+#     kmers_map_file_name = 'all_kmers_map_SMALL_50.txt'
+
+# *********************************************************************************************************************************
+
+amr_data_file_name = 'amr_labels.csv'
+
+prefix = '..' if os.name == 'nt' else '.'
+path = os.path.join(prefix, 'results_files', BACTERIA)
 
 params_dict = {
     "bacteria": BACTERIA,
@@ -64,21 +75,6 @@ params_dict = {
     "model": str(model.__class__),
 }
 params_dict.update(model.set_params(**model_params).get_params())
-
-# *********************************************************************************************************************************
-# Constant PARAMS
-if os.name == 'nt':
-    dataset_file_name = 'all_kmers_file_SMALL_50.csv.gz'
-    kmers_map_file_name = 'all_kmers_map_SMALL_50.txt'
-else:
-    dataset_file_name = f'all_kmers_file_K_{K}.csv.gz'
-    kmers_map_file_name = f'all_kmers_map_K_{K}.txt'
-
-
-amr_data_file_name = 'amr_labels.csv'
-
-prefix = '..' if os.name == 'nt' else '.'
-path = os.path.join(prefix, 'results_files', BACTERIA)
 
 # Config END
 # *********************************************************************************************************************************
