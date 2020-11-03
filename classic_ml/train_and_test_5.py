@@ -22,6 +22,7 @@ K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
 TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 3 else sys.argv[3]  # can be either "train_test" or "cv"
 FEATURES_SELECTION_N = 300 if len(sys.argv) <= 4 else int(sys.argv[4])  # Choose K size # number of features to leave after feature selection
 RESULTS_FOLDER_NAME = None if len(sys.argv) <= 5 else sys.argv[5]
+DATA_TYPE = "all"
 USE_PREDEFINED_FEATURES_LIST = False  # Use predefined features list INSTEAD OF DOING FEATURE SELECTION!!!
 USE_MULTIPROCESS = True
 remove_intermediate = True
@@ -68,6 +69,8 @@ amr_data_file_name = 'amr_labels.csv'
 prefix = '..' if os.name == 'nt' else '.'
 path = os.path.join(prefix, 'results_files', BACTERIA)
 
+baseline_data_path = os.path.join(path, "baseline_data", DATA_TYPE)
+
 params_dict = {
     "bacteria": BACTERIA,
     "test_method": TEST_METHOD,
@@ -90,6 +93,8 @@ if __name__ == '__main__':
     results_path = os.path.join(path, "classic_ml_results", results_file_folder)
     if not os.path.exists(results_path):
         os.makedirs(results_path)
+    if not os.path.exists(baseline_data_path):
+        os.makedirs(baseline_data_path)
     log_path = os.path.join(results_path, f"log_{results_file_folder}.txt")
     sys.stdout = Logger(log_path)
 
@@ -98,16 +103,24 @@ if __name__ == '__main__':
     print(f"params: {params_dict}")
     for antibiotic in antibiotic_list:
         print(f"{datetime.datetime.now().strftime(TIME_STR)} Started running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic}")
-        now = time.time()
-        label_df = get_label_df(amr_df, antibiotic)
-        final_df = get_final_df(antibiotic, kmers_df, label_df)
-        print(f"{datetime.datetime.now().strftime(TIME_STR)} Finished running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
+        final_df_file_name = f"{DATA_TYPE}_{antibiotic}_rth_{rare_th}_cth_{common_th_subtract}.csv.gz"
+        final_df_file_path = os.path.join(baseline_data_path, final_df_file_name)
+        if os.path.exists(final_df_file_path):
+            now = time.time()
+            final_df = pd.read_csv(final_df_file_path, compression='gzip')
+            print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED LOADING get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
+        else:
+            now = time.time()
+            label_df = get_label_df(amr_df, antibiotic)
+            final_df = get_final_df(antibiotic, kmers_df, label_df)
+            final_df.to_csv(final_df_file_path, compression='gzip')
+            print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED CALCULATING final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
         results_file_name = f"{antibiotic}_RESULTS_{results_file_folder}.xlsx"
         results_file_path = os.path.join(results_path, results_file_name)
         if TEST_METHOD == TestMethod.TRAIN_TEST.value:
             train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, BACTERIA, USE_PREDEFINED_FEATURES_LIST)
         elif TEST_METHOD == TestMethod.CV.value:
-            train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, USE_MULTIPROCESS)
+            train_test_and_write_results_cv(final_df_file_path, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, USE_MULTIPROCESS)
         else:
             raise Exception("Invalid test_method")
     print(all_results_dic)
