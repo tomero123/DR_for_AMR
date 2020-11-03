@@ -1,7 +1,6 @@
 import gzip
 import os
 import re
-import shutil
 from functools import partial
 
 import pandas as pd
@@ -9,11 +8,7 @@ from Bio import SeqIO
 
 from constants import FileType, FILES_SUFFIX
 
-
-def extract_file(file):
-    with gzip.open(file, "rb") as compressed:
-        with open(file[:-3], "wb") as uncompressed:
-            shutil.copyfileobj(compressed, uncompressed)
+_open = partial(gzip.open, mode='rt')
 
 
 def create_merged_file(input_list):
@@ -42,14 +37,12 @@ def create_merged_file(input_list):
 
     # proteins
     protein_df = pd.DataFrame(columns=['id', 'protein'])
-    extract_file(protein_file_path)
-    for record in SeqIO.parse(protein_file_path[:-3], "fasta"):
+    for record in SeqIO.parse(_open(os.path.join(protein_file_path)), 'fasta'):
         protein_df.loc[len(protein_df)] = [record.id, record.seq]
 
     # cds
     dna_df = pd.DataFrame(columns=['locus_tag', 'dna'])
-    extract_file(cds_file_path)
-    for record in SeqIO.parse(cds_file_path[:-3], "fasta"):
+    for record in SeqIO.parse(_open(os.path.join(cds_file_path)), 'fasta'):
         try:
             locus_tag = re.findall('\[locus_tag=(.+?)\]', record.description)[0]
         except AttributeError:
