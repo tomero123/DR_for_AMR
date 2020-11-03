@@ -5,6 +5,7 @@ sys.path.append("/home/tomeror/tomer_thesis")
 
 import os
 import pandas as pd
+from tqdm import tqdm
 
 from constants import Bacteria
 
@@ -26,7 +27,7 @@ print(f"Number of combined files: {len(files_list)}")
 
 results_df = pd.DataFrame(columns=["file_name", "file", "number_of_genes"])
 
-for file in files_list:
+for file in tqdm(files_list):
     df = pd.read_csv(os.path.join(input_folder_path, file))
     results_df.loc[len(results_df)] = [file, file.replace(".csv.gz", ""), df.shape[0]]
 

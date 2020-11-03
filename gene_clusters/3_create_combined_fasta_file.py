@@ -5,6 +5,7 @@ sys.path.append("/home/tomeror/tomer_thesis")
 
 import os
 import pandas as pd
+from tqdm import tqdm
 
 from constants import Bacteria
 
@@ -19,7 +20,7 @@ combined_files_path = os.path.join(prefix, "results_files", BACTERIA, "combined_
 seq_list = []
 
 strains_df = pd.read_csv(os.path.join(summary_gene_files_path, "ALL_STRAINS.csv"))
-for _, row in strains_df.iterrows():
+for _, row in tqdm(strains_df.iterrows(), total=strains_df.shape[0]):
     file_name = row['file_name']
     strain_index = row['index']
     genes_df = pd.read_csv(os.path.join(combined_files_path, file_name))
