@@ -10,13 +10,13 @@ import os
 import pandas as pd
 import numpy as np
 import pickle
-import zlib
 from sklearn.feature_selection import SelectFromModel
 from sklearn import metrics
 import traceback
 import time
+import datetime
 
-from constants import PREDEFINED_FEATURES_LIST
+from constants import PREDEFINED_FEATURES_LIST, TIME_STR
 from utils import get_time_as_str
 
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -92,7 +92,7 @@ def get_final_df(antibiotic, kmers_df, label_df):
         traceback.print_exc()
 
 
-def train_test_and_write_results(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, bacteria, use_predefined_features_list):
+def train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, bacteria, use_predefined_features_list):
     try:
         non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
         train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin([1, 2, 3, 4])]["file_id"])
@@ -182,13 +182,14 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, use_multiprocess):
+def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, use_multiprocess):
     try:
         now = time.time()
         n_folds = amr_df[f"{antibiotic}_group"].max()
         train_groups_list, test_groups_list = get_train_and_test_groups(n_folds)
 
         inputs_list = []
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} STARTED creating folds data. antibiotic: {antibiotic}")
         for train_group_list, test_group in zip(train_groups_list, test_groups_list):
             train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin(train_group_list)]["file_id"])
             test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == test_group]["file_id"])
@@ -198,6 +199,8 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
             final_df_test = final_df[final_df["file_id"].isin(test_file_id_list)]
             inputs_list.append([test_group, final_df_train, final_df_test, results_file_path, model, antibiotic, features_selection_n])
 
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED creating folds data. antibiotic: {antibiotic}")
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} STARTED training models. antibiotic: {antibiotic}")
         if use_multiprocess:
             with multiprocessing.Pool(processes=n_folds) as pool:
                 results_list = pool.map(train_test_one_fold, inputs_list)
@@ -209,7 +212,7 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
         model_parmas = json.dumps(model.get_params())
         write_data_to_excel(antibiotic, results_list, results_file_path, model_parmas, kmers_original_count,
                             kmers_final_count, all_results_dic)
-        print(f"***FINISHED running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes***")
+        print(f"***{datetime.datetime.now().strftime(TIME_STR)} FINISHED training models for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes***")
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
         traceback.print_exc()
@@ -338,17 +341,17 @@ def train_test_one_fold(test_group, final_df_train, final_df_test, results_file_
     y_train = final_df_train[['label']].copy()
     X_test = final_df_test.drop(non_features_columns, axis=1).copy()
     y_test = final_df_test[['label']].copy()
-    print(f"FOLD#{test_group} X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
+    print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
 
     # Create weight according to the ratio of each class
     resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
         if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
     sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
-    print(f"FOLD#{test_group} Resistance_weight for antibiotic: {antibiotic} is: {resistance_weight}")
+    print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Resistance_weight for antibiotic: {antibiotic} is: {resistance_weight}")
 
     # Features Selection
     if features_selection_n:
-        print(f"FOLD#{test_group} Started running Feature selection for antibiotic: {antibiotic}")
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Started running Feature selection for antibiotic: {antibiotic}")
         now = time.time()
         model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
         # Write csv of data after FS
@@ -368,7 +371,7 @@ def train_test_one_fold(test_group, final_df_train, final_df_test, results_file_
         selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
         X_train = selection.transform(X_train)
         X_test = selection.transform(X_test)
-        print(f"FOLD#{test_group} Finished running Feature selection for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}, X_test.shape: {X_test.shape}")
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Finished running Feature selection for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}, X_test.shape: {X_test.shape}")
 
     # model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
 

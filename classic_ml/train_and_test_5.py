@@ -13,7 +13,7 @@ from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_resul
     get_current_results_folder, get_label_df, train_test_and_write_results_cv, convert_results_df_to_new_format, \
     get_agg_results_df, get_all_resulst_df
 from MyLogger import Logger
-from constants import Bacteria, ANTIBIOTIC_DIC, TestMethod
+from constants import Bacteria, ANTIBIOTIC_DIC, TestMethod, TIME_STR
 
 # *********************************************************************************************************************************
 # Config
@@ -93,21 +93,21 @@ if __name__ == '__main__':
     log_path = os.path.join(results_path, f"log_{results_file_folder}.txt")
     sys.stdout = Logger(log_path)
 
-    print(f"STARTED running at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"STARTED running at {datetime.datetime.now().strftime(TIME_STR)}")
     print(f"Bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
     print(f"params: {params_dict}")
     for antibiotic in antibiotic_list:
-        print(f"Started running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic}")
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} Started running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic}")
         now = time.time()
         label_df = get_label_df(amr_df, antibiotic)
         final_df = get_final_df(antibiotic, kmers_df, label_df)
-        print(f"Finished running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} Finished running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
         results_file_name = f"{antibiotic}_RESULTS_{results_file_folder}.xlsx"
         results_file_path = os.path.join(results_path, results_file_name)
         if TEST_METHOD == TestMethod.TRAIN_TEST.value:
-            train_test_and_write_results(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, BACTERIA, USE_PREDEFINED_FEATURES_LIST)
+            train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, BACTERIA, USE_PREDEFINED_FEATURES_LIST)
         elif TEST_METHOD == TestMethod.CV.value:
-            train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, USE_MULTIPROCESS)
+            train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, USE_MULTIPROCESS)
         else:
             raise Exception("Invalid test_method")
     print(all_results_dic)
