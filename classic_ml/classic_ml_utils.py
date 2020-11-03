@@ -182,11 +182,6 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, mod
         traceback.print_exc()
 
 
-def train_test_one_fold_pickled(args):
-    args = pickle.loads(zlib.decompress(args))
-    return train_test_one_fold(*args)
-
-
 def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, model_params, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, use_multiprocess):
     try:
         now = time.time()
@@ -195,13 +190,17 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
 
         inputs_list = []
         for train_group_list, test_group in zip(train_groups_list, test_groups_list):
-            inputs_list.append([train_group_list, test_group, final_df, amr_df, results_file_path, model, model_params, antibiotic, features_selection_n])
+            train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin(train_group_list)]["file_id"])
+            test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == test_group]["file_id"])
+            final_df['label'].replace('R', 1, inplace=True)
+            final_df['label'].replace('S', 0, inplace=True)
+            final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]
+            final_df_test = final_df[final_df["file_id"].isin(test_file_id_list)]
+            inputs_list.append([test_group, final_df_train, final_df_test, results_file_path, model, antibiotic, features_selection_n])
 
         if use_multiprocess:
-
             with multiprocessing.Pool(processes=n_folds) as pool:
-                results_list = pool.map(train_test_one_fold_pickled,
-                                        [zlib.compress(pickle.dumps(s)) for s in inputs_list])
+                results_list = pool.map(train_test_one_fold, inputs_list)
         else:
             results_list = []
             for i in inputs_list:
@@ -333,14 +332,8 @@ def get_train_and_test_groups(n_folds):
     return train_groups_list, test_groups_list
 
 
-def train_test_one_fold(train_group_list, test_group, final_df, amr_df, results_file_path, model, model_params, antibiotic, features_selection_n):
+def train_test_one_fold(test_group, final_df_train, final_df_test, results_file_path, model, antibiotic, features_selection_n):
     non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
-    train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin(train_group_list)]["file_id"])
-    test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == test_group]["file_id"])
-    final_df['label'].replace('R', 1, inplace=True)
-    final_df['label'].replace('S', 0, inplace=True)
-    final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]
-    final_df_test = final_df[final_df["file_id"].isin(test_file_id_list)]
     X_train = final_df_train.drop(non_features_columns, axis=1).copy()
     y_train = final_df_train[['label']].copy()
     X_test = final_df_test.drop(non_features_columns, axis=1).copy()
@@ -381,8 +374,8 @@ def train_test_one_fold(train_group_list, test_group, final_df, amr_df, results_
 
     eval_set = [(X_test, y_test)]
     model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
-              eval_metric="error", eval_set=eval_set, verbose=True,
-              # early_stopping_rounds=10
+              eval_metric="error", eval_set=eval_set, # verbose=True,
+              early_stopping_rounds=20
               )
 
     temp_scores = model.predict_proba(X_test)

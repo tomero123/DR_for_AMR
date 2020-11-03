@@ -33,14 +33,14 @@ common_th_subtract = None  # remove kmer if it appears in number of strains whic
 max_depth = 4
 n_estimators = 300
 subsample = 0.8
-max_features = 0.8  # like max_features in sklearn
+colsample_bytree = 0.8  # like max_features in sklearn
 learning_rate = 0.1
-n_jobs = 10
+n_jobs = -1
 model_params = {
     "max_depth": max_depth,
     "n_estimators": n_estimators,
     "subsample": subsample,
-    "max_features": max_features,  # like max_features in sklearn
+    "colsample_bytree": colsample_bytree,  # like max_features in sklearn
     "learning_rate": learning_rate,
     "n_jobs": n_jobs,
     "random_state": random_seed
@@ -54,7 +54,7 @@ if os.name == 'nt':
     model = xgboost.XGBClassifier(random_state=random_seed)
     model_params = {
         "n_estimators": 2,
-        "max_features": 0.8,  # like max_features in sklearn
+        "colsample_bytree": 0.8,  # like max_features in sklearn
         "learning_rate": 0.5,
     }
     antibiotic_list = ['levofloxacin', 'ceftazidime']
