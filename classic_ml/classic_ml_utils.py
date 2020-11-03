@@ -189,12 +189,13 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
         train_groups_list, test_groups_list = get_train_and_test_groups(n_folds)
 
         inputs_list = []
+        final_df['label'].replace('R', 1, inplace=True)
+        final_df['label'].replace('S', 0, inplace=True)
+
         print(f"{datetime.datetime.now().strftime(TIME_STR)} STARTED creating folds data. antibiotic: {antibiotic}")
         for train_group_list, test_group in zip(train_groups_list, test_groups_list):
             train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin(train_group_list)]["file_id"])
             test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == test_group]["file_id"])
-            final_df['label'].replace('R', 1, inplace=True)
-            final_df['label'].replace('S', 0, inplace=True)
             final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]
             final_df_test = final_df[final_df["file_id"].isin(test_file_id_list)]
             inputs_list.append([test_group, final_df_train, final_df_test, results_file_path, model, antibiotic, features_selection_n])

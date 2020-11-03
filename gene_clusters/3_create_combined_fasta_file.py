@@ -11,7 +11,6 @@ from constants import Bacteria
 
 # PARAMS
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
-NUM_OF_PROCESSES = 1 if len(sys.argv) <= 2 else int(sys.argv[2])
 
 prefix = '..' if os.name == 'nt' else '.'
 summary_gene_files_path = os.path.join(prefix, "results_files", BACTERIA, "summary_gene_files")

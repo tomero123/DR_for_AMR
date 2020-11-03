@@ -64,3 +64,5 @@ FILES_SUFFIX = {
     FileType.FEATURE_TABLE.value: ".txt.gz",
     FileType.PROTEIN.value: ".faa.gz",
 }
+
+TIME_STR = '%Y-%m-%d %H:%M:%S'
