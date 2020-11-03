@@ -42,6 +42,10 @@ for ind, file_name in enumerate(file_names_combined):
         input_list.append([ind, file_name, input_folder_base, output_folder])
 
 print("Start processing {} files".format(len(input_list)))
+
+if len(input_list) < 50:
+    print(f"files list: {[x[1] for x in input_list]}")
+
 if NUM_OF_PROCESSES > 1:
     pool = ProcessPool(processes=NUM_OF_PROCESSES)
     pool.map(create_merged_file, input_list)
