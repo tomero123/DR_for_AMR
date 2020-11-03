@@ -5,10 +5,8 @@ sys.path.append("/home/tomeror/tomer_thesis")
 
 import os
 import pandas as pd
-from pathos.multiprocessing import ProcessPool
 
-from gene_clusters.gene_clusters_utils import create_merged_file
-from constants import FileType, FILES_SUFFIX, Bacteria
+from constants import Bacteria
 
 
 # PARAMS
@@ -17,8 +15,10 @@ NUM_OF_PROCESSES = 1 if len(sys.argv) <= 2 else int(sys.argv[2])
 
 prefix = '..' if os.name == 'nt' else '.'
 input_folder_path = os.path.join(prefix, "results_files", BACTERIA, "combined_genes_files")
-output_folder = os.path.join(prefix, "results_files", BACTERIA)
+output_folder = os.path.join(prefix, "results_files", BACTERIA, "summary_gene_files")
 
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
 
 files_list = os.listdir(input_folder_path)
 files_list = [x for x in files_list if ".csv.gz" in x]
@@ -32,3 +32,4 @@ for file in files_list:
 
 results_df = results_df.reset_index()
 results_df.to_csv(os.path.join(output_folder, "ALL_STRAINS.csv"), index=False)
+print("DONE!")
