@@ -24,7 +24,7 @@ FEATURES_SELECTION_N = 300 if len(sys.argv) <= 4 else int(sys.argv[4])  # Choose
 RESULTS_FOLDER_NAME = None if len(sys.argv) <= 5 else sys.argv[5]
 DATA_TYPE = "all"
 USE_PREDEFINED_FEATURES_LIST = False  # Use predefined features list INSTEAD OF DOING FEATURE SELECTION!!!
-USE_MULTIPROCESS = True
+USE_MULTIPROCESS = False
 remove_intermediate = True
 
 # Model params
