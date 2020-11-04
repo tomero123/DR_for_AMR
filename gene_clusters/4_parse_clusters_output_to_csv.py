@@ -12,7 +12,7 @@ from constants import Bacteria
 
 # PARAMS
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
-cluster_output_file_name = "output70.txt.clstr"
+cluster_output_file_name = "cd_hit_results.txt.clstr"
 
 prefix = '..' if os.name == 'nt' else '.'
 summary_gene_files_path = os.path.join(prefix, "results_files", BACTERIA, "summary_gene_files")
@@ -50,16 +50,6 @@ clusters_df["ratio_multiple_genes"] = clusters_df["n_multiple_genes"] / num_of_s
 
 clusters_df["accessory_cluster"] = (clusters_df["ratio_one_gene"] + clusters_df["ratio_multiple_genes"] < accessory_max_ratio_th) & \
                                    (clusters_df["n_one_gene"] + clusters_df["n_multiple_genes"] >= accessory_min_count_th)
-# clusters_df = clusters_df.append(pd.Series(name="num_of_core_clusters"))
-# clusters_df = clusters_df.append(pd.Series(name="single_copy_core_clusters"))
-
-# for strain in clusters_df_strains:
-#     strain_df = clusters_df.loc[:, [strain, "core_cluster"]]
-#     core_df = strain_df[(strain_df[strain] > 0) & (strain_df["core_cluster"] > 0)]
-#     clusters_df.loc["num_of_core_clusters", strain] = core_df[strain].count()
-#
-#     single_copy_df = strain_df[(strain_df[strain] == 1) & (strain_df["core_cluster"] > 0)]
-#     clusters_df.loc["single_copy_core_clusters", strain] = single_copy_df[strain].count()
 
 clusters_df.index.set_names(['cluster_ind'], inplace=True)
 clusters_df.reset_index().to_csv(os.path.join(summary_gene_files_path, "CLUSTERS_DATA.csv"), index=False)
