@@ -199,9 +199,11 @@ def train_test_and_write_results_cv(final_df_file_path, amr_df, results_file_pat
         print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED creating folds data. antibiotic: {antibiotic}")
         print(f"{datetime.datetime.now().strftime(TIME_STR)} STARTED training models. antibiotic: {antibiotic}")
         if use_multiprocess:
+            print("Using multiprocessing")
             with multiprocessing.Pool(processes=n_folds) as pool:
                 results_list = pool.starmap(train_test_one_fold, inputs_list)
         else:
+            print("Using 1 process")
             results_list = []
             for i in inputs_list:
                 results_list.append(train_test_one_fold(*i))
