@@ -5,31 +5,35 @@ sys.path.append("/home/tomeror/tomer_thesis")
 
 import os
 import pandas as pd
-from tqdm import tqdm
 from collections import Counter
+import json
 
 from constants import Bacteria
 
 # PARAMS
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
-cluster_output_file_name = "cd_hit_results.txt.clstr"
+
+if os.name == 'nt':
+    cluster_output_file_name = "output70.txt.clstr"
+else:
+    cluster_output_file_name = "cd_hit_results.txt.clstr"
 
 prefix = '..' if os.name == 'nt' else '.'
 summary_gene_files_path = os.path.join(prefix, "results_files", BACTERIA, "summary_gene_files")
 strains_df = pd.read_csv(os.path.join(summary_gene_files_path, "ALL_STRAINS.csv"))
 accessory_max_ratio_th = 0.8
-accessory_min_count_th = 5
+accessory_min_count_th = 2
 
 clusters_dict = {}
 with open(os.path.join(summary_gene_files_path, cluster_output_file_name)) as cluster_file:
-    for line in tqdm(cluster_file):
+    for line in cluster_file:
         if line.startswith(">"):  # new cluster
-            cluster = line.split()[1]
-            clusters_dict.update({cluster: []})
+            cluster_ind = line.split()[1]
+            clusters_dict.update({cluster_ind: []})
         else:
-            strain = line.split(">")[1].split("|")[0]
-            strain = int(strain)
-            clusters_dict[cluster].append(strain)
+            strain_ind = int(line.split(">")[1].split("|")[0])
+            gene_ind = int(line.split(">")[1].split("|")[1].split(".")[0])
+            clusters_dict[cluster_ind].append(strain_ind)
 
 clusters_dict_count = {cluster: Counter(strain) for cluster, strain in clusters_dict.items()}
 print("Finished creating clusters_dict_count")
@@ -53,6 +57,41 @@ clusters_df["ratio_multiple_genes"] = clusters_df["n_multiple_genes"] / num_of_s
 clusters_df["accessory_cluster"] = (clusters_df["ratio_one_gene"] + clusters_df["ratio_multiple_genes"] < accessory_max_ratio_th) & \
                                    (clusters_df["n_one_gene"] + clusters_df["n_multiple_genes"] >= accessory_min_count_th)
 
+# Write clusters_df to csv
 clusters_df.index.set_names(['cluster_ind'], inplace=True)
-clusters_df.reset_index().to_csv(os.path.join(summary_gene_files_path, "CLUSTERS_DATA.csv"), index=False)
+clusters_df = clusters_df.reset_index()
+clusters_df.to_csv(os.path.join(summary_gene_files_path, "CLUSTERS_DATA_COUNTS.csv"), index=False)
+
+print("Finished Writing clusters_df to csv")
+
+# calculate dicts for mapping of strains and their genes to clusters
+accessory_clusters_ind = list(clusters_df["cluster_ind"][clusters_df["accessory_cluster"]])  # list of accessory clusters ind
+strains_genes_dict = {}
+strains_genes_dict_accessory = {}
+with open(os.path.join(summary_gene_files_path, cluster_output_file_name)) as cluster_file:
+    for line in cluster_file:
+        if line.startswith(">"):  # new cluster
+            cluster_ind = line.split()[1]
+            clusters_dict.update({cluster_ind: []}) # new cluster
+        else:
+            strain_ind = int(line.split(">")[1].split("|")[0])
+            gene_ind = int(line.split(">")[1].split("|")[1].split(".")[0])
+            strains_genes_dict.setdefault(strain_ind, {})
+            strains_genes_dict[strain_ind].setdefault(cluster_ind, [])
+            strains_genes_dict[strain_ind][cluster_ind].append(gene_ind)
+            # Add only genes of strains belonging to accessory clusters
+            if cluster_ind in accessory_clusters_ind:
+                strains_genes_dict_accessory.setdefault(strain_ind, {})
+                strains_genes_dict_accessory[strain_ind].setdefault(cluster_ind, [])
+                strains_genes_dict_accessory[strain_ind][cluster_ind].append(gene_ind)
+
+print("Finished creating strains_genes_dict and strains_genes_dict_accessory")
+# Write strains_genes_dict to json
+with open(os.path.join(summary_gene_files_path, "STRAINS_GENES_DICT.json"), "w") as write_file:
+    json.dump(strains_genes_dict, write_file)
+
+# Write strains_genes_dict_accessory to json
+with open(os.path.join(summary_gene_files_path, "STRAINS_GENES_DICT_ACCESSORY.json"), "w") as write_file:
+    json.dump(strains_genes_dict_accessory, write_file)
+
 print("DONE!")
