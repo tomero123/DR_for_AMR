@@ -32,7 +32,9 @@ with open(os.path.join(summary_gene_files_path, cluster_output_file_name)) as cl
             clusters_dict[cluster].append(strain)
 
 clusters_dict_count = {cluster: Counter(strain) for cluster, strain in clusters_dict.items()}
+print("Finished creating clusters_dict_count")
 clusters_df_strains = pd.DataFrame(clusters_dict_count).transpose()
+print("Finished creating clusters_df_strains")
 clusters_df_strains = clusters_df_strains.sort_index(axis=1)
 num_of_strains = clusters_df_strains.shape[1]
 
