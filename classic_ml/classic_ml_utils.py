@@ -182,7 +182,7 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, ant
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df_file_path, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, use_multiprocess):
+def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, use_multiprocess):
     try:
         now = time.time()
         n_folds = amr_df[f"{antibiotic}_group"].max()
@@ -194,7 +194,7 @@ def train_test_and_write_results_cv(final_df_file_path, amr_df, results_file_pat
         for train_group_list, test_group in zip(train_groups_list, test_groups_list):
             train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin(train_group_list)]["file_id"])
             test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == test_group]["file_id"])
-            inputs_list.append([test_group, final_df_file_path, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n])
+            inputs_list.append([test_group, final_df, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n])
 
         print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED creating folds data. antibiotic: {antibiotic}")
         print(f"{datetime.datetime.now().strftime(TIME_STR)} STARTED training models. antibiotic: {antibiotic}")
@@ -334,8 +334,7 @@ def get_train_and_test_groups(n_folds):
     return train_groups_list, test_groups_list
 
 
-def train_test_one_fold(test_group, final_df_file_path, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n):
-    final_df = pd.read_csv(final_df_file_path, compression='gzip')
+def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n):
     final_df['label'].replace('R', 1, inplace=True)
     final_df['label'].replace('S', 0, inplace=True)
     final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]

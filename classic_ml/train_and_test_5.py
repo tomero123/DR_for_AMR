@@ -32,7 +32,7 @@ random_seed = 1
 rare_th = 5  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
 max_depth = 4
-n_estimators = 300
+n_estimators = 150
 subsample = 0.8
 colsample_bytree = 0.8  # like max_features in sklearn
 learning_rate = 0.1
@@ -103,24 +103,17 @@ if __name__ == '__main__':
     print(f"params: {params_dict}")
     for antibiotic in antibiotic_list:
         print(f"{datetime.datetime.now().strftime(TIME_STR)} Started running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic}")
-        final_df_file_name = f"{DATA_TYPE}_{antibiotic}_rth_{rare_th}_cth_{common_th_subtract}.csv.gz"
-        final_df_file_path = os.path.join(baseline_data_path, final_df_file_name)
-        if os.path.exists(final_df_file_path):
-            now = time.time()
-            final_df = pd.read_csv(final_df_file_path, compression='gzip')
-            print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED LOADING get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
-        else:
-            now = time.time()
-            label_df = get_label_df(amr_df, antibiotic)
-            final_df = get_final_df(antibiotic, kmers_df, label_df)
-            final_df.to_csv(final_df_file_path, compression='gzip')
-            print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED CALCULATING final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
+        now = time.time()
+        label_df = get_label_df(amr_df, antibiotic)
+        final_df = get_final_df(antibiotic, kmers_df, label_df)
+        # final_df.to_csv(final_df_file_path, compression='gzip')
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED CALCULATING final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
         results_file_name = f"{antibiotic}_RESULTS_{results_file_folder}.xlsx"
         results_file_path = os.path.join(results_path, results_file_name)
         if TEST_METHOD == TestMethod.TRAIN_TEST.value:
             train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, BACTERIA, USE_PREDEFINED_FEATURES_LIST)
         elif TEST_METHOD == TestMethod.CV.value:
-            train_test_and_write_results_cv(final_df_file_path, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, USE_MULTIPROCESS)
+            train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, USE_MULTIPROCESS)
         else:
             raise Exception("Invalid test_method")
     print(all_results_dic)
