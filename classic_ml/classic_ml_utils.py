@@ -378,12 +378,11 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
 
     # model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
 
-    # eval_set = [(X_test, y_test)]
+    eval_set = [(X_test, y_test)]
     model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
-              # eval_metric="error", eval_set=eval_set, # verbose=True,
-              # early_stopping_rounds=20
+              eval_metric="auc", eval_set=eval_set, verbose=True,
+              early_stopping_rounds=15
               )
-
     temp_scores = model.predict_proba(X_test)
     true_results = y_test.values.ravel()
     resistance_score = [x[1] for x in temp_scores]
