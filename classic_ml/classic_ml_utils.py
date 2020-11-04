@@ -377,7 +377,7 @@ def train_test_one_fold(test_group, final_df_file_path, train_file_id_list, test
 
     # model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
 
-    eval_set = [(X_test, y_test)]
+    # eval_set = [(X_test, y_test)]
     model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
               # eval_metric="error", eval_set=eval_set, # verbose=True,
               # early_stopping_rounds=20
