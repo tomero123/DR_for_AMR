@@ -3,6 +3,7 @@ import os
 import re
 import traceback
 from functools import partial
+import json
 
 import pandas as pd
 from Bio import SeqIO
@@ -56,3 +57,45 @@ def create_merged_file(input_list):
     except Exception() as e:
         print(f"ERROR at create_merged_file for: {file}, index: {ind}, message: {e}")
         traceback.print_exc()
+
+
+def create_kmers_from_combined_csv(input_list):
+    try:
+        strain_index = input_list[0]
+        file = input_list[1]
+        K = input_list[2]
+        input_combined_genes_path = input_list[3]
+        output_all_genes_kmers = input_list[4]
+        output_accessory_genes_kmers = input_list[5]
+        summary_gene_files_path = input_list[6]
+        all_genes_kmers_dic = {}
+        accessory_genes_kmers_dic = {}
+        genes_df = pd.read_csv(os.path.join(input_combined_genes_path, file + ".csv.gz"))
+        with open(os.path.join(summary_gene_files_path, "STRAINS_GENES_DICT_ACCESSORY.json"), 'r') as f:
+            strains_genes_dict_accessory = json.loads(f.read())
+        accessory_genes = []
+        for _, genes_list in strains_genes_dict_accessory.get(str(strain_index)).items():
+            accessory_genes += genes_list
+        accessory_genes_non_unique = len(accessory_genes)
+        accessory_genes = list(set(accessory_genes))
+        accessory_genes_unique = len(accessory_genes)
+        print(f"Processing: {file}, accessory genes before: {accessory_genes_non_unique} accessory genes unique: {accessory_genes_unique}")
+        for gene_id, row in genes_df.iterrows():
+            sequence = row['dna']
+            for start_ind in range(len(sequence) - K + 1):
+                key = sequence[start_ind:start_ind + K]
+                if key in all_genes_kmers_dic:
+                    all_genes_kmers_dic[key] += 1
+                else:
+                    all_genes_kmers_dic[key] = 1
+                if gene_id in accessory_genes:
+                    if key in accessory_genes_kmers_dic:
+                        accessory_genes_kmers_dic[key] += 1
+                    else:
+                        accessory_genes_kmers_dic[key] = 1
+        with gzip.open(os.path.join(output_all_genes_kmers, file + ".txt.gz"), 'wt') as outfile:
+            json.dump(all_genes_kmers_dic, outfile)
+        with gzip.open(os.path.join(output_accessory_genes_kmers, file + ".txt.gz"), 'wt') as outfile:
+            json.dump(accessory_genes_kmers_dic, outfile)
+    except Exception as e:
+        print(f"ERROR at create_kmers_file for: {file}, index: {strain_index}, message: {e}")
