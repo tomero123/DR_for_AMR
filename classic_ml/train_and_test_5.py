@@ -24,7 +24,7 @@ TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 4 else sys.argv[4]  # can 
 FEATURES_SELECTION_N = 300 if len(sys.argv) <= 5 else int(sys.argv[5])  # Choose K size # number of features to leave after feature selection
 N_ESTIMATORS = 300 if len(sys.argv) <= 6 else int(sys.argv[6])
 MAX_DEPTH = 4 if len(sys.argv) <= 7 else int(sys.argv[7])
-LEARNING_RATE = 0.1 if len(sys.argv) <= 8 else int(sys.argv[8])
+LEARNING_RATE = 0.1 if len(sys.argv) <= 8 else float(sys.argv[8])
 RESULTS_FOLDER_NAME = None if len(sys.argv) <= 9 else sys.argv[9]
 DATA_TYPE = "all"
 USE_PREDEFINED_FEATURES_LIST = False  # Use predefined features list INSTEAD OF DOING FEATURE SELECTION!!!
