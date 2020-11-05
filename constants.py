@@ -36,6 +36,13 @@ class FileType(Enum):
     FEATURE_TABLE = "feature_table"
 
 
+class BaselineMode(Enum):
+    ALL_GENOME = "all_genome"
+    ALL_GENES = "all_genes"
+    ACCESSORY_GENES = "accessory_genes"
+    GENE_CLUSTERS = "gene_clusters"
+
+
 # antibiotic dic
 ANTIBIOTIC_DIC = {
     Bacteria.PSEUDOMONAS_AUREGINOSA.value: ['imipenem', 'ceftazidime', 'meropenem', 'levofloxacin', 'amikacin'],

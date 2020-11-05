@@ -85,7 +85,27 @@ def get_final_df(antibiotic, kmers_df, label_df):
             # Join (inner) between kmers_df and label_df
             final_df = kmers_df.merge(label_df, how="inner", right_on="file_name", left_index=True)
         # final_df = kmers_df.merge(label_df, how="inner", right_on="file_name", left_index=True)
-        print("final_df for antibiotic: {} have {} Strains with label and {} features".format(antibiotic, final_df.shape[0], final_df.shape[1] - 2))
+        print("final_df for antibiotic: {} have {} Strains with label and {} features".format(antibiotic, final_df.shape[0], final_df.shape[1] - 4))
+        return final_df
+    except Exception as e:
+        print(f"ERROR at get_final_df, message: {e}")
+        traceback.print_exc()
+
+
+def get_final_df_gene_clusters(antibiotic, label_df, path):
+    try:
+        clusters_df_file_path = os.path.join(path, "summary_gene_files", "CLUSTERS_DATA_COUNTS.csv")
+        all_strains_df_file_path = os.path.join(path, "summary_gene_files", "ALL_STRAINS.csv")
+        clusters_df = pd.read_csv(clusters_df_file_path)
+        all_strains_df = pd.read_csv(all_strains_df_file_path)
+        strains_columns = [x for x in clusters_df.columns if x.isdigit()]
+        clusters_df = clusters_df[strains_columns]
+        clusters_df = clusters_df.T
+        clusters_df.index = clusters_df.index.astype(int)
+        clusters_df = clusters_df.merge(all_strains_df[['index', 'file']], how="inner", right_on="index", left_index=True)
+        final_df = clusters_df.merge(label_df, how="inner", right_on="file_name", left_on='file')
+        final_df = final_df.drop(['index', 'file'], axis=1)
+        print("GENE CLUSTERS: final_df for antibiotic: {} have {} Strains with label and {} features".format(antibiotic, final_df.shape[0], final_df.shape[1] - 4))
         return final_df
     except Exception as e:
         print(f"ERROR at get_final_df, message: {e}")
