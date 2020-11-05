@@ -13,15 +13,19 @@ from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_resul
     get_current_results_folder, get_label_df, train_test_and_write_results_cv, convert_results_df_to_new_format, \
     get_agg_results_df, get_all_resulst_df
 from MyLogger import Logger
-from constants import Bacteria, ANTIBIOTIC_DIC, TestMethod, TIME_STR
+from constants import Bacteria, ANTIBIOTIC_DIC, TestMethod, TIME_STR, BaselineMode
 
 # *********************************************************************************************************************************
 # Config
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
-K = 10 if len(sys.argv) <= 2 else int(sys.argv[2])  # Choose K size
-TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 3 else sys.argv[3]  # can be either "train_test" or "cv"
-FEATURES_SELECTION_N = 300 if len(sys.argv) <= 4 else int(sys.argv[4])  # Choose K size # number of features to leave after feature selection
-RESULTS_FOLDER_NAME = None if len(sys.argv) <= 5 else sys.argv[5]
+BASELINE_MODE = BaselineMode.ALL_GENOME.value if len(sys.argv) <= 2 else sys.argv[2]
+K = 10 if len(sys.argv) <= 3 else int(sys.argv[3])  # Choose K size
+TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 4 else sys.argv[4]  # can be either "train_test" or "cv"
+FEATURES_SELECTION_N = 300 if len(sys.argv) <= 5 else int(sys.argv[5])  # Choose K size # number of features to leave after feature selection
+N_ESTIMATORS = 300 if len(sys.argv) <= 6 else int(sys.argv[6])
+MAX_DEPTH = 4 if len(sys.argv) <= 7 else int(sys.argv[7])
+LEARNING_RATE = 0.1 if len(sys.argv) <= 8 else int(sys.argv[8])
+RESULTS_FOLDER_NAME = None if len(sys.argv) <= 9 else sys.argv[9]
 DATA_TYPE = "all"
 USE_PREDEFINED_FEATURES_LIST = False  # Use predefined features list INSTEAD OF DOING FEATURE SELECTION!!!
 USE_MULTIPROCESS = False
@@ -31,25 +35,22 @@ remove_intermediate = True
 random_seed = 1
 rare_th = 5  # remove kmer if it appears in number of strains which is less or equal than rare_th
 common_th_subtract = None  # remove kmer if it appears in number of strains which is more or equal than number_of_strains - common_th
-max_depth = 4
-n_estimators = 300
 subsample = 0.8
 colsample_bytree = 0.8  # like max_features in sklearn
-learning_rate = 0.1
 n_jobs = 64
 model_params = {
-    "max_depth": max_depth,
-    "n_estimators": n_estimators,
+    "max_depth": MAX_DEPTH,
+    "n_estimators": N_ESTIMATORS,
     "subsample": subsample,
     "colsample_bytree": colsample_bytree,  # like max_features in sklearn
-    "learning_rate": learning_rate,
+    "learning_rate": LEARNING_RATE,
     "n_jobs": n_jobs,
     "random_state": random_seed
 }
 model = xgboost.XGBClassifier(**model_params)
 antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
-dataset_file_name = f'all_kmers_file_K_{K}.csv.gz'
-kmers_map_file_name = f'all_kmers_map_K_{K}.txt'
+dataset_file_name = f'{BASELINE_MODE}_kmers_file_K_{K}.csv.gz'
+kmers_map_file_name = f'{BASELINE_MODE}_kmers_map_K_{K}.txt'
 
 if os.name == 'nt':
     model = xgboost.XGBClassifier(random_state=random_seed)
@@ -69,10 +70,9 @@ amr_data_file_name = 'amr_labels.csv'
 prefix = '..' if os.name == 'nt' else '.'
 path = os.path.join(prefix, 'results_files', BACTERIA)
 
-baseline_data_path = os.path.join(path, "baseline_data", DATA_TYPE)
-
 params_dict = {
     "bacteria": BACTERIA,
+    "baseline_mode": BASELINE_MODE,
     "test_method": TEST_METHOD,
     "K": K,
     "model": str(model.__class__),
@@ -93,14 +93,12 @@ if __name__ == '__main__':
     results_path = os.path.join(path, "classic_ml_results", results_file_folder)
     if not os.path.exists(results_path):
         os.makedirs(results_path)
-    if not os.path.exists(baseline_data_path):
-        os.makedirs(baseline_data_path)
     log_path = os.path.join(results_path, f"log_{results_file_folder}.txt")
     sys.stdout = Logger(log_path)
 
     print(f"STARTED running at {datetime.datetime.now().strftime(TIME_STR)}")
     print(f"Bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
-    print(f"params: {params_dict}")
+    print(f"RUN PARAMS: {params_dict}")
     for antibiotic in antibiotic_list:
         print(f"{datetime.datetime.now().strftime(TIME_STR)} Started running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic}")
         now = time.time()

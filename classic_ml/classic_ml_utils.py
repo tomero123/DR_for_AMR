@@ -190,13 +190,13 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
 
         inputs_list = []
 
-        print(f"{datetime.datetime.now().strftime(TIME_STR)} STARTED creating folds data. antibiotic: {antibiotic}")
+        # print(f"{datetime.datetime.now().strftime(TIME_STR)} STARTED creating folds data. antibiotic: {antibiotic}")
         for train_group_list, test_group in zip(train_groups_list, test_groups_list):
             train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin(train_group_list)]["file_id"])
             test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == test_group]["file_id"])
             inputs_list.append([test_group, final_df, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n])
 
-        print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED creating folds data. antibiotic: {antibiotic}")
+        # print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED creating folds data. antibiotic: {antibiotic}")
         print(f"{datetime.datetime.now().strftime(TIME_STR)} STARTED training models. antibiotic: {antibiotic}")
         if use_multiprocess:
             print("Using multiprocessing")
