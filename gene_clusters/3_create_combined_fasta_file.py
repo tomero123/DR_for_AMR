@@ -26,7 +26,7 @@ for _, row in tqdm(strains_df.iterrows(), total=strains_df.shape[0]):
     for seq_index, row in genes_df.iterrows():
         header = str(strain_index) + "|" + str(seq_index)
         protein = row["protein"]
-        seq_list.append(">{}\n{}".format(header, protein))
+        seq_list.append(f">{header}\n{protein}")
 
 with open(os.path.join(summary_gene_files_path, "protein_combined.fasta"), "w") as file:
     file.write("\n".join(seq_list))
