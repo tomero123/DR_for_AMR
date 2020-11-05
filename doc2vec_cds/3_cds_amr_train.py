@@ -96,7 +96,7 @@ if __name__ == '__main__':
                 os.makedirs(results_file_folder)
             log_path = os.path.join(results_file_folder, f"log_{current_results_folder}.txt")
             sys.stdout = Logger(log_path)
-            all_results_dic = {"antibiotic": [], "agg_method": [], "accuracy": [], "f1_score": [], "auc": [], "recall": [], "precision": []}
+            all_results_dic = {"antibiotic": [], "agg_method": [], "fold": [], "accuracy": [], "f1_score": [], "auc": [], "recall": [], "precision": []}
 
             params_dict = {
                 "bacteria": BACTERIA,
