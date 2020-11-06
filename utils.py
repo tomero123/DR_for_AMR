@@ -154,7 +154,7 @@ def create_kmers_file(input_list):
                     kmers_dic[key] += 1
                 else:
                     kmers_dic[key] = 1
-        with gzip.open(os.path.join(output_folder, file_name.replace(".fna.gz", ".txt.gz")), 'wt') as outfile:
+        with gzip.open(os.path.join(output_folder, file_name.replace("_genomic.fna.gz", ".txt.gz")), 'wt') as outfile:
             json.dump(kmers_dic, outfile)
     except Exception as e:
         print(f"ERROR at create_kmers_file for: {file_name}, index: {ind}, message: {e}")
