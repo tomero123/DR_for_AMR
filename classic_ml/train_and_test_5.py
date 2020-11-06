@@ -13,12 +13,12 @@ from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_resul
     get_current_results_folder, get_label_df, train_test_and_write_results_cv, convert_results_df_to_new_format, \
     get_agg_results_df, get_all_resulst_df, get_final_df_gene_clusters
 from MyLogger import Logger
-from constants import Bacteria, ANTIBIOTIC_DIC, TestMethod, TIME_STR, BaselineMode
+from constants import Bacteria, ANTIBIOTIC_DIC, TestMethod, TIME_STR, RawDataType
 
 # *********************************************************************************************************************************
 # Config
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
-BASELINE_MODE = BaselineMode.ALL_GENOME.value if len(sys.argv) <= 2 else sys.argv[2]
+RAW_DATA_TYPE = RawDataType.ALL_GENOME.value if len(sys.argv) <= 2 else sys.argv[2]
 K = 10 if len(sys.argv) <= 3 else int(sys.argv[3])  # Choose K size
 TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 4 else sys.argv[4]  # can be either "train_test" or "cv"
 FEATURES_SELECTION_N = 300 if len(sys.argv) <= 5 else int(sys.argv[5])  # Choose K size # number of features to leave after feature selection
@@ -49,8 +49,6 @@ model_params = {
 }
 model = xgboost.XGBClassifier(**model_params)
 antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
-dataset_file_name = f'{BASELINE_MODE}_kmers_file_K_{K}.csv.gz'
-kmers_map_file_name = f'{BASELINE_MODE}_kmers_map_K_{K}.txt'
 
 
 if os.name == 'nt':
@@ -74,7 +72,7 @@ path = os.path.join(prefix, 'results_files', BACTERIA)
 
 params_dict = {
     "bacteria": BACTERIA,
-    "baseline_mode": BASELINE_MODE,
+    "baseline_mode": RAW_DATA_TYPE,
     "test_method": TEST_METHOD,
     "K": K,
     "model": str(model.__class__),
@@ -97,9 +95,6 @@ if __name__ == '__main__':
     log_path = os.path.join(results_path, f"log_{results_file_folder}.txt")
     sys.stdout = Logger(log_path)
 
-    # Get kmers df (if we are not using clusters as features
-    kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
-
     print(f"STARTED running at {datetime.datetime.now().strftime(TIME_STR)}")
     print(f"Bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
     print(f"RUN PARAMS: {params_dict}")
@@ -108,11 +103,16 @@ if __name__ == '__main__':
         now = time.time()
         label_df = get_label_df(amr_df, antibiotic)
         # Use gene clusters as features
-        if BASELINE_MODE == BaselineMode.GENE_CLUSTERS.value:
+        if RAW_DATA_TYPE == RawDataType.GENE_CLUSTERS.value:
             final_df = get_final_df_gene_clusters(antibiotic, label_df, path)
+            kmers_original_count, kmers_final_count = 0, 0
         # Use kmers count as features from one of the options:
         # (1) all genome (2) all genes (3) accessory genes
         else:
+            dataset_file_name = f'{RAW_DATA_TYPE}_kmers_file_K_{K}.csv.gz'
+            kmers_map_file_name = f'{RAW_DATA_TYPE}_kmers_map_K_{K}.txt'
+            # Get kmers df (if we are not using clusters as features
+            kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
             final_df = get_final_df(antibiotic, kmers_df, label_df)
         # final_df.to_csv(final_df_file_path, compression='gzip')
         print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED CALCULATING final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")

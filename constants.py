@@ -36,7 +36,7 @@ class FileType(Enum):
     FEATURE_TABLE = "feature_table"
 
 
-class BaselineMode(Enum):
+class RawDataType(Enum):
     ALL_GENOME = "all_genome"
     ALL_GENES = "all_genes"
     ACCESSORY_GENES = "accessory_genes"

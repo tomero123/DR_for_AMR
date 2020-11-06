@@ -8,22 +8,22 @@ import json
 import pandas as pd
 from tqdm import tqdm
 
-from constants import Bacteria, BaselineMode
+from constants import Bacteria, RawDataType
 
 # PARAMS
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
-BASELINE_MODE = BaselineMode.ACCESSORY_GENES.value if len(sys.argv) <= 2 else sys.argv[2]
+RAW_DATA_TYPE = RawDataType.ACCESSORY_GENES.value if len(sys.argv) <= 2 else sys.argv[2]
 K = 10 if len(sys.argv) <= 3 else int(sys.argv[3])  # Choose K size
 
 limit = None  # if None - take all files from kmers_files else limit
 
 prefix = '..' if os.name == 'nt' else '.'
 results_files_path = os.path.join(prefix, 'results_files', BACTERIA)
-input_folder = os.path.join(results_files_path, f'{BASELINE_MODE}_kmers_files', f"K_{K}")
+input_folder = os.path.join(results_files_path, f'{RAW_DATA_TYPE}_kmers_files', f"K_{K}")
 amr_data_file_path = os.path.join(results_files_path, 'amr_labels.csv')
 
-all_kmers_file_csv_name = f"{BASELINE_MODE}_kmers_file_K_{K}.csv.gz"
-all_kmers_map_file_name = f"{BASELINE_MODE}_kmers_map_K_{K}.txt"
+all_kmers_file_csv_name = f"{RAW_DATA_TYPE}_kmers_file_K_{K}.csv.gz"
+all_kmers_map_file_name = f"{RAW_DATA_TYPE}_kmers_map_K_{K}.txt"
 
 # PARAMS END
 
