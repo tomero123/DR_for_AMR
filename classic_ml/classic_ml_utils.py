@@ -28,11 +28,13 @@ def get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_t
         kmers_df = pd.read_csv(os.path.join(path, dataset_file_name), compression='gzip')
         kmers_original_count = kmers_df.shape[0]
         print("kmers_df shape: {}".format(kmers_df.shape))
+        kmers_count = kmers_df.shape[0]
         # # remove too rare and too common kmers
         if rare_th:
             non_zero_strains_count = kmers_df.astype(bool).sum(axis=1)
             kmers_df = kmers_df[non_zero_strains_count > rare_th]
-            print("rare_th: {} ; kmers_df shape after rare kmers removal: {}".format(rare_th, kmers_df.shape))
+            kmers_count2 = kmers_df.shape[0]
+            print(f"rare_th: {rare_th} ; removed {kmers_count - kmers_count2} kmers ; kmers_df shape after rare kmers removal: {kmers_df.shape}")
         if common_th_subtract:
             non_zero_strains_count = kmers_df.astype(bool).sum(axis=1)
             kmers_df = kmers_df[non_zero_strains_count < kmers_df.shape[1] - common_th_subtract]
@@ -49,6 +51,7 @@ def get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_t
         # Transpose to have strains as rows and kmers as columns
         kmers_df = kmers_df.T
         kmers_df.index = kmers_df.index.str.replace("_genomic.txt.gz", "")
+        kmers_df.index = kmers_df.index.str.replace(".txt.gz", "")
         print("kmers_df shape: {}".format(kmers_df.shape))
         print("Finished running get_kmers_df in {} minutes".format(round((time.time() - now)/60), 4))
         return kmers_df, kmers_original_count, kmers_final_count

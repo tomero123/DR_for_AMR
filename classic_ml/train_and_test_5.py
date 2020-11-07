@@ -18,7 +18,7 @@ from constants import Bacteria, ANTIBIOTIC_DIC, TestMethod, TIME_STR, RawDataTyp
 # *********************************************************************************************************************************
 # Config
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
-RAW_DATA_TYPE = RawDataType.ALL_GENOME.value if len(sys.argv) <= 2 else sys.argv[2]
+RAW_DATA_TYPE = RawDataType.ALL_GENES.value if len(sys.argv) <= 2 else sys.argv[2]
 K = 10 if len(sys.argv) <= 3 else int(sys.argv[3])  # Choose K size
 TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 4 else sys.argv[4]  # can be either "train_test" or "cv"
 FEATURES_SELECTION_N = 300 if len(sys.argv) <= 5 else int(sys.argv[5])  # Choose K size # number of features to leave after feature selection
@@ -67,7 +67,6 @@ if os.name == 'nt':
 amr_data_file_name = 'amr_labels.csv'
 
 prefix = '..' if os.name == 'nt' else '.'
-prefix = '..'
 path = os.path.join(prefix, 'results_files', BACTERIA)
 
 
