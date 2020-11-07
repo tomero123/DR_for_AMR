@@ -106,7 +106,7 @@ def create_kmers_from_combined_csv(input_list):
         with gzip.open(os.path.join(output_accessory_genes_kmers, file + ".txt.gz"), 'wt') as outfile:
             json.dump(accessory_genes_kmers_dic, outfile)
 
-        with gzip.open(os.path.join(output_accessory_cds_from_genomic_files, file + ".fna.gz"), "wt") as outfile:
+        with gzip.open(os.path.join(output_accessory_cds_from_genomic_files, file + "cds_from_genomic.fna.gz"), "wt") as outfile:
             outfile.write("\n".join(accessory_seq_list))
 
         print(f"FINISHED processing: {file}, accessory genes count: {accessory_genes_count}")
