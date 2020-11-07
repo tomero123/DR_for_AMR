@@ -39,13 +39,14 @@ class GenomeDocsCDS(object):
                     documents_list = self._get_document_from_fasta(sequence, self.processing_mode, self.k, self.shift_size)
                     for doc_ind, doc in enumerate(documents_list):
                         yield doc2vec.TaggedDocument(doc, [document_id])
+                    # Use same document_id for all sequences if non-overlapping
+                    document_id += 1
                 if file_ind % 1 == 0:
                     print(f"Finished processing file #{file_ind}, file_name:{file_name}, number of genes: {seq_id} document_id: {document_id}")
             except Exception as e:
                 print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
                 print(f"name: {name}  sequence: {sequence}")
                 print(f"Error message: {e}")
-            document_id += 1
 
     @staticmethod
     def _get_document_from_fasta(sequence: str, processing_mode, k, shift_size):
@@ -112,10 +113,10 @@ class Doc2VecCDS(object):
         vector_size = self.vector_size
         window = self.window_size
         dm = 1
-        min_count = 5
+        min_count = 20
         sample = 1e-4
         negative = 5
-        epochs = 20
+        epochs = 10
         # PARAMS END
 
         self.conf_dict["vector_size"] = vector_size

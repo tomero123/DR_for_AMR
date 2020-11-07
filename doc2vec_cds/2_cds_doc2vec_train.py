@@ -7,22 +7,24 @@ import multiprocessing
 import os
 import time
 import datetime
+import pandas as pd
 
 from doc2vec_cds.Doc2VecCDS import Doc2VecCDS
 from utils import get_time_as_str
-from constants import Bacteria, ProcessingMode
+from constants import Bacteria, ProcessingMode, RawDataType
 from MyLogger import Logger
 
 if __name__ == '__main__':
     # PARAMS
     BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
-    PROCESSING_MODE = ProcessingMode.NON_OVERLAPPING.value if len(sys.argv) <= 2 else sys.argv[2]  # can be "non_overlapping" or "overlapping"
-    VECTOR_SIZE = 300 if len(sys.argv) <= 3 else int(sys.argv[3])
-    WINDOW_SIZE = 5 if len(sys.argv) <= 4 else int(sys.argv[4])
-    K = 10 if len(sys.argv) <= 5 else int(sys.argv[5])  # Choose K size
-    SHIFT_SIZE = 1 if len(sys.argv) <= 6 else int(sys.argv[6])  # relevant only for PROCESSING_MODE "overlapping"
+    RAW_DATA_TYPE = RawDataType.ACCESSORY_GENES.value if len(sys.argv) <= 2 else sys.argv[2]
+    PROCESSING_MODE = ProcessingMode.OVERLAPPING.value if len(sys.argv) <= 3 else sys.argv[3]  # can be "non_overlapping" or "overlapping"
+    VECTOR_SIZE = 300 if len(sys.argv) <= 4 else int(sys.argv[4])
+    WINDOW_SIZE = 5 if len(sys.argv) <= 5 else int(sys.argv[5])
+    K = 10 if len(sys.argv) <= 6 else int(sys.argv[6])  # Choose K size
+    SHIFT_SIZE = 1 if len(sys.argv) <= 7 else int(sys.argv[7])  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
-    NUMBER_OF_TRAINING_STRAINS = 500  # if None take ALL strains
+    USE_ONLY_LABELED_STRAINS = True  # if True take only strains that have AMR label
     # PARAMS END
 
     conf_str = f"_PM_{PROCESSING_MODE}_K_{K}_SS_{SHIFT_SIZE}"
@@ -33,7 +35,8 @@ if __name__ == '__main__':
     now_date = datetime.datetime.now()
 
     prefix = '..' if os.name == 'nt' else '.'
-    input_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_genome_files")
+    cds_genome_files_folder = "accessory_cds_from_genomic_files" if RAW_DATA_TYPE == RawDataType.ACCESSORY_GENES.value else "cds_from_genomic_files"
+    input_folder = os.path.join(prefix, "results_files", BACTERIA, cds_genome_files_folder)
     models_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_models", model_folder_name)
     if not os.path.exists(models_folder):
         os.makedirs(models_folder)
@@ -44,8 +47,13 @@ if __name__ == '__main__':
     files_list = os.listdir(input_folder)
     files_list = [x for x in files_list if ".fna.gz" in x]
 
-    if NUMBER_OF_TRAINING_STRAINS:
-        files_list = files_list[:NUMBER_OF_TRAINING_STRAINS]
+    if USE_ONLY_LABELED_STRAINS:
+        original_files_list_len = len(files_list)
+        amr_df = pd.read_csv(os.path.join(prefix, "results_files", BACTERIA, "amr_labels.csv"))
+        labeled_files_list = list(amr_df["NCBI File Name"])
+        files_list = [x for x in files_list if x.replace(".fna.gz", "") in labeled_files_list]
+        new_files_list_len = len(files_list)
+        print(f"Using only labeled files ; Original number of strains: {original_files_list_len} New number of strains: {new_files_list_len}")
 
     conf_dict = {
         "bacteria": BACTERIA,
