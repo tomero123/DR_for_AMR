@@ -67,6 +67,7 @@ if os.name == 'nt':
 amr_data_file_name = 'amr_labels.csv'
 
 prefix = '..' if os.name == 'nt' else '.'
+prefix = '..'
 path = os.path.join(prefix, 'results_files', BACTERIA)
 
 
@@ -98,22 +99,27 @@ if __name__ == '__main__':
     print(f"STARTED running at {datetime.datetime.now().strftime(TIME_STR)}")
     print(f"Bacteria: {BACTERIA} with antibiotics: {str(antibiotic_list)}")
     print(f"RUN PARAMS: {params_dict}")
+
+    if RAW_DATA_TYPE != RawDataType.GENE_CLUSTERS.value:
+        dataset_file_name = f'{RAW_DATA_TYPE}_kmers_file_K_{K}.csv.gz'
+        kmers_map_file_name = f'{RAW_DATA_TYPE}_kmers_map_K_{K}.txt'
+        # Get kmers df (if we are not using clusters as features
+        kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
+    else:
+        kmers_original_count, kmers_final_count = 0, 0
+
     for antibiotic in antibiotic_list:
         print(f"{datetime.datetime.now().strftime(TIME_STR)} Started running get_final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic}")
         now = time.time()
         label_df = get_label_df(amr_df, antibiotic)
         # Use gene clusters as features
-        if RAW_DATA_TYPE == RawDataType.GENE_CLUSTERS.value:
-            final_df = get_final_df_gene_clusters(antibiotic, label_df, path)
-            kmers_original_count, kmers_final_count = 0, 0
-        # Use kmers count as features from one of the options:
-        # (1) all genome (2) all genes (3) accessory genes
-        else:
-            dataset_file_name = f'{RAW_DATA_TYPE}_kmers_file_K_{K}.csv.gz'
-            kmers_map_file_name = f'{RAW_DATA_TYPE}_kmers_map_K_{K}.txt'
-            # Get kmers df (if we are not using clusters as features
-            kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
+        if RAW_DATA_TYPE != RawDataType.GENE_CLUSTERS.value:
+            # Use kmers count as features from one of the options:
+            # (1) all genome (2) all genes (3) accessory genes
             final_df = get_final_df(antibiotic, kmers_df, label_df)
+        else:
+            final_df = get_final_df_gene_clusters(antibiotic, label_df, path)
+
         # final_df.to_csv(final_df_file_path, compression='gzip')
         print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED CALCULATING final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
         results_file_name = f"{antibiotic}_RESULTS_{results_file_folder}.xlsx"
