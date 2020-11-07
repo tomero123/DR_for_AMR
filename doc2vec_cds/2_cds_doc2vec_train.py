@@ -51,7 +51,7 @@ if __name__ == '__main__':
         original_files_list_len = len(files_list)
         amr_df = pd.read_csv(os.path.join(prefix, "results_files", BACTERIA, "amr_labels.csv"))
         labeled_files_list = list(amr_df["NCBI File Name"])
-        files_list = [x for x in files_list if x.replace("_genomic_from_cds.fna.gz", "") in labeled_files_list]
+        files_list = [x for x in files_list if x.replace("_cds_from_genomic.fna.gz", "") in labeled_files_list]
         new_files_list_len = len(files_list)
         print(f"Using only labeled files ; Original number of strains: {original_files_list_len} New number of strains: {new_files_list_len}")
 
