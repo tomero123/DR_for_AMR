@@ -126,40 +126,6 @@ def create_kmers_file(input_list):
         print(f"ERROR at create_kmers_file for: {file_name}, index: {ind}, message: {e}")
 
 
-def create_kmers_file(input_list):
-    """
-    get one fasta file and creating a kmers mapping file
-    :param input_list - list including the following fields:
-    1) ind: index of the current item
-    2) ref_seq_ftp: path of specific ftp folder (coming after 'ftp.ncbi.nlm.nih.gov')
-    3) strain_name: name of specific strain
-    4) ftp_file_name: name of the ftp file to download/open
-    5) ftp_file_site: site name to open the ftp connection with
-    6) dest_path: destenation of the output files folder. if None then return the str retreived and don't save the file
-    """
-    try:
-        ind = input_list[0]
-        file_name = input_list[1]
-        K = input_list[2]
-        input_folder = input_list[3]
-        output_folder = input_list[4]
-        print(f"Started processing: {file_name}")
-        kmers_dic = {}
-        fasta_sequences = SeqIO.parse(_open(os.path.join(input_folder, file_name)), 'fasta')
-        for fasta in fasta_sequences:
-            name, sequence = fasta.id, str(fasta.seq)
-            for start_ind in range(len(sequence) - K + 1):
-                key = sequence[start_ind:start_ind + K]
-                if key in kmers_dic:
-                    kmers_dic[key] += 1
-                else:
-                    kmers_dic[key] = 1
-        with gzip.open(os.path.join(output_folder, file_name.replace("_genomic.fna.gz", ".txt.gz")), 'wt') as outfile:
-            json.dump(kmers_dic, outfile)
-    except Exception as e:
-        print(f"ERROR at create_kmers_file for: {file_name}, index: {ind}, message: {e}")
-
-
 def create_genome_document(input_list):
     """
     get one fasta file and creating a document, which is python list with words,
@@ -235,3 +201,11 @@ def get_time_as_str():
     minute = str(time.minute) if time.minute > 9 else '0' + str(time.minute)
     file_name = "{}_{}_{}_{}{}".format(year, month, day, hour, minute)
     return file_name
+
+
+def get_train_and_test_groups(n_folds):
+    train_groups_list = []
+    test_groups_list = list(range(1, n_folds + 1))
+    for i in test_groups_list:
+        train_groups_list.append([x for x in test_groups_list if i != x])
+    return train_groups_list, test_groups_list

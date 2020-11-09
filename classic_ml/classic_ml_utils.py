@@ -17,7 +17,7 @@ import time
 import datetime
 
 from constants import PREDEFINED_FEATURES_LIST, TIME_STR
-from utils import get_time_as_str
+from utils import get_time_as_str, get_train_and_test_groups
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -230,16 +230,14 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
             for i in inputs_list:
                 results_list.append(train_test_one_fold(*i))
 
-        model_parmas = json.dumps(model.get_params())
-        write_data_to_excel(antibiotic, results_list, results_file_path, model_parmas, kmers_original_count,
-                            kmers_final_count, all_results_dic)
+        write_data_to_excel(antibiotic, results_list, results_file_path, all_results_dic)
         print(f"***{datetime.datetime.now().strftime(TIME_STR)} FINISHED training models for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes***")
     except Exception as e:
         print(f"ERROR at train_test_and_write_results_cv, message: {e}")
         traceback.print_exc()
 
 
-def write_data_to_excel(antibiotic, results_list, results_file_path, model_parmas, kmers_original_count, kmers_final_count, all_results_dic):
+def write_data_to_excel(antibiotic, results_list, results_file_path, all_results_dic):
     try:
         writer = pd.ExcelWriter(results_file_path, engine='xlsxwriter')
         name = 'Sheet1'
@@ -348,20 +346,12 @@ def get_all_resulst_df(all_results_dic, metrics_order):
     return all_results_df
 
 
-def get_train_and_test_groups(n_folds):
-    train_groups_list = []
-    test_groups_list = list(range(1, n_folds + 1))
-    for i in test_groups_list:
-        train_groups_list.append([x for x in test_groups_list if i != x])
-    return train_groups_list, test_groups_list
-
-
 def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n):
+    non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
     final_df['label'].replace('R', 1, inplace=True)
     final_df['label'].replace('S', 0, inplace=True)
     final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]
     final_df_test = final_df[final_df["file_id"].isin(test_file_id_list)]
-    non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
     X_train = final_df_train.drop(non_features_columns, axis=1).copy()
     y_train = final_df_train[['label']].copy()
     X_test = final_df_test.drop(non_features_columns, axis=1).copy()

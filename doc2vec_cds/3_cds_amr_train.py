@@ -13,8 +13,8 @@ import xgboost
 from sklearn.neighbors import KNeighborsClassifier
 from doc2vec_cds.FaissKNeighbors import FaissKNeighbors
 
-from doc2vec_cds.cds_utils import get_label_df, train_test_scores_aggregation, get_current_results_folder, \
-    train_test_embeddings_aggregation, cds_convert_results_df_to_new_format
+from doc2vec_cds.cds_utils import get_label_df, get_current_results_folder, \
+    cds_convert_results_df_to_new_format, train_cv_from_cds_embeddings, cds_get_all_resulst_df, cds_get_agg_results_df
 from doc2vec_cds.Doc2VecCDS import Doc2VecCDSLoader
 from constants import Bacteria, ANTIBIOTIC_DIC, EMBEDDING_DF_FILE_NAME, METADATA_DF_FILE_NAME, AggregationMethod, \
     ClassifierType, RawDataType
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # PARAMS
     MODEL_BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
     MODEL_CLASSIFIER = ClassifierType.XGBOOST.value if len(sys.argv) <= 2 else sys.argv[2]  # can be "knn" or "xgboost"
-    AGGREGATION_METHOD = AggregationMethod.EMBEDDINGS.value if len(sys.argv) <= 3 else sys.argv[3]  # can be "scores" or "embeddings"
+    AGGREGATION_METHOD = AggregationMethod.SCORES.value if len(sys.argv) <= 3 else sys.argv[3]  # can be "scores" or "embeddings"
     RESULTS_FOLDER_NAME = None if len(sys.argv) <= 4 else sys.argv[4]
     NON_OVERLAPPING_USE_SEQ_AGGREGATION = False  # relevant only if non_overlapping and AGGREGATION_METHOD = "scores"
     if len(sys.argv) >= 5 and sys.argv[5] == "true":
@@ -32,14 +32,16 @@ if __name__ == '__main__':
 
     EMBEDDINGS_AGGREGATION_METHOD = "mean"  # can be "max" or "mean"
     LOAD_EMBEDDING_DF = True  # if True then load embedding_df if it exists otherwise calculate. If False - always calculate
+    USE_MULTIPROCESS = False
 
     # XGBoost params - relevant only if MODEL_CLASSIFIER = ClassifierType.XGBOOST.value
-    max_depth = 4
-    n_estimators = 300
-    subsample = 0.8
-    max_features = 0.8
-    learning_rate = 0.1
+    MAX_DEPTH = 4
+    N_ESTIMATORS = 300
+    SUBSAMPLE = 0.8
+    COLSAMPLE_BYTREE = 0.8
+    LEARNING_RATE = 0.1
     n_jobs = 64
+    random_seed = 1
     # knn params - relevant only if MODEL_CLASSIFIER = ClassifierType.KNN.value
     use_faiss_knn = True
     knn_k_size = 5
@@ -55,13 +57,13 @@ if __name__ == '__main__':
     ]
     # Define list of model_names and processing method
     D2V_MODELS_LIST = [
-        # "2020_11_07_2316_PM_overlapping_K_10_SS_1",
-        "2020_11_07_2316_PM_non_overlapping_K_10_SS_1"
+        "2020_11_07_2316_PM_overlapping_K_10_SS_1",
+        # "2020_11_07_2316_PM_non_overlapping_K_10_SS_1"
     ]
     # PARAMS END
     # IF RUNNING LOCAL (WINDOWS)
     if os.name == 'nt':
-        D2V_MODELS_LIST = ["2020_09_21_1227_PM_overlapping_K_10_SS_2"]
+        D2V_MODELS_LIST = ["2020_11_09_1818_PM_overlapping_K_10_SS_1"]
         prefix = '..'
 
     # if "SSH_CONNECTION" in os.environ:
@@ -75,7 +77,16 @@ if __name__ == '__main__':
         else:
             model = KNeighborsClassifier(n_neighbors=knn_k_size)
     elif MODEL_CLASSIFIER == ClassifierType.XGBOOST.value:
-        model = xgboost.XGBClassifier(max_depth=max_depth, n_estimators=n_estimators, subsample=subsample, max_features=max_features, learning_rate=learning_rate, n_jobs=n_jobs)
+        model_params = {
+            "max_depth": MAX_DEPTH,
+            "n_estimators": N_ESTIMATORS,
+            "subsample": SUBSAMPLE,
+            "colsample_bytree": COLSAMPLE_BYTREE,  # like max_features in sklearn
+            "learning_rate": LEARNING_RATE,
+            "n_jobs": n_jobs,
+            "random_state": random_seed
+        }
+        model = xgboost.XGBClassifier(**model_params)
     else:
         raise Exception(f"model_classifier: {MODEL_CLASSIFIER} is invalid!")
 
@@ -110,11 +121,11 @@ if __name__ == '__main__':
                 params_dict["use_faiss_knn"] = use_faiss_knn
 
             elif MODEL_CLASSIFIER == ClassifierType.XGBOOST.value:
-                params_dict["max_depth"] = max_depth
-                params_dict["n_estimators"] = n_estimators
-                params_dict["subsample"] = subsample
-                params_dict["max_features"] = max_features
-                params_dict["learning_rate"] = learning_rate
+                params_dict["max_depth"] = MAX_DEPTH
+                params_dict["n_estimators"] = N_ESTIMATORS
+                params_dict["subsample"] = SUBSAMPLE
+                params_dict["max_features"] = COLSAMPLE_BYTREE
+                params_dict["learning_rate"] = LEARNING_RATE
                 params_dict["n_jobs"] = n_jobs
 
             for key, val in model_conf.items():
@@ -160,9 +171,6 @@ if __name__ == '__main__':
                 t3 = time.time()
                 print(f"Finished saving embeddings_df to hdf in {round((t3 - t2) / 60, 4)} minutes")
 
-            #REMOVE!$@#$@#$@#@$#$@#@#$
-            continue
-
             for antibiotic in antibiotic_list:
                 t1 = time.time()
                 results_file_name = f"{antibiotic}_{current_results_folder}.xlsx"
@@ -172,32 +180,29 @@ if __name__ == '__main__':
                 t2 = time.time()
                 print(f"Finished creating final_df for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t2-t1) / 60, 4)} minutes")
                 print(f"Started classifier training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}  MODEL_CLASSIFIER: {MODEL_CLASSIFIER}")
-                # Calculate score for each gene and then aggregate all scores of the same strain
-                if AGGREGATION_METHOD == AggregationMethod.SCORES.value:
-                    train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION)
-                # Aggregate all gene embeddings of the same strain and then calculate one score per each strain
-                elif AGGREGATION_METHOD == AggregationMethod.EMBEDDINGS.value:
-                    train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, model, EMBEDDINGS_AGGREGATION_METHOD)
+                train_cv_from_cds_embeddings(final_df, amr_df, results_file_path, model, antibiotic, all_results_dic,
+                                             USE_MULTIPROCESS, MODEL_CLASSIFIER, NON_OVERLAPPING_USE_SEQ_AGGREGATION,
+                                             EMBEDDINGS_AGGREGATION_METHOD, AGGREGATION_METHOD)
+
                 t3 = time.time()
 
                 print(f"Finished training classifier for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE} in {round((t3-t2) / 60, 4)} minutes")
+
+            # Write ALL_RESULTS
+            metrics_order = ["auc", "accuracy", "f1_score", "recall", "precision"]
+            all_results_df = cds_get_all_resulst_df(all_results_dic, metrics_order)
+            all_results_agg = cds_get_agg_results_df(all_results_df, metrics_order)
+            all_results_df_new_format = cds_convert_results_df_to_new_format(all_results_agg, metrics_order)
+            writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_results_folder}.xlsx"), engine='xlsxwriter')
+            all_results_df_new_format.to_excel(writer, sheet_name="Agg_Results_New_Format", index=False)
+            all_results_agg.to_excel(writer, sheet_name="Agg_Results", index=False)
+            all_results_df.to_excel(writer, sheet_name="All_Folds", index=False)
+            writer.save()
 
             params_dict.update(all_results_dic)
 
             with open(os.path.join(results_file_folder, "params.json"), "w") as write_file:
                 json.dump(params_dict, write_file)
-
-            # Write ALL_RESULTS
-            all_results_df = pd.DataFrame(all_results_dic)
-            writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_{current_results_folder}.xlsx"), engine='xlsxwriter')
-            all_results_df.iloc[::-1].to_excel(writer, sheet_name="Sheet1", index=False)
-            writer.save()
-
-            # Write ALL_RESULTS_NEW_FORMAT
-            all_results_df_new_format = cds_convert_results_df_to_new_format(all_results_df)
-            writer = pd.ExcelWriter(os.path.join(results_file_folder, f"ALL_RESULTS_NEW_FORMAT_{current_results_folder}.xlsx"), engine='xlsxwriter')
-            all_results_df_new_format.to_excel(writer, sheet_name="Sheet1", index=False)
-            writer.save()
 
             now_date = datetime.datetime.now()
             print(f"Finished running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')} after {round((time.time() - now_total) / 3600, 4)} hours; D2V_MODEL_NAME: {d2v_model_folder_name}  PROCESSING_MODE: {PROCESSING_MODE}  BACTERIA: {BACTERIA}  MODEL_CLASSIFIER: {MODEL_CLASSIFIER}")
