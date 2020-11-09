@@ -150,8 +150,8 @@ class Doc2VecCDS(object):
 
 
 class Doc2VecCDSLoader(object):
-    def __init__(self, input_folder, labeled_files_dic, k, processing_mode, shift_size, models_folder):
-        self.input_folder = input_folder
+    def __init__(self, genome_files_input_folder, labeled_files_dic, k, processing_mode, shift_size, models_folder):
+        self.genome_files_input_folder = genome_files_input_folder
         self.labeled_files_dic = labeled_files_dic
         self.k = k
         self.processing_mode = processing_mode
@@ -172,7 +172,7 @@ class Doc2VecCDSLoader(object):
         for file_name, file_id in self.labeled_files_dic.items():
             try:
                 file_ind += 1
-                fasta_sequences = SeqIO.parse(_open(os.path.join(self.input_folder, file_name + "_cds_from_genomic.fna.gz")), 'fasta')
+                fasta_sequences = SeqIO.parse(_open(os.path.join(self.genome_files_input_folder, file_name + "_cds_from_genomic.fna.gz")), 'fasta')
                 seq_id = 0
                 for fasta in fasta_sequences:
                     seq_id += 1

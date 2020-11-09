@@ -17,7 +17,7 @@ from doc2vec_cds.cds_utils import get_label_df, train_test_scores_aggregation, g
     train_test_embeddings_aggregation, cds_convert_results_df_to_new_format
 from doc2vec_cds.Doc2VecCDS import Doc2VecCDSLoader
 from constants import Bacteria, ANTIBIOTIC_DIC, EMBEDDING_DF_FILE_NAME, METADATA_DF_FILE_NAME, AggregationMethod, \
-    ClassifierType
+    ClassifierType, RawDataType
 from MyLogger import Logger
 
 if __name__ == '__main__':
@@ -26,6 +26,9 @@ if __name__ == '__main__':
     MODEL_CLASSIFIER = ClassifierType.XGBOOST.value if len(sys.argv) <= 2 else sys.argv[2]  # can be "knn" or "xgboost"
     AGGREGATION_METHOD = AggregationMethod.EMBEDDINGS.value if len(sys.argv) <= 3 else sys.argv[3]  # can be "scores" or "embeddings"
     RESULTS_FOLDER_NAME = None if len(sys.argv) <= 4 else sys.argv[4]
+    NON_OVERLAPPING_USE_SEQ_AGGREGATION = False  # relevant only if non_overlapping and AGGREGATION_METHOD = "scores"
+    if len(sys.argv) >= 5 and sys.argv[5] == "true":
+        NON_OVERLAPPING_USE_SEQ_AGGREGATION = True
 
     EMBEDDINGS_AGGREGATION_METHOD = "mean"  # can be "max" or "mean"
     LOAD_EMBEDDING_DF = True  # if True then load embedding_df if it exists otherwise calculate. If False - always calculate
@@ -36,7 +39,7 @@ if __name__ == '__main__':
     subsample = 0.8
     max_features = 0.8
     learning_rate = 0.1
-    n_jobs = 20
+    n_jobs = 64
     # knn params - relevant only if MODEL_CLASSIFIER = ClassifierType.KNN.value
     use_faiss_knn = True
     knn_k_size = 5
@@ -52,12 +55,8 @@ if __name__ == '__main__':
     ]
     # Define list of model_names and processing method
     D2V_MODELS_LIST = [
-        # "2020_10_09_1217_PM_overlapping_K_10_SS_1",
-        # "2020_10_09_1217_PM_non_overlapping_K_10_SS_1"
-        # "2020_09_28_1100_PM_overlapping_K_10_SS_10",
-        # "2020_09_01_1931_PM_overlapping_K_10_SS_2"
-        # "2020_10_13_1800_PM_overlapping_K_10_SS_5"
-        "2020_10_13_1800_PM_non_overlapping_K_10_SS_1"
+        "2020_11_07_2316_PM_overlapping_K_10_SS_1",
+        "2020_11_07_2316_PM_non_overlapping_K_10_SS_1"
     ]
     # PARAMS END
     # IF RUNNING LOCAL (WINDOWS)
@@ -87,6 +86,7 @@ if __name__ == '__main__':
         PROCESSING_MODE = model_conf["processing_mode"]
         K = model_conf["k"]
         SHIFT_SIZE = model_conf["shift_size"]
+        RAW_DATA_TYPE = model_conf["raw_data_type"]
 
         for BACTERIA in BACTERIA_LIST:
             current_results_folder = get_current_results_folder(RESULTS_FOLDER_NAME, MODEL_CLASSIFIER, knn_k_size)
@@ -121,14 +121,15 @@ if __name__ == '__main__':
                 params_dict[f"d2v_{key}"] = val
 
             antibiotic_list = ANTIBIOTIC_DIC.get(BACTERIA)
-            input_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_genome_files")
+            cds_genome_files_folder = "accessory_cds_from_genomic_files" if RAW_DATA_TYPE == RawDataType.ACCESSORY_GENES.value else "cds_from_genomic_files"
+            genome_files_input_folder = os.path.join(prefix, "results_files", BACTERIA, cds_genome_files_folder)
             amr_file_path = os.path.join(prefix, 'results_files', BACTERIA, amr_data_file_name)
             now_total = time.time()
             now_date = datetime.datetime.now()
             print(f"Started running on: {now_date.strftime('%Y-%m-%d %H:%M:%S')}  D2V_MODEL_NAME: {d2v_model_folder_name}  PROCESSING_MODE: {PROCESSING_MODE}  BACTERIA: {BACTERIA}  MODEL_CLASSIFIER: {MODEL_CLASSIFIER}")
             print(f"results_file_folder path: {results_file_folder}")
             # Get embeddings df
-            files_list = os.listdir(input_folder)
+            files_list = os.listdir(genome_files_input_folder)
             files_list = [x for x in files_list if ".fna.gz" in x]
             print(f"len files_list: {len(files_list)}")
             # get AMR data df
@@ -149,7 +150,7 @@ if __name__ == '__main__':
             else:
                 # get only the files with label for the specific antibiotic
                 t1 = time.time()
-                doc2vec_loader = Doc2VecCDSLoader(input_folder, labeled_files_dic, K, PROCESSING_MODE, SHIFT_SIZE, models_folder)
+                doc2vec_loader = Doc2VecCDSLoader(genome_files_input_folder, labeled_files_dic, K, PROCESSING_MODE, SHIFT_SIZE, models_folder)
                 embedding_df, metadata_df_full = doc2vec_loader.run()
                 t2 = time.time()
                 print(f"Finished extracting embeddings in {round((t2 - t1) / 60, 4)} minutes")
@@ -158,6 +159,9 @@ if __name__ == '__main__':
                 metadata_df_full.to_csv(os.path.join(embedding_df_folder, METADATA_DF_FILE_NAME), index=False)
                 t3 = time.time()
                 print(f"Finished saving embeddings_df to hdf in {round((t3 - t2) / 60, 4)} minutes")
+
+            #REMOVE!$@#$@#$@#@$#$@#@#$
+            continue
 
             for antibiotic in antibiotic_list:
                 t1 = time.time()
@@ -170,7 +174,7 @@ if __name__ == '__main__':
                 print(f"Started classifier training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}  MODEL_CLASSIFIER: {MODEL_CLASSIFIER}")
                 # Calculate score for each gene and then aggregate all scores of the same strain
                 if AGGREGATION_METHOD == AggregationMethod.SCORES.value:
-                    train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, model)
+                    train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION)
                 # Aggregate all gene embeddings of the same strain and then calculate one score per each strain
                 elif AGGREGATION_METHOD == AggregationMethod.EMBEDDINGS.value:
                     train_test_embeddings_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, MODEL_CLASSIFIER, model, EMBEDDINGS_AGGREGATION_METHOD)

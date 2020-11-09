@@ -120,7 +120,7 @@ def write_data_to_excel_embeddings_agg(antibiotic, results_df, results_file_path
         print("Error in write_roc_curve.error message: {}".format(e))
 
 
-def train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, model_classifier, model):
+def train_test_scores_aggregation(final_df, antibiotic, results_file_path, all_results_dic, amr_df, model_classifier, model, non_overlapping_use_seq_aggregation):
     try:
         non_features_columns = ['file_id', 'seq_id', 'doc_ind', 'label']
         train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin([1, 2, 3, 4])]["file_id"])

@@ -25,4 +25,6 @@ class EpochSaver(CallbackAny2Vec):
             os.remove(os.path.join(self.savedir, f"model_epoch_{self.epoch - 1}.gz.trainables.syn1neg.npz"))
         if os.path.isfile(os.path.join(self.savedir, f"model_epoch_{self.epoch - 1}.gz.wv.vectors.npz")):
             os.remove(os.path.join(self.savedir, f"model_epoch_{self.epoch - 1}.gz.wv.vectors.npz"))
+        if os.path.isfile(os.path.join(self.savedir, f"model_epoch_{self.epoch - 1}.gz.docvecs.vectors_docs.npz")):
+            os.remove(os.path.join(self.savedir, f"model_epoch_{self.epoch - 1}.gz.docvecs.vectors_docs.npz"))
         self.epoch += 1

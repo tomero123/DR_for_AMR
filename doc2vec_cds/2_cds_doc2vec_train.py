@@ -57,6 +57,7 @@ if __name__ == '__main__':
 
     conf_dict = {
         "bacteria": BACTERIA,
+        "raw_data_type": RAW_DATA_TYPE,
         "processing_mode": PROCESSING_MODE,
         "k": K,
         "shift_size": SHIFT_SIZE,
