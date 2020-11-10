@@ -27,7 +27,7 @@ if __name__ == '__main__':
     AGGREGATION_METHOD = AggregationMethod.SCORES.value if len(sys.argv) <= 3 else sys.argv[3]  # can be "scores" or "embeddings"
     RESULTS_FOLDER_NAME = None if len(sys.argv) <= 4 else sys.argv[4]
     NON_OVERLAPPING_USE_SEQ_AGGREGATION = False  # relevant only if non_overlapping and AGGREGATION_METHOD = "scores"
-    if len(sys.argv) >= 5 and sys.argv[5] == "true":
+    if len(sys.argv) > 5 and sys.argv[5] == "true":
         NON_OVERLAPPING_USE_SEQ_AGGREGATION = True
 
     EMBEDDINGS_AGGREGATION_METHOD = "mean"  # can be "max" or "mean"
