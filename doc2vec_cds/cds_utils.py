@@ -13,7 +13,7 @@ from pathos import multiprocessing
 
 
 from utils import get_time_as_str, get_train_and_test_groups
-from constants import TIME_STR, AggregationMethod
+from constants import TIME_STR, AggregationMethod, ProcessingMode
 
 
 def get_label_df(amr_df, files_list, antibiotic):
@@ -67,7 +67,7 @@ def get_results_agg_df(agg_method, results_df, amr_df):
         traceback.print_exc()
 
 
-def train_cv_from_cds_embeddings(final_df, amr_df, results_file_path, model, antibiotic, all_results_dic, use_multiprocess, MODEL_CLASSIFIER, NON_OVERLAPPING_USE_SEQ_AGGREGATION, EMBEDDINGS_AGGREGATION_METHOD, AGGREGATION_METHOD):
+def train_cv_from_cds_embeddings(final_df, amr_df, results_file_path, model, antibiotic, all_results_dic, use_multiprocess, MODEL_CLASSIFIER, NON_OVERLAPPING_USE_SEQ_AGGREGATION, EMBEDDINGS_AGGREGATION_METHOD, AGGREGATION_METHOD, PROCESSING_MODE):
     try:
         now = time.time()
         n_folds = amr_df[f"{antibiotic}_group"].max()
@@ -79,7 +79,7 @@ def train_cv_from_cds_embeddings(final_df, amr_df, results_file_path, model, ant
         for train_group_list, test_group in zip(train_groups_list, test_groups_list):
             train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin(train_group_list)]["file_id"])
             test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == test_group]["file_id"])
-            inputs_list.append([test_group, train_file_id_list, test_file_id_list, final_df, antibiotic, amr_df, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION, EMBEDDINGS_AGGREGATION_METHOD])
+            inputs_list.append([test_group, train_file_id_list, test_file_id_list, final_df, antibiotic, amr_df, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION, EMBEDDINGS_AGGREGATION_METHOD, PROCESSING_MODE])
 
         # print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED creating folds data. antibiotic: {antibiotic}")
         print(f"{datetime.datetime.now().strftime(TIME_STR)} STARTED training models. antibiotic: {antibiotic}")
@@ -106,14 +106,22 @@ def train_cv_from_cds_embeddings(final_df, amr_df, results_file_path, model, ant
         traceback.print_exc()
 
 
-def scores_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final_df, antibiotic, amr_df, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION, embeddings_aggregation_method):
+def scores_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final_df, antibiotic, amr_df, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION, embeddings_aggregation_method, PROCESSING_MODE):
     now = time.time()
     non_features_columns = ['file_id', 'NCBI File Name', 'Strain', 'label', 'seq_id', 'doc_ind']
     final_df['label'].replace('R', 1, inplace=True)
     final_df['label'].replace('S', 0, inplace=True)
     final_df = final_df.merge(amr_df[['file_id', 'NCBI File Name', 'Strain']], on='file_id', how='inner')
-    final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]
-    final_df_test = final_df[final_df["file_id"].isin(test_file_id_list)]
+    # Use mean aggregation for all sequences when method = non_overlapping
+    if PROCESSING_MODE == ProcessingMode.NON_OVERLAPPING.value and NON_OVERLAPPING_USE_SEQ_AGGREGATION:
+        agg_final_df = final_df.groupby(['file_id', 'seq_id'])[[x for x in final_df.columns if x.startswith("f_")]].mean()
+        agg_final_df['label'] = final_df.groupby(['file_id', 'seq_id'])['label'].max()
+        agg_final_df.reset_index(inplace=True)
+        final_df_train = agg_final_df[agg_final_df["file_id"].isin(train_file_id_list)]
+        final_df_test = agg_final_df[agg_final_df["file_id"].isin(test_file_id_list)]
+    else:
+        final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]
+        final_df_test = final_df[final_df["file_id"].isin(test_file_id_list)]
     X_train = final_df_train.drop(non_features_columns, axis=1).copy()
     y_train = final_df_train[['label']].copy()
     X_test = final_df_test.drop(non_features_columns, axis=1).copy()
@@ -170,7 +178,7 @@ def scores_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final
     return results_list
 
 
-def embeddings_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final_df, antibiotic, amr_df, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION, embeddings_aggregation_method):
+def embeddings_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final_df, antibiotic, amr_df, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION, embeddings_aggregation_method, PROCESSING_MODE):
     now = time.time()
     if embeddings_aggregation_method == "mean":
         agg_final_df = final_df.groupby('file_id')[[x for x in final_df.columns if x.startswith("f_")]].mean()

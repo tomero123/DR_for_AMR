@@ -63,7 +63,10 @@ if __name__ == '__main__':
     # PARAMS END
     # IF RUNNING LOCAL (WINDOWS)
     if os.name == 'nt':
-        D2V_MODELS_LIST = ["2020_11_09_1818_PM_overlapping_K_10_SS_1"]
+        D2V_MODELS_LIST = [
+            # "2020_11_09_1818_PM_overlapping_K_10_SS_1"
+            "2020_11_10_1821_PM_non_overlapping_K_10_SS_1"
+            ]
         prefix = '..'
 
     # if "SSH_CONNECTION" in os.environ:
@@ -182,7 +185,7 @@ if __name__ == '__main__':
                 print(f"Started classifier training for bacteria: {BACTERIA} antibiotic: {antibiotic} processing mode: {PROCESSING_MODE} shift size: {SHIFT_SIZE}  MODEL_CLASSIFIER: {MODEL_CLASSIFIER}")
                 train_cv_from_cds_embeddings(final_df, amr_df, results_file_path, model, antibiotic, all_results_dic,
                                              USE_MULTIPROCESS, MODEL_CLASSIFIER, NON_OVERLAPPING_USE_SEQ_AGGREGATION,
-                                             EMBEDDINGS_AGGREGATION_METHOD, AGGREGATION_METHOD)
+                                             EMBEDDINGS_AGGREGATION_METHOD, AGGREGATION_METHOD, PROCESSING_MODE)
 
                 t3 = time.time()
 
