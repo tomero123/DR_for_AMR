@@ -24,7 +24,7 @@ if __name__ == '__main__':
     K = 10 if len(sys.argv) <= 6 else int(sys.argv[6])  # Choose K size
     SHIFT_SIZE = 1 if len(sys.argv) <= 7 else int(sys.argv[7])  # relevant only for PROCESSING_MODE "overlapping"
     workers = multiprocessing.cpu_count()
-    USE_ONLY_LABELED_STRAINS = True  # if True take only strains that have AMR label
+    USE_ONLY_LABELED_STRAINS = False  # if True take only strains that have AMR label
     # PARAMS END
 
     conf_str = f"_PM_{PROCESSING_MODE}_K_{K}_SS_{SHIFT_SIZE}"
