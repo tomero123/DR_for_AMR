@@ -106,7 +106,11 @@ class Doc2VecCDS(object):
     def run(self):
         gc.collect()
         print(f"Number of documents: {len(self.files_list)}")
-        print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
+        try:
+            print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
+        except Exception as e:
+            print(f"could'nt run doc2vec.FAST_VERSION. error message: {e}")
+
         corpus_data = GenomeDocsCDS(self.input_folder, self.files_list, self.processing_mode, self.k, self.shift_size)
 
         # PARAMS
@@ -163,7 +167,11 @@ class Doc2VecCDSLoader(object):
         gc.collect()
         print('Loading an exiting model')
         print(f"Number of documents: {len(self.labeled_files_dic)}")
-        print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
+        try:
+            print(f"doc2vec FAST_VERSION: {doc2vec.FAST_VERSION}")
+        except Exception as e:
+            print(f"could'nt run doc2vec.FAST_VERSION. error message: {e}")
+
         vector_size = None
         embeddings_results = []
         metadata_results = []
