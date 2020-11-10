@@ -57,8 +57,8 @@ if __name__ == '__main__':
     ]
     # Define list of model_names and processing method
     D2V_MODELS_LIST = [
-        "2020_11_07_2316_PM_overlapping_K_10_SS_1",
-        # "2020_11_07_2316_PM_non_overlapping_K_10_SS_1"
+        # "2020_11_07_2316_PM_overlapping_K_10_SS_1",
+        "2020_11_07_2316_PM_non_overlapping_K_10_SS_1"
     ]
     # PARAMS END
     # IF RUNNING LOCAL (WINDOWS)

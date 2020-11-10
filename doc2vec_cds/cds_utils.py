@@ -107,6 +107,7 @@ def train_cv_from_cds_embeddings(final_df, amr_df, results_file_path, model, ant
 
 
 def scores_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final_df, antibiotic, amr_df, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION, embeddings_aggregation_method):
+    now = time.time()
     non_features_columns = ['file_id', 'NCBI File Name', 'Strain', 'label', 'seq_id', 'doc_ind']
     final_df['label'].replace('R', 1, inplace=True)
     final_df['label'].replace('S', 0, inplace=True)
@@ -165,10 +166,12 @@ def scores_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final
 
         results_list.append(results_dic)
 
+    print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Finished training classifier in {round((time.time() - now) / 60, 4)} minutes")
     return results_list
 
 
 def embeddings_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final_df, antibiotic, amr_df, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION, embeddings_aggregation_method):
+    now = time.time()
     if embeddings_aggregation_method == "mean":
         agg_final_df = final_df.groupby('file_id')[[x for x in final_df.columns if x.startswith("f_")]].mean()
     elif embeddings_aggregation_method == "max":
@@ -218,6 +221,7 @@ def embeddings_agg_one_fold(test_group, train_file_id_list, test_file_id_list, f
         "predictions": predictions,
     }]
 
+    print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Finished training classifier in {round((time.time() - now) / 60, 4)} minutes")
     return results_list
 
 
