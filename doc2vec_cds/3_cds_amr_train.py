@@ -44,7 +44,7 @@ if __name__ == '__main__':
     random_seed = 1
     # knn params - relevant only if MODEL_CLASSIFIER = ClassifierType.KNN.value
     use_faiss_knn = True
-    knn_k_size = 5
+    knn_k_size = 7
 
     workers = multiprocessing.cpu_count()
     amr_data_file_name = "amr_labels.csv"
