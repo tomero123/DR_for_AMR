@@ -134,11 +134,14 @@ def scores_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final
     sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
     print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Resistance_weight for antibiotic: {antibiotic} is: {resistance_weight}")
 
-    eval_set = [(X_test, y_test)]
-    model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
-              eval_metric="auc", eval_set=eval_set, verbose=True,
-              early_stopping_rounds=15
-              )
+    if model.__class__.__name__ == "XGBClassifier":
+        eval_set = [(X_test, y_test)]
+        model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
+                  eval_metric="auc", eval_set=eval_set, verbose=True,
+                  early_stopping_rounds=15
+                  )
+    else:
+        model.fit(X_train, y_train.values.ravel())
 
     test_agg_list = ["mean_highest$100", "mean_highest$300", "mean_highest$600", "mean_all"]
 
@@ -208,11 +211,15 @@ def embeddings_agg_one_fold(test_group, train_file_id_list, test_file_id_list, f
     sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
     print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Resistance_weight for antibiotic: {antibiotic} is: {resistance_weight}")
 
-    eval_set = [(X_test, y_test)]
-    model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
-              eval_metric="auc", eval_set=eval_set, verbose=True,
-              early_stopping_rounds=15
-              )
+    if model.__class__.__name__ == "XGBClassifier":
+        eval_set = [(X_test, y_test)]
+        model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
+                  eval_metric="auc", eval_set=eval_set, verbose=True,
+                  early_stopping_rounds=15
+                  )
+    else:
+        model.fit(X_train, y_train.values.ravel())
+
     temp_scores = model.predict_proba(X_test)
     true_results = y_test.values.ravel()
     resistance_score = [x[1] for x in temp_scores]
