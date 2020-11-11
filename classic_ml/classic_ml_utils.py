@@ -378,6 +378,7 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
             feature_importance = pd.DataFrame(list(zip(X_train.columns, vals)), columns=['feature', 'feature_importance_val'])
             feature_importance.sort_values(by=['feature_importance_val'], ascending=False, inplace=True)
             features_with_positive_shap_n = feature_importance[feature_importance['feature_importance_val'] > 0].shape[0]
+            print(f"Number of features with positive SHAP value: {features_with_positive_shap_n}")
             final_features_count = min(features_with_positive_shap_n, features_selection_n)
             feature_importance = feature_importance.head(final_features_count)
             feature_importance.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
