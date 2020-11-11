@@ -48,16 +48,20 @@ def get_results_agg_df(agg_method, results_df, amr_df):
         y_true = results_df_agg['label']
         y_pred_score = list(results_df_agg['resistance_score'])
         fpr, tpr, thresholds = metrics.roc_curve(y_true, y_pred_score)
-        num_pos_class = len([x for x in y_true if x == 1])
-        num_neg_class = len([x for x in y_true if x == 0])
-        if agg_method != "mean_all":
-            max_accuracy, resistance_threshold = get_metric_and_best_threshold_from_roc_curve(tpr, fpr, thresholds, num_pos_class, num_neg_class)
-            print(f"max_accuracy: {max_accuracy}, best_threshold: {resistance_threshold}")
-        else:
-            resistance_threshold = 0.5
-            print("Using resistance_threshold = 0.5 for mean_all aggregation")
-
-        prediction = [1 if x > resistance_threshold else 0 for x in y_pred_score]
+        # Choosing best thresholds using G-mean
+        gmeans = np.sqrt(tpr * (1 - fpr))
+        ix = np.argmax(gmeans)
+        best_threshold = thresholds[ix]
+        print(f'Calculating best threshold for: {agg_method} ; Best Threshold={round(best_threshold, 4)}, G-Mean={round(gmeans[ix], 4)}')
+        # if agg_method != "mean_all":
+        # num_pos_class = len([x for x in y_true if x == 1])
+        # num_neg_class = len([x for x in y_true if x == 0])
+        #     max_accuracy, resistance_threshold = get_metric_and_best_threshold_from_roc_curve(tpr, fpr, thresholds, num_pos_class, num_neg_class)
+        #     print(f"Calculating best accuracy threshold. max_accuracy: {max_accuracy}, best_threshold: {resistance_threshold}")
+        # else:
+        #     resistance_threshold = 0.5
+        #     print("Using resistance_threshold = 0.5 for mean_all aggregation")
+        prediction = [1 if x > best_threshold else 0 for x in y_pred_score]
         results_df_agg['prediction'] = prediction
 
         final_df = results_df_agg.merge(amr_df[['file_id', 'NCBI File Name']], on='file_id', how='inner')
