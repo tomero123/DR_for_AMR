@@ -5,6 +5,7 @@ sys.path.append("/home/tomeror/tomer_thesis")
 
 import multiprocessing
 # import pathos.multiprocessing as multiprocessing
+import shap
 import json
 import os
 import pandas as pd
@@ -204,7 +205,7 @@ def train_test_and_write_results(final_df, amr_df, results_file_path, model, ant
         traceback.print_exc()
 
 
-def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, use_multiprocess):
+def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, features_selection_n, all_results_dic, use_multiprocess, use_shap_feature_selection):
     try:
         now = time.time()
         n_folds = amr_df[f"{antibiotic}_group"].max()
@@ -216,7 +217,7 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
         for train_group_list, test_group in zip(train_groups_list, test_groups_list):
             train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin(train_group_list)]["file_id"])
             test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == test_group]["file_id"])
-            inputs_list.append([test_group, final_df, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n])
+            inputs_list.append([test_group, final_df, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n, use_shap_feature_selection])
 
         # print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED creating folds data. antibiotic: {antibiotic}")
         print(f"{datetime.datetime.now().strftime(TIME_STR)} STARTED training models. antibiotic: {antibiotic}")
@@ -346,7 +347,7 @@ def get_all_resulst_df(all_results_dic, metrics_order):
     return all_results_df
 
 
-def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n):
+def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n, use_shap_feature_selection):
     non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
     final_df['label'].replace('R', 1, inplace=True)
     final_df['label'].replace('S', 0, inplace=True)
@@ -366,27 +367,45 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
 
     # Features Selection
     if features_selection_n:
-        print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Started running Feature selection for antibiotic: {antibiotic}")
         now = time.time()
         model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
-        # Write csv of data after FS
-        d = model.feature_importances_
-        most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
-        temp_df = X_train.iloc[:, most_important_index]
-        temp_df["label"] = y_train.values.ravel()
-        temp_df["file_id"] = list(final_df_train.loc[:, 'file_id'])
-        temp_df["Strain"] = list(final_df_train.loc[:, 'Strain'])
-        temp_df["file_name"] = list(final_df_train.loc[:, 'file_name'])
-        temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
-        importance_list = []
-        for ind in most_important_index:
-            importance_list.append([X_train.columns[ind], d[ind]])
-        importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
-        importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
-        selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
-        X_train = selection.transform(X_train)
-        X_test = selection.transform(X_test)
-        print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Finished running Feature selection for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}, X_test.shape: {X_test.shape}")
+        # Use SHAP Feature Selection
+        if use_shap_feature_selection:
+            print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Started running SHAP Feature selection for antibiotic: {antibiotic}")
+            explainer = shap.TreeExplainer(model)
+            shap_values = explainer.shap_values(X_train)
+            vals = np.abs(shap_values).mean(0)
+            feature_importance = pd.DataFrame(list(zip(X_train.columns, vals)), columns=['feature', 'feature_importance_val'])
+            feature_importance.sort_values(by=['feature_importance_val'], ascending=False, inplace=True)
+            features_with_positive_shap_n = feature_importance[feature_importance['feature_importance_val'] > 0].shape[0]
+            final_features_count = min(features_with_positive_shap_n, features_selection_n)
+            feature_importance = feature_importance.head(final_features_count)
+            feature_importance.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
+            final_features_list = list(feature_importance['feature'])
+            X_train = X_train[final_features_list]
+            X_test = X_test[final_features_list]
+            print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Finished running SHAP Feature selection for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}, X_test.shape: {X_test.shape}")
+        # Use SelectFromModel Feature Selection
+        else:
+            print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Started running SelectFromModel Feature selection for antibiotic: {antibiotic}")
+            # Write csv of data after FS
+            d = model.feature_importances_
+            most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
+            temp_df = X_train.iloc[:, most_important_index]
+            temp_df["label"] = y_train.values.ravel()
+            temp_df["file_id"] = list(final_df_train.loc[:, 'file_id'])
+            temp_df["Strain"] = list(final_df_train.loc[:, 'Strain'])
+            temp_df["file_name"] = list(final_df_train.loc[:, 'file_name'])
+            temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
+            importance_list = []
+            for ind in most_important_index:
+                importance_list.append([X_train.columns[ind], d[ind]])
+            importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
+            importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
+            selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
+            X_train = selection.transform(X_train)
+            X_test = selection.transform(X_test)
+            print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Finished running SelectFromModel Feature selection for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}, X_test.shape: {X_test.shape}")
 
     # model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
 

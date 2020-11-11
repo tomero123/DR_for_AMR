@@ -26,10 +26,11 @@ N_ESTIMATORS = 300 if len(sys.argv) <= 6 else int(sys.argv[6])
 MAX_DEPTH = 4 if len(sys.argv) <= 7 else int(sys.argv[7])
 LEARNING_RATE = 0.1 if len(sys.argv) <= 8 else float(sys.argv[8])
 RESULTS_FOLDER_NAME = None if len(sys.argv) <= 9 else sys.argv[9]
-DATA_TYPE = "all"
+
 USE_PREDEFINED_FEATURES_LIST = False  # Use predefined features list INSTEAD OF DOING FEATURE SELECTION!!!
 USE_MULTIPROCESS = False
 remove_intermediate = True
+USE_SHAP_FEATURE_SELECTION = True
 
 # Model params
 random_seed = 1
@@ -59,8 +60,6 @@ if os.name == 'nt':
         "learning_rate": 0.5,
     }
     antibiotic_list = ['levofloxacin', 'ceftazidime']
-    dataset_file_name = 'all_kmers_file_SMALL_50.csv.gz'
-    kmers_map_file_name = 'all_kmers_map_SMALL_50.txt'
 
 # *********************************************************************************************************************************
 
@@ -102,6 +101,9 @@ if __name__ == '__main__':
     if RAW_DATA_TYPE != RawDataType.GENE_CLUSTERS.value:
         dataset_file_name = f'{RAW_DATA_TYPE}_kmers_file_K_{K}.csv.gz'
         kmers_map_file_name = f'{RAW_DATA_TYPE}_kmers_map_K_{K}.txt'
+        if os.name == "nt":
+            dataset_file_name = 'all_kmers_file_SMALL_50.csv.gz'
+            kmers_map_file_name = 'all_kmers_map_SMALL_50.txt'
         # Get kmers df (if we are not using clusters as features
         kmers_df, kmers_original_count, kmers_final_count = get_kmers_df(path, dataset_file_name, kmers_map_file_name, rare_th, common_th_subtract)
     else:
@@ -126,7 +128,7 @@ if __name__ == '__main__':
         if TEST_METHOD == TestMethod.TRAIN_TEST.value:
             train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, BACTERIA, USE_PREDEFINED_FEATURES_LIST)
         elif TEST_METHOD == TestMethod.CV.value:
-            train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, USE_MULTIPROCESS)
+            train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, FEATURES_SELECTION_N, all_results_dic, USE_MULTIPROCESS, USE_SHAP_FEATURE_SELECTION)
         else:
             raise Exception("Invalid test_method")
     print(all_results_dic)
