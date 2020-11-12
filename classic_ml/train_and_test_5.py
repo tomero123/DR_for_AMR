@@ -30,7 +30,7 @@ RESULTS_FOLDER_NAME = None if len(sys.argv) <= 9 else sys.argv[9]
 USE_PREDEFINED_FEATURES_LIST = False  # Use predefined features list INSTEAD OF DOING FEATURE SELECTION!!!
 USE_MULTIPROCESS = False
 remove_intermediate = True
-USE_SHAP_FEATURE_SELECTION = True
+USE_SHAP_FEATURE_SELECTION = False
 
 # Model params
 random_seed = 1
