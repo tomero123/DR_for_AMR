@@ -62,10 +62,10 @@ if __name__ == '__main__':
     # Choose classifier
     if MODEL_CLASSIFIER == ClassifierType.KNN.value:
         if use_faiss_knn and os.name != 'nt':
-            print(f"Using FaissKNeighbors with K: {knn_k_size}")
-            model = FaissKNeighbors(knn_k_size)
+            print(f"Using FaissKNeighbors with K: {KNN_K_SIZE}")
+            model = FaissKNeighbors(KNN_K_SIZE)
         else:
-            model = KNeighborsClassifier(n_neighbors=knn_k_size)
+            model = KNeighborsClassifier(n_neighbors=KNN_K_SIZE)
     elif MODEL_CLASSIFIER == ClassifierType.XGBOOST.value:
         model_params = {
             "max_depth": MAX_DEPTH,
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     SHIFT_SIZE = model_conf["shift_size"]
     RAW_DATA_TYPE = model_conf["raw_data_type"]
 
-    current_results_folder = get_current_results_folder(RESULTS_FOLDER_NAME, MODEL_CLASSIFIER, knn_k_size)
+    current_results_folder = get_current_results_folder(RESULTS_FOLDER_NAME, MODEL_CLASSIFIER, KNN_K_SIZE)
     embedding_df_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_embeddings_df", D2V_MODEL_FOLDER_NAME)
     results_file_folder = os.path.join(prefix, "results_files", BACTERIA, "cds_embeddings_classification_results", D2V_MODEL_FOLDER_NAME, current_results_folder)
     if not os.path.exists(results_file_folder):
@@ -105,7 +105,7 @@ if __name__ == '__main__':
         "load_embedding_df": LOAD_EMBEDDING_DF,
     }
     if MODEL_CLASSIFIER == ClassifierType.KNN.value:
-        params_dict["knn_k_size"] = knn_k_size
+        params_dict["knn_k_size"] = KNN_K_SIZE
         params_dict["use_faiss_knn"] = use_faiss_knn
 
     elif MODEL_CLASSIFIER == ClassifierType.XGBOOST.value:
