@@ -27,7 +27,7 @@ if __name__ == '__main__':
     AGGREGATION_METHOD = AggregationMethod.SCORES.value if len(sys.argv) <= 3 else sys.argv[3]  # can be "scores" or "embeddings"
     D2V_MODEL_FOLDER_NAME = "2020_11_07_2316_PM_non_overlapping_K_10_SS_1" if len(sys.argv) <= 4 else sys.argv[4]
     RESULTS_FOLDER_NAME = None if len(sys.argv) <= 5 else sys.argv[5]
-    KNN_K_SIZE = 7 if len(sys.argv) <= 6 else sys.argv[6]
+    KNN_K_SIZE = 7 if len(sys.argv) <= 6 else int(sys.argv[6])
     NON_OVERLAPPING_USE_SEQ_AGGREGATION = False  # relevant only if non_overlapping and AGGREGATION_METHOD = "scores"
     if len(sys.argv) > 7 and sys.argv[7] == "true":
         NON_OVERLAPPING_USE_SEQ_AGGREGATION = True
