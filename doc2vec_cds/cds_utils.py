@@ -111,137 +111,146 @@ def train_cv_from_cds_embeddings(final_df, amr_df, results_file_path, model, ant
 
 
 def scores_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final_df, antibiotic, amr_df, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION, embeddings_aggregation_method, PROCESSING_MODE):
-    now = time.time()
-    non_features_columns = ['file_id', 'NCBI File Name', 'Strain', 'label', 'seq_id', 'doc_ind']
-    final_df['label'].replace('R', 1, inplace=True)
-    final_df['label'].replace('S', 0, inplace=True)
-    final_df = final_df.merge(amr_df[['file_id', 'NCBI File Name', 'Strain']], on='file_id', how='inner')
-    # Use mean aggregation for all sequences when method = non_overlapping
-    if PROCESSING_MODE == ProcessingMode.NON_OVERLAPPING.value and NON_OVERLAPPING_USE_SEQ_AGGREGATION:
-        agg_final_df = final_df.groupby(['file_id', 'seq_id'])[[x for x in final_df.columns if x.startswith("f_")]].mean()
-        agg_final_df['label'] = final_df.groupby(['file_id', 'seq_id'])['label'].max()
-        agg_final_df.reset_index(inplace=True)
-        final_df_train = agg_final_df[agg_final_df["file_id"].isin(train_file_id_list)]
-        final_df_test = agg_final_df[agg_final_df["file_id"].isin(test_file_id_list)]
-    else:
-        final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]
-        final_df_test = final_df[final_df["file_id"].isin(test_file_id_list)]
-    X_train = final_df_train.drop(non_features_columns, axis=1).copy()
-    y_train = final_df_train[['label']].copy()
-    X_test = final_df_test.drop(non_features_columns, axis=1).copy()
-    y_test = final_df_test[['label']].copy()
-    print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
+    try:
+        now = time.time()
+        non_features_columns = ['file_id', 'NCBI File Name', 'Strain', 'label', 'seq_id', 'doc_ind']
+        final_df['label'].replace('R', 1, inplace=True)
+        final_df['label'].replace('S', 0, inplace=True)
+        final_df = final_df.merge(amr_df[['file_id', 'NCBI File Name', 'Strain']], on='file_id', how='inner')
+        # Use mean aggregation for all sequences when method = non_overlapping
+        if PROCESSING_MODE == ProcessingMode.NON_OVERLAPPING.value and NON_OVERLAPPING_USE_SEQ_AGGREGATION:
+            non_features_columns = ['file_id', 'NCBI File Name', 'Strain', 'label', 'seq_id']
+            agg_final_df = final_df.groupby(['file_id', 'seq_id'])[[x for x in final_df.columns if x.startswith("f_")]].mean()
+            agg_final_df['label'] = final_df.groupby(['file_id', 'seq_id'])['label'].max()
+            agg_final_df.reset_index(inplace=True)
+            agg_final_df = agg_final_df.merge(amr_df[['file_id', 'NCBI File Name', 'Strain']], on='file_id', how='inner')
+            final_df_train = agg_final_df[agg_final_df["file_id"].isin(train_file_id_list)]
+            final_df_test = agg_final_df[agg_final_df["file_id"].isin(test_file_id_list)]
+        else:
+            final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]
+            final_df_test = final_df[final_df["file_id"].isin(test_file_id_list)]
+        X_train = final_df_train.drop(non_features_columns, axis=1).copy()
+        y_train = final_df_train[['label']].copy()
+        X_test = final_df_test.drop(non_features_columns, axis=1).copy()
+        y_test = final_df_test[['label']].copy()
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
 
-    # Create weight according to the ratio of each class
-    resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
-        if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
-    sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
-    print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Resistance_weight for antibiotic: {antibiotic} is: {resistance_weight}")
+        # Create weight according to the ratio of each class
+        resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
+            if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
+        sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Resistance_weight for antibiotic: {antibiotic} is: {resistance_weight}")
 
-    if model.__class__.__name__ == "XGBClassifier":
-        eval_set = [(X_test, y_test)]
-        model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
-                  eval_metric="auc", eval_set=eval_set, verbose=True,
-                  early_stopping_rounds=15
-                  )
-    else:
-        model.fit(X_train, y_train.values.ravel())
+        if model.__class__.__name__ == "XGBClassifier":
+            eval_set = [(X_test, y_test)]
+            model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
+                      eval_metric="auc", eval_set=eval_set, verbose=True,
+                      early_stopping_rounds=15
+                      )
+        else:
+            model.fit(X_train, y_train.values.ravel())
 
-    test_agg_list = ["mean_highest$100", "mean_highest$300", "mean_highest$600", "mean_all"]
+        test_agg_list = ["mean_highest$100", "mean_highest$300", "mean_highest$600", "mean_all"]
 
-    temp_scores = model.predict_proba(X_test)
-    true_results = y_test.values.ravel()
+        temp_scores = model.predict_proba(X_test)
+        true_results = y_test.values.ravel()
 
-    resistance_score = [x[1] for x in temp_scores]
-    test_files_ids = list(final_df_test['file_id'])
-    strain = list(final_df_test['Strain'])
+        resistance_score = [x[1] for x in temp_scores]
+        test_files_ids = list(final_df_test['file_id'])
+        strain = list(final_df_test['Strain'])
 
-    results_list = []
+        results_list = []
 
-    results_df = pd.DataFrame({
-        'file_id': test_files_ids,
-        'label': true_results,
-        'resistance_score': resistance_score,
-        'strain': strain
-    })
+        results_df = pd.DataFrame({
+            'file_id': test_files_ids,
+            'label': true_results,
+            'resistance_score': resistance_score,
+            'strain': strain
+        })
 
-    for agg_method in test_agg_list:
-        results_df_agg = get_results_agg_df(agg_method, results_df, amr_df)
+        for agg_method in test_agg_list:
+            results_df_agg = get_results_agg_df(agg_method, results_df, amr_df)
 
-        results_dic = {
-            'agg_method': agg_method,
-            'Fold': test_group,
-            'file_id': list(results_df_agg['file_id']),
-            'Strain': list(results_df_agg['strain']),
-            'File name': list(results_df_agg['NCBI File Name']),
-            "true_results": results_df_agg['label'],
-            "resistance_score": results_df_agg['resistance_score'],
-            "predictions": results_df_agg['prediction'],
-        }
+            results_dic = {
+                'agg_method': agg_method,
+                'Fold': test_group,
+                'file_id': list(results_df_agg['file_id']),
+                'Strain': list(results_df_agg['strain']),
+                'File name': list(results_df_agg['NCBI File Name']),
+                "true_results": results_df_agg['label'],
+                "resistance_score": results_df_agg['resistance_score'],
+                "predictions": results_df_agg['prediction'],
+            }
 
-        results_list.append(results_dic)
+            results_list.append(results_dic)
 
-    print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Finished training classifier in {round((time.time() - now) / 60, 4)} minutes")
-    return results_list
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Finished training classifier in {round((time.time() - now) / 60, 4)} minutes")
+        return results_list
+    except Exception as e:
+        print(f"ERROR at scores_agg_one_fold, message: {e}")
+        traceback.print_exc()
 
 
 def embeddings_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final_df, antibiotic, amr_df, model, NON_OVERLAPPING_USE_SEQ_AGGREGATION, embeddings_aggregation_method, PROCESSING_MODE):
-    now = time.time()
-    if embeddings_aggregation_method == "mean":
-        agg_final_df = final_df.groupby('file_id')[[x for x in final_df.columns if x.startswith("f_")]].mean()
-    elif embeddings_aggregation_method == "max":
-        agg_final_df = final_df.groupby('file_id')[[x for x in final_df.columns if x.startswith("f_")]].max()
-    else:
-        raise Exception(f"embeddings_aggregation_method: {embeddings_aggregation_method} is invalid!")
+    try:
+        now = time.time()
+        non_features_columns = ['file_id', 'NCBI File Name', 'Strain', 'label']
+        final_df['label'].replace('R', 1, inplace=True)
+        final_df['label'].replace('S', 0, inplace=True)
+        if embeddings_aggregation_method == "mean":
+            agg_final_df = final_df.groupby('file_id')[[x for x in final_df.columns if x.startswith("f_")]].mean()
+        elif embeddings_aggregation_method == "max":
+            agg_final_df = final_df.groupby('file_id')[[x for x in final_df.columns if x.startswith("f_")]].max()
+        else:
+            raise Exception(f"embeddings_aggregation_method: {embeddings_aggregation_method} is invalid!")
 
-    agg_final_df['label'] = final_df.groupby('file_id')['label'].max()
-    agg_final_df.reset_index(level=0, inplace=True)
+        agg_final_df['label'] = final_df.groupby('file_id')['label'].max()
+        agg_final_df.reset_index(level=0, inplace=True)
+        agg_final_df = agg_final_df.merge(amr_df[['file_id', 'NCBI File Name', 'Strain']], on='file_id', how='inner')
+        final_df_train = agg_final_df[agg_final_df["file_id"].isin(train_file_id_list)]
+        final_df_test = agg_final_df[agg_final_df["file_id"].isin(test_file_id_list)]
+        X_train = final_df_train.drop(non_features_columns, axis=1).copy()
+        y_train = final_df_train[['label']].copy()
+        X_test = final_df_test.drop(non_features_columns, axis=1).copy()
+        y_test = final_df_test[['label']].copy()
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
 
-    non_features_columns = ['file_id', 'NCBI File Name', 'Strain', 'label']
-    agg_final_df['label'].replace('R', 1, inplace=True)
-    agg_final_df['label'].replace('S', 0, inplace=True)
-    agg_final_df = agg_final_df.merge(amr_df[['file_id', 'NCBI File Name', 'Strain']], on='file_id', how='inner')
-    final_df_train = agg_final_df[agg_final_df["file_id"].isin(train_file_id_list)]
-    final_df_test = agg_final_df[agg_final_df["file_id"].isin(test_file_id_list)]
-    X_train = final_df_train.drop(non_features_columns, axis=1).copy()
-    y_train = final_df_train[['label']].copy()
-    X_test = final_df_test.drop(non_features_columns, axis=1).copy()
-    y_test = final_df_test[['label']].copy()
-    print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
+        # Create weight according to the ratio of each class
+        resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
+            if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
+        sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Resistance_weight for antibiotic: {antibiotic} is: {resistance_weight}")
 
-    # Create weight according to the ratio of each class
-    resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
-        if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
-    sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
-    print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Resistance_weight for antibiotic: {antibiotic} is: {resistance_weight}")
+        if model.__class__.__name__ == "XGBClassifier":
+            eval_set = [(X_test, y_test)]
+            model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
+                      eval_metric="auc", eval_set=eval_set, verbose=True,
+                      early_stopping_rounds=15
+                      )
+        else:
+            model.fit(X_train, y_train.values.ravel())
 
-    if model.__class__.__name__ == "XGBClassifier":
-        eval_set = [(X_test, y_test)]
-        model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight,
-                  eval_metric="auc", eval_set=eval_set, verbose=True,
-                  early_stopping_rounds=15
-                  )
-    else:
-        model.fit(X_train, y_train.values.ravel())
+        temp_scores = model.predict_proba(X_test)
+        true_results = y_test.values.ravel()
+        resistance_score = [x[1] for x in temp_scores]
+        predictions = [1 if p[1] >= p[0] else 0 for p in temp_scores]
 
-    temp_scores = model.predict_proba(X_test)
-    true_results = y_test.values.ravel()
-    resistance_score = [x[1] for x in temp_scores]
-    predictions = [1 if p[1] >= p[0] else 0 for p in temp_scores]
+        results_list = [{
+            'agg_method': "NA",
+            'Fold': test_group,
+            'file_id': list(final_df_test['file_id']),
+            'Strain': list(final_df_test['Strain']),
+            'File name': list(final_df_test['NCBI File Name']),
+            "true_results": true_results,
+            "resistance_score": resistance_score,
+            "predictions": predictions,
+        }]
 
-    results_list = [{
-        'agg_method': "NA",
-        'Fold': test_group,
-        'file_id': list(final_df_test['file_id']),
-        'Strain': list(final_df_test['Strain']),
-        'File name': list(final_df_test['NCBI File Name']),
-        "true_results": true_results,
-        "resistance_score": resistance_score,
-        "predictions": predictions,
-    }]
-
-    print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Finished training classifier in {round((time.time() - now) / 60, 4)} minutes")
-    return results_list
+        print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Finished training classifier in {round((time.time() - now) / 60, 4)} minutes")
+        return results_list
+    except Exception as e:
+        print(f"ERROR at embeddings_agg_one_fold, message: {e}")
+        traceback.print_exc()
 
 
 def cds_write_data_to_excel(antibiotic, results_list, results_file_path, all_results_dic):
