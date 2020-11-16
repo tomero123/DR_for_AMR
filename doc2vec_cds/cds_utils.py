@@ -53,19 +53,12 @@ def get_results_agg_df(agg_method, results_df, amr_df):
         ix = np.argmax(gmeans)
         best_threshold = thresholds[ix]
         print(f'Calculating best threshold for: {agg_method} ; Best Threshold={round(best_threshold, 4)}, G-Mean={round(gmeans[ix], 4)}')
-        # if agg_method != "mean_all":
-        # num_pos_class = len([x for x in y_true if x == 1])
-        # num_neg_class = len([x for x in y_true if x == 0])
-        #     max_accuracy, resistance_threshold = get_metric_and_best_threshold_from_roc_curve(tpr, fpr, thresholds, num_pos_class, num_neg_class)
-        #     print(f"Calculating best accuracy threshold. max_accuracy: {max_accuracy}, best_threshold: {resistance_threshold}")
-        # else:
-        #     resistance_threshold = 0.5
-        #     print("Using resistance_threshold = 0.5 for mean_all aggregation")
         prediction = [1 if x > best_threshold else 0 for x in y_pred_score]
         results_df_agg['prediction'] = prediction
 
         final_df = results_df_agg.merge(amr_df[['file_id', 'NCBI File Name']], on='file_id', how='inner')
         return final_df
+
     except Exception as e:
         print(f"ERROR at get_results_agg_df, message: {e}")
         traceback.print_exc()
@@ -119,6 +112,7 @@ def scores_agg_one_fold(test_group, train_file_id_list, test_file_id_list, final
         final_df = final_df.merge(amr_df[['file_id', 'NCBI File Name', 'Strain']], on='file_id', how='inner')
         # Use mean aggregation for all sequences when method = non_overlapping
         if PROCESSING_MODE == ProcessingMode.NON_OVERLAPPING.value and NON_OVERLAPPING_USE_SEQ_AGGREGATION:
+            print("NON_OVERLAPPING - Performing mean aggregation of embeddings from the same gene")
             non_features_columns = ['file_id', 'NCBI File Name', 'Strain', 'label', 'seq_id']
             agg_final_df = final_df.groupby(['file_id', 'seq_id'])[[x for x in final_df.columns if x.startswith("f_")]].mean()
             agg_final_df['label'] = final_df.groupby(['file_id', 'seq_id'])['label'].max()
