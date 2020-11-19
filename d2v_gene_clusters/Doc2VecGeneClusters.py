@@ -183,7 +183,7 @@ class Doc2VecGeneClustersLoader(object):
 
         columns_names = [f"f_{x + 1}" for x in range(vector_size)]
         em_df = pd.DataFrame(embeddings_results, columns=columns_names)
-        metadata_df = pd.DataFrame(metadata_results, columns=["file_id", "seq_id", "doc_ind"])
-        metadata_df_full = pd.DataFrame(metadata_results_full, columns=["file_ind", "file_name", "seq_id", "seq_name", "doc_ind"])
+        metadata_df = pd.DataFrame(metadata_results, columns=["file_id"])
+        metadata_df_full = pd.DataFrame(metadata_results_full, columns=["file_ind", "file_name"])
         final_df = pd.concat([metadata_df, em_df], axis=1)
         return final_df, metadata_df_full

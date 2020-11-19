@@ -13,10 +13,10 @@ import xgboost
 from sklearn.neighbors import KNeighborsClassifier
 
 from doc2vec_cds.FaissKNeighbors import FaissKNeighbors
-from doc2vec_cds.cds_utils import get_label_df, cds_get_all_resulst_df, cds_get_agg_results_df, \
+from doc2vec_cds.cds_utils import cds_get_all_resulst_df, cds_get_agg_results_df, \
     cds_convert_results_df_to_new_format
 from d2v_gene_clusters.Doc2VecGeneClusters import Doc2VecGeneClustersLoader
-from d2v_gene_clusters.gene_clusters_utils import train_cv_from_gene_clusters_embeddings
+from d2v_gene_clusters.gene_clusters_utils import train_cv_from_gene_clusters_embeddings, gene_clusters_get_label_df
 from utils import get_time_as_str
 from constants import Bacteria, ANTIBIOTIC_DIC, EMBEDDING_DF_FILE_NAME, METADATA_DF_FILE_NAME, ClassifierType
 from MyLogger import Logger
@@ -155,7 +155,7 @@ if __name__ == '__main__':
         t1 = time.time()
         results_file_name = f"{antibiotic}_{current_results_folder}.xlsx"
         results_file_path = os.path.join(results_file_folder, results_file_name)
-        label_df = get_label_df(amr_df, files_list, antibiotic)
+        label_df = gene_clusters_get_label_df(amr_df, files_list, antibiotic)
         final_df = embedding_df.merge(label_df[['file_id', 'label']], on='file_id', how='inner')
         t2 = time.time()
         print(f"Finished creating final_df for bacteria: {BACTERIA} antibiotic: {antibiotic} in {round((t2-t1) / 60, 4)} minutes")

@@ -9,6 +9,22 @@ from utils import get_train_and_test_groups
 from constants import TIME_STR
 
 
+def gene_clusters_get_label_df(amr_df, files_list, antibiotic):
+    file_name_col = 'NCBI File Name'
+    file_id_col = 'file_id'
+    strain_col = 'Strain'
+    label_df = amr_df[[file_id_col, file_name_col, strain_col, antibiotic]]
+    # Remove antibiotics without resistance data
+    label_df = label_df[label_df[antibiotic] != '-']
+    # Remove antibiotics with label 'I'
+    label_df = label_df[label_df[antibiotic] != 'I']
+    # Remove strains which are not in "files list"
+    ind_to_save = label_df[file_name_col].apply(lambda x: True if x in [x.replace(".pickle", "") for x in files_list] else False)
+    new_label_df = label_df[ind_to_save]
+    new_label_df.rename(columns={"NCBI File Name": "file_name", antibiotic: "label"}, inplace=True)
+    return new_label_df
+
+
 def train_cv_from_gene_clusters_embeddings(final_df, amr_df, results_file_path, model, antibiotic, all_results_dic, use_multiprocess, MODEL_CLASSIFIER):
     try:
         now = time.time()
