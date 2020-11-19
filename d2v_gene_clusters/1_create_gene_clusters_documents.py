@@ -5,6 +5,7 @@ sys.path.append("/home/tomeror/tomer_thesis")
 
 import os
 import pandas as pd
+import pickle
 from tqdm import tqdm
 
 from constants import Bacteria
@@ -44,15 +45,19 @@ for _, row in tqdm(all_strains_df.iterrows(), total=all_strains_df.shape[0]):
     strain_index = row['index']
     file = row['file']
     number_of_genes = row['number_of_genes']
-    output_file_name = file + ".txt"
+    output_file_name = file + ".pickle"
     genes_to_clusters_dic = strains_genes_to_clusters_dict[strain_index]
     dic_len = len(genes_to_clusters_dic)
     if number_of_genes != dic_len:
         print(f"MISMATCH in genes len for strain_id: {strain_index}, strain name: {file}, number_of_genes: {number_of_genes}, genes_to_clusters_dic len: {dic_len}")
     clusters_list = []
     for gene_ind in range(dic_len):
-        clusters_list.append(str(genes_to_clusters_dic[gene_ind]))
-    with open(os.path.join(output_gene_clusters_documents_path, output_file_name), "w") as output_file:
-        output_file.write(" ".join(clusters_list))
+        try:
+            clusters_list.append(str(genes_to_clusters_dic[gene_ind]))
+        except Exception as e:
+            print(f"Couldn't find gene_ind: {gene_ind} for strain_id :{strain_index}")
+
+    with open(os.path.join(output_gene_clusters_documents_path, output_file_name), 'wb') as f:
+        pickle.dump(clusters_list, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 print("DONE!")
