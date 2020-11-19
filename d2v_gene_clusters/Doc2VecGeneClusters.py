@@ -1,7 +1,5 @@
 import sys
 
-from doc2vec_cds.EpochSaver import EpochSaver
-
 sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
@@ -10,11 +8,13 @@ import os
 import json
 import pandas as pd
 import gzip
+import pickle
 from functools import partial
 from constants import ProcessingMode
-from Bio import SeqIO
 from gensim.models import doc2vec
 from gensim.models.callbacks import CallbackAny2Vec
+
+from doc2vec_cds.EpochSaver import EpochSaver
 
 _open = partial(gzip.open, mode='rt')
 
@@ -28,21 +28,16 @@ class GenomeDocsGeneClusters(object):
         document_id = 0
         for file_ind, file_name in enumerate(self.files_list):
             try:
-                fasta_sequences = SeqIO.parse(_open(os.path.join(self.input_folder, file_name)), 'fasta')
-                seq_id = 0
-                for fasta in fasta_sequences:
-                    seq_id += 1
-                    name, sequence = fasta.id, str(fasta.seq)
-                    documents_list = self._get_document_from_fasta(sequence, self.processing_mode, self.k, self.shift_size)
-                    for doc_ind, doc in enumerate(documents_list):
-                        yield doc2vec.TaggedDocument(doc, [document_id])
+                with open(os.path.join(self.input_folder, file_name), 'rb') as f:
+                    doc = pickle.load(f)
+                    num_of_genes = len(doc)
+                    yield doc2vec.TaggedDocument(doc, [document_id])
                     # Use same document_id for all sequences if non-overlapping
                     document_id += 1
                 if file_ind % 1 == 0:
-                    print(f"Finished processing file #{file_ind}, file_name:{file_name}, number of genes: {seq_id} document_id: {document_id}")
+                    print(f"Finished processing file #{file_ind}, file_name:{file_name}, number of genes: {num_of_genes} document_id: {document_id}")
             except Exception as e:
-                print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
-                print(f"name: {name}  sequence: {sequence}")
+                print(f"****ERROR IN PARSING file: {file_name}")
                 print(f"Error message: {e}")
 
     @staticmethod
@@ -111,7 +106,7 @@ class Doc2VecGeneClusters(object):
         vector_size = self.vector_size
         window = self.window_size
         dm = 1
-        min_count = 20
+        min_count = 5
         sample = 1e-4
         negative = 5
         epochs = 20
@@ -148,12 +143,9 @@ class Doc2VecGeneClusters(object):
 
 
 class Doc2VecGeneClustersLoader(object):
-    def __init__(self, genome_files_input_folder, labeled_files_dic, k, processing_mode, shift_size, models_folder):
+    def __init__(self, genome_files_input_folder, labeled_files_dic, models_folder):
         self.genome_files_input_folder = genome_files_input_folder
         self.labeled_files_dic = labeled_files_dic
-        self.k = k
-        self.processing_mode = processing_mode
-        self.shift_size = shift_size
         self.model = doc2vec.Doc2Vec.load(os.path.join(models_folder, "d2v.model"))
         self.model.delete_temporary_training_data(keep_doctags_vectors=False, keep_inference=True)
 
@@ -174,24 +166,19 @@ class Doc2VecGeneClustersLoader(object):
         for file_name, file_id in self.labeled_files_dic.items():
             try:
                 file_ind += 1
-                fasta_sequences = SeqIO.parse(_open(os.path.join(self.genome_files_input_folder, file_name + "_cds_from_genomic.fna.gz")), 'fasta')
-                seq_id = 0
-                for fasta in fasta_sequences:
-                    seq_id += 1
-                    seq_name, sequence = fasta.id, str(fasta.seq)
-                    documents_list = GenomeDocsGeneClusters._get_document_from_fasta(sequence, self.processing_mode, self.k, self.shift_size)
-                    for doc_ind, cur_doc in enumerate(documents_list):
-                        cur_vec = self.model.infer_vector(cur_doc)
-                        if vector_size is None:
-                            vector_size = cur_vec.shape[0]
-                        embeddings_results.append(cur_vec)
-                        metadata_results.append([file_id, seq_id, doc_ind])
-                        metadata_results_full.append([file_id, file_name, seq_id, seq_name, doc_ind])
+                with open(os.path.join(self.genome_files_input_folder, file_name), 'rb') as f:
+                    cur_doc = pickle.load(f)
+                    num_of_genes = len(cur_doc)
+                    cur_vec = self.model.infer_vector(cur_doc)
+                    if vector_size is None:
+                        vector_size = cur_vec.shape[0]
+                    embeddings_results.append(cur_vec)
+                    metadata_results.append([file_id])
+                    metadata_results_full.append([file_id, file_name])
                 if file_id % 1 == 0:
-                    print(f"Finished processing file#{file_ind} file_id: {file_id}, file_name: {file_name}, number of genes: {seq_id}")
+                    print(f"Finished processing file#{file_ind} file_id: {file_id}, file_name: {file_name}, number of genes: {num_of_genes}")
             except Exception as e:
-                print(f"****ERROR IN PARSING file: {file_name}, seq_id: {seq_id},")
-                print(f"name: {seq_name}  sequence: {sequence}")
+                print(f"****ERROR IN PARSING file: {file_name}")
                 print(f"Error message: {e}")
 
         columns_names = [f"f_{x + 1}" for x in range(vector_size)]
