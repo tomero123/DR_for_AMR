@@ -166,7 +166,7 @@ class Doc2VecGeneClustersLoader(object):
         for file_name, file_id in self.labeled_files_dic.items():
             try:
                 file_ind += 1
-                with open(os.path.join(self.genome_files_input_folder, file_name), 'rb') as f:
+                with open(os.path.join(self.genome_files_input_folder, file_name + ".pickle"), 'rb') as f:
                     cur_doc = pickle.load(f)
                     num_of_genes = len(cur_doc)
                     cur_vec = self.model.infer_vector(cur_doc)
