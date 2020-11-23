@@ -390,8 +390,8 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
         else:
             print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Started running SelectFromModel Feature selection for antibiotic: {antibiotic}")
             # Write csv of data after FS
-            d = model.feature_importances_
-            most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
+            feature_importances = model.feature_importances_
+            most_important_index = sorted(range(len(feature_importances)), key=lambda i: feature_importances[i], reverse=True)[:features_selection_n]
             temp_df = X_train.iloc[:, most_important_index]
             temp_df["label"] = y_train.values.ravel()
             temp_df["file_id"] = list(final_df_train.loc[:, 'file_id'])
@@ -400,7 +400,7 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
             temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
             importance_list = []
             for ind in most_important_index:
-                importance_list.append([X_train.columns[ind], d[ind]])
+                importance_list.append([X_train.columns[ind], feature_importances[ind]])
             importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
             importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
             selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
@@ -415,6 +415,15 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
               eval_metric="auc", eval_set=eval_set, verbose=True,
               early_stopping_rounds=15
               )
+    # Save feature importance after re-training the model with best features
+    feature_importances_after = model.feature_importances_
+    most_important_index = sorted(range(len(feature_importances_after)), key=lambda i: feature_importances_after[i], reverse=True)
+    importance_list = []
+    for ind in most_important_index:
+        importance_list.append([X_train.columns[ind], feature_importances_after[ind]])
+    importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
+    importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE_AFTER").replace("xlsx", "csv"), index=False)
+
     temp_scores = model.predict_proba(X_test)
     true_results = y_test.values.ravel()
     resistance_score = [x[1] for x in temp_scores]
