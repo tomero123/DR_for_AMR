@@ -18,14 +18,9 @@ else:
     cluster_output_file_name = "cd_hit_results.txt.clstr"
 
 
-try:
-    prefix = '..'
-    summary_gene_files_path = os.path.join(prefix, "results_files", BACTERIA, "summary_gene_files")
-    combined_files_path = os.path.join(prefix, "results_files", BACTERIA, "combined_genes_files")
-except:
-    prefix = '.'
-    summary_gene_files_path = os.path.join(prefix, "results_files", BACTERIA, "summary_gene_files")
-    combined_files_path = os.path.join(prefix, "results_files", BACTERIA, "combined_genes_files")
+prefix = '..' if os.name == 'nt' else '.'
+summary_gene_files_path = os.path.join(prefix, "results_files", BACTERIA, "summary_gene_files")
+combined_files_path = os.path.join(prefix, "results_files", BACTERIA, "combined_genes_files")
 
 seq_list = []
 
