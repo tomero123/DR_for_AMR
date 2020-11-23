@@ -35,16 +35,17 @@ with open(os.path.join(summary_gene_files_path, cluster_output_file_name)) as cl
         if line.startswith(">"):  # new cluster
             cluster_ind = line.split()[1]
         else:
-            strain_ind = int(line.split(">")[1].split("|")[0])
-            gene_ind = int(line.split(">")[1].split("|")[1].split(".")[0])
-            file_name = strains_df[strains_df["index"] == strain_ind]['file_name'].values[0]
-            genes_df = pd.read_csv(os.path.join(combined_files_path, file_name))
-            protein_seq = genes_df[genes_df['Unnamed: 0'] == gene_ind]['protein'].values[0]
-            header = f"cluster_{cluster_ind}"
-            seq_list.append(f">{header}\n{protein_seq}")
-            if int(cluster_ind) % 100 == 0:
-                print(f"Finished processing cluster: {cluster_ind}")
-            continue
+            is_primary = True if "*" in line else False
+            if is_primary:
+                strain_ind = int(line.split(">")[1].split("|")[0])
+                gene_ind = int(line.split(">")[1].split("|")[1].split(".")[0])
+                file_name = strains_df[strains_df["index"] == strain_ind]['file_name'].values[0]
+                genes_df = pd.read_csv(os.path.join(combined_files_path, file_name))
+                protein_seq = genes_df[genes_df['Unnamed: 0'] == gene_ind]['protein'].values[0]
+                header = f"cluster_{cluster_ind}"
+                seq_list.append(f">{header}\n{protein_seq}")
+                if int(cluster_ind) % 100 == 0:
+                    print(f"Finished processing cluster: {cluster_ind}")
 
 with open(os.path.join(summary_gene_files_path, "clusters_protein.fasta"), "w") as file:
     file.write("\n".join(seq_list))
