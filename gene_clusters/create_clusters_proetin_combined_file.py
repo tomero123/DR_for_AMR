@@ -37,7 +37,7 @@ with open(os.path.join(summary_gene_files_path, cluster_output_file_name)) as cl
             protein_seq = genes_df[genes_df['Unnamed: 0'] == gene_ind]['protein'].values[0]
             header = f"cluster_{cluster_ind}"
             seq_list.append(f">{header}\n{protein_seq}")
-            if cluster_ind % 100 == 0:
+            if int(cluster_ind) % 100 == 0:
                 print(f"Finished processing cluster: {cluster_ind}")
             continue
 
