@@ -14,13 +14,18 @@ BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.
 
 if os.name == 'nt':
     cluster_output_file_name = "output70.txt.clstr"
-    prefix = '..'
 else:
     cluster_output_file_name = "cd_hit_results.txt.clstr"
-    prefix = '.'
 
-summary_gene_files_path = os.path.join(prefix, "results_files", BACTERIA, "summary_gene_files")
-combined_files_path = os.path.join(prefix, "results_files", BACTERIA, "combined_genes_files")
+
+try:
+    prefix = '..'
+    summary_gene_files_path = os.path.join(prefix, "results_files", BACTERIA, "summary_gene_files")
+    combined_files_path = os.path.join(prefix, "results_files", BACTERIA, "combined_genes_files")
+except:
+    prefix = '.'
+    summary_gene_files_path = os.path.join(prefix, "results_files", BACTERIA, "summary_gene_files")
+    combined_files_path = os.path.join(prefix, "results_files", BACTERIA, "combined_genes_files")
 
 seq_list = []
 
