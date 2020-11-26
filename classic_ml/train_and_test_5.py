@@ -9,7 +9,7 @@ import time
 import datetime
 import json
 
-from classic_ml.classic_ml_utils import get_final_df, train_test_and_write_results, get_kmers_df, \
+from classic_ml.classic_ml_utils import get_final_df, get_kmers_df, \
     get_current_results_folder, get_label_df, train_test_and_write_results_cv, convert_results_df_to_new_format, \
     get_agg_results_df, get_all_resulst_df, get_final_df_gene_clusters
 from MyLogger import Logger
@@ -20,17 +20,17 @@ from constants import Bacteria, ANTIBIOTIC_DIC, TestMethod, TIME_STR, RawDataTyp
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
 RAW_DATA_TYPE = RawDataType.ALL_GENES.value if len(sys.argv) <= 2 else sys.argv[2]
 K = 10 if len(sys.argv) <= 3 else int(sys.argv[3])  # Choose K size
-TEST_METHOD = TestMethod.CV.value if len(sys.argv) <= 4 else sys.argv[4]  # can be either "train_test" or "cv"
-FEATURES_SELECTION_N = 300 if len(sys.argv) <= 5 else int(sys.argv[5])  # Choose K size # number of features to leave after feature selection
-N_ESTIMATORS = 300 if len(sys.argv) <= 6 else int(sys.argv[6])
-MAX_DEPTH = 4 if len(sys.argv) <= 7 else int(sys.argv[7])
-LEARNING_RATE = 0.1 if len(sys.argv) <= 8 else float(sys.argv[8])
-RESULTS_FOLDER_NAME = None if len(sys.argv) <= 9 else sys.argv[9]
+FEATURES_SELECTION_N = 300 if len(sys.argv) <= 4 else int(sys.argv[4])  # Choose K size # number of features to leave after feature selection
+N_ESTIMATORS = 300 if len(sys.argv) <= 5 else int(sys.argv[5])
+MAX_DEPTH = 4 if len(sys.argv) <= 6 else int(sys.argv[6])
+LEARNING_RATE = 0.1 if len(sys.argv) <= 7 else float(sys.argv[7])
+RESULTS_FOLDER_NAME = None if len(sys.argv) <= 8 else sys.argv[8]
 
 USE_PREDEFINED_FEATURES_LIST = False  # Use predefined features list INSTEAD OF DOING FEATURE SELECTION!!!
 USE_MULTIPROCESS = False
 remove_intermediate = True
 USE_SHAP_FEATURE_SELECTION = False
+TEST_METHOD = TestMethod.CV.value
 
 # Model params
 random_seed = 1
@@ -125,10 +125,10 @@ if __name__ == '__main__':
         print(f"{datetime.datetime.now().strftime(TIME_STR)} FINISHED CALCULATING final_df for bacteria: {BACTERIA}, antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
         results_file_name = f"{antibiotic}_RESULTS_{results_file_folder}.xlsx"
         results_file_path = os.path.join(results_path, results_file_name)
-        if TEST_METHOD == TestMethod.TRAIN_TEST.value:
-            train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, BACTERIA, USE_PREDEFINED_FEATURES_LIST)
-        elif TEST_METHOD == TestMethod.CV.value:
+        if TEST_METHOD == TestMethod.CV.value:
             train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, FEATURES_SELECTION_N, all_results_dic, USE_MULTIPROCESS, USE_SHAP_FEATURE_SELECTION)
+        # elif TEST_METHOD == TestMethod.TRAIN_TEST.value:
+        #     train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, FEATURES_SELECTION_N, all_results_dic, BACTERIA, USE_PREDEFINED_FEATURES_LIST)
         else:
             raise Exception("Invalid test_method")
     print(all_results_dic)

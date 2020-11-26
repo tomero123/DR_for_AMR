@@ -115,94 +115,94 @@ def get_final_df_gene_clusters(antibiotic, label_df, path):
         traceback.print_exc()
 
 
-def train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, bacteria, use_predefined_features_list):
-    try:
-        non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
-        train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin([1, 2, 3, 4])]["file_id"])
-        test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == 5]["file_id"])
-        final_df['label'].replace('R', 1, inplace=True)
-        final_df['label'].replace('S', 0, inplace=True)
-        final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]
-        final_df_test = final_df[final_df["file_id"].isin(test_file_id_list)]
-        X_train = final_df_train.drop(non_features_columns, axis=1).copy()
-        y_train = final_df_train[['label']].copy()
-        X_test = final_df_test.drop(non_features_columns, axis=1).copy()
-        y_test = final_df_test[['label']].copy()
-        print(f"X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
-
-        # Create weight according to the ratio of each class
-        resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
-            if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
-        sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
-        print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
-
-        if use_predefined_features_list:
-            predefined_features_list = PREDEFINED_FEATURES_LIST.get(bacteria, {}).get(antibiotic, [])
-            if predefined_features_list:
-                print(f"Using predefined_features_list in size: {len(predefined_features_list)} for bacteria: {bacteria} and antibiotic: {antibiotic}")
-                X_train = X_train[predefined_features_list]
-                X_test = X_test[predefined_features_list]
-            else:
-                raise Exception(f"Couldn't find valid predefined_features_list for bacteria: {bacteria} and antibiotic: {antibiotic}")
-
-        # Features Selection
-        elif features_selection_n:
-            print(f"Started Feature selection model fit antibiotic: {antibiotic}")
-            now = time.time()
-            model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
-            # Write csv of data after FS
-            d = model.feature_importances_
-            most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
-            temp_df = X_train.iloc[:, most_important_index]
-            temp_df["label"] = y_train.values.ravel()
-            temp_df["file_id"] = list(final_df_train.loc[:, 'file_id'])
-            temp_df["Strain"] = list(final_df_train.loc[:, 'Strain'])
-            temp_df["file_name"] = list(final_df_train.loc[:, 'file_name'])
-            temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
-            importance_list = []
-            for ind in most_important_index:
-                importance_list.append([X_train.columns[ind], d[ind]])
-            importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
-            importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
-            print(f"Finished running Feature selection model fit for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}")
-            print(f"Started Feature selection SelectFromModel for antibiotic: {antibiotic}")
-            now = time.time()
-            selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
-            X_train = selection.transform(X_train)
-            X_test = selection.transform(X_test)
-            print(f"Finished running Feature selection SelectFromModel for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}, X_test.shape: {X_test.shape}")
-
-        model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
-
-        # Save model
-        model_file_path = results_file_path.replace(".xlsx", "_MODEL.p")
-        with open(model_file_path, 'wb') as f:
-            pickle.dump(model, f)
-
-        temp_scores = model.predict_proba(X_test)
-        true_results = y_test.values.ravel()
-
-        predictions = [1 if p[1] >= p[0] else 0 for p in temp_scores]
-        resistance_score = [x[1] for x in temp_scores]
-
-        results_dic = {
-            'Fold': "NA",
-            'file_id': list(final_df_test['file_id']),
-            'Strain': list(final_df_test['Strain']),
-            'File name': list(final_df_test['file_name']),
-            "true_results": true_results,
-            "resistance_score": resistance_score,
-            "predictions": predictions,
-        }
-
-        results_list = [results_dic]
-
-        model_parmas = json.dumps(model.get_params())
-        write_data_to_excel(antibiotic, results_list, results_file_path, model_parmas, kmers_original_count, kmers_final_count, all_results_dic)
-        print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
-    except Exception as e:
-        print(f"ERROR at train_test_and_write_results, message: {e}")
-        traceback.print_exc()
+# def train_test_and_write_results(final_df, amr_df, results_file_path, model, antibiotic, kmers_original_count, kmers_final_count, features_selection_n, all_results_dic, bacteria, use_predefined_features_list):
+#     try:
+#         non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
+#         train_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"].isin([1, 2, 3, 4])]["file_id"])
+#         test_file_id_list = list(amr_df[amr_df[f"{antibiotic}_group"] == 5]["file_id"])
+#         final_df['label'].replace('R', 1, inplace=True)
+#         final_df['label'].replace('S', 0, inplace=True)
+#         final_df_train = final_df[final_df["file_id"].isin(train_file_id_list)]
+#         final_df_test = final_df[final_df["file_id"].isin(test_file_id_list)]
+#         X_train = final_df_train.drop(non_features_columns, axis=1).copy()
+#         y_train = final_df_train[['label']].copy()
+#         X_test = final_df_test.drop(non_features_columns, axis=1).copy()
+#         y_test = final_df_test[['label']].copy()
+#         print(f"X_train size: {X_train.shape}  y_train size: {y_train.shape}  X_test size: {X_test.shape}  y_test size: {y_test.shape}")
+#
+#         # Create weight according to the ratio of each class
+#         resistance_weight = (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() \
+#             if (y_train['label'] == 0).sum() / (y_train['label'] == 1).sum() > 0 else 1
+#         sample_weight = np.array([resistance_weight if i == 1 else 1 for i in y_train['label']])
+#         print("Resistance_weight for antibiotic: {} is: {}".format(antibiotic, resistance_weight))
+#
+#         if use_predefined_features_list:
+#             predefined_features_list = PREDEFINED_FEATURES_LIST.get(bacteria, {}).get(antibiotic, [])
+#             if predefined_features_list:
+#                 print(f"Using predefined_features_list in size: {len(predefined_features_list)} for bacteria: {bacteria} and antibiotic: {antibiotic}")
+#                 X_train = X_train[predefined_features_list]
+#                 X_test = X_test[predefined_features_list]
+#             else:
+#                 raise Exception(f"Couldn't find valid predefined_features_list for bacteria: {bacteria} and antibiotic: {antibiotic}")
+#
+#         # Features Selection
+#         elif features_selection_n:
+#             print(f"Started Feature selection model fit antibiotic: {antibiotic}")
+#             now = time.time()
+#             model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
+#             # Write csv of data after FS
+#             d = model.feature_importances_
+#             most_important_index = sorted(range(len(d)), key=lambda i: d[i], reverse=True)[:features_selection_n]
+#             temp_df = X_train.iloc[:, most_important_index]
+#             temp_df["label"] = y_train.values.ravel()
+#             temp_df["file_id"] = list(final_df_train.loc[:, 'file_id'])
+#             temp_df["Strain"] = list(final_df_train.loc[:, 'Strain'])
+#             temp_df["file_name"] = list(final_df_train.loc[:, 'file_name'])
+#             temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
+#             importance_list = []
+#             for ind in most_important_index:
+#                 importance_list.append([X_train.columns[ind], d[ind]])
+#             importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
+#             importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
+#             print(f"Finished running Feature selection model fit for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}")
+#             print(f"Started Feature selection SelectFromModel for antibiotic: {antibiotic}")
+#             now = time.time()
+#             selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
+#             X_train = selection.transform(X_train)
+#             X_test = selection.transform(X_test)
+#             print(f"Finished running Feature selection SelectFromModel for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes ; X_train.shape: {X_train.shape}, X_test.shape: {X_test.shape}")
+#
+#         model.fit(X_train, y_train.values.ravel(), sample_weight=sample_weight)
+#
+#         # Save model
+#         model_file_path = results_file_path.replace(".xlsx", "_MODEL.p")
+#         with open(model_file_path, 'wb') as f:
+#             pickle.dump(model, f)
+#
+#         temp_scores = model.predict_proba(X_test)
+#         true_results = y_test.values.ravel()
+#
+#         predictions = [1 if p[1] >= p[0] else 0 for p in temp_scores]
+#         resistance_score = [x[1] for x in temp_scores]
+#
+#         results_dic = {
+#             'Fold': "NA",
+#             'file_id': list(final_df_test['file_id']),
+#             'Strain': list(final_df_test['Strain']),
+#             'File name': list(final_df_test['file_name']),
+#             "true_results": true_results,
+#             "resistance_score": resistance_score,
+#             "predictions": predictions,
+#         }
+#
+#         results_list = [results_dic]
+#
+#         model_parmas = json.dumps(model.get_params())
+#         write_data_to_excel(antibiotic, results_list, results_file_path, model_parmas, kmers_original_count, kmers_final_count, all_results_dic)
+#         print(f"Finished running train_test_and_write_results_cv for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes")
+#     except Exception as e:
+#         print(f"ERROR at train_test_and_write_results, message: {e}")
+#         traceback.print_exc()
 
 
 def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, antibiotic, features_selection_n, all_results_dic, use_multiprocess, use_shap_feature_selection):
