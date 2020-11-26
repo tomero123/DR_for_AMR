@@ -4,6 +4,7 @@ sys.path.append("/home/local/BGU-USERS/tomeror/tomer_thesis")
 sys.path.append("/home/tomeror/tomer_thesis")
 
 import multiprocessing
+import operator
 # import pathos.multiprocessing as multiprocessing
 import shap
 import json
@@ -231,6 +232,7 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
             for i in inputs_list:
                 results_list.append(train_test_one_fold(*i))
 
+        write_feature_importance_to_excel(antibiotic, results_list, results_file_path, n_folds)
         write_data_to_excel(antibiotic, results_list, results_file_path, all_results_dic)
         print(f"***{datetime.datetime.now().strftime(TIME_STR)} FINISHED training models for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes***")
     except Exception as e:
@@ -305,6 +307,20 @@ def write_data_to_excel(antibiotic, results_list, results_file_path, all_results
         traceback.print_exc()
 
 
+def write_feature_importance_to_excel(antibiotic, results_list, results_file_path, n_folds):
+    importance_list = []
+    feature_importance_dic = {}
+    for fold_dic in results_list:
+        for feature_name, feature_importance in zip(fold_dic["feature_names"], fold_dic["positive_feature_importances"]):
+            feature_importance_dic.setdefault(feature_name, 0)
+            feature_importance_dic[feature_name] += feature_importance
+
+    for feature, importance_sum in sorted(feature_importance_dic.items(), key=operator.itemgetter(1),reverse=True):
+        importance_list.append([feature, importance_sum / n_folds])
+    importance_df = pd.DataFrame(importance_list, columns=["feature", "score"])
+    importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
+
+
 def get_current_results_folder(results_folder_name, features_selection_n, test_method):
     current_results_folder = get_time_as_str()
     if results_folder_name is not None:
@@ -348,6 +364,8 @@ def get_all_resulst_df(all_results_dic, metrics_order):
 
 
 def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n, use_shap_feature_selection):
+    feature_names = None
+    positive_feature_importances = None
     non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
     final_df['label'].replace('R', 1, inplace=True)
     final_df['label'].replace('S', 0, inplace=True)
@@ -378,7 +396,7 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
             feature_importance = pd.DataFrame(list(zip(X_train.columns, vals)), columns=['feature', 'feature_importance_val'])
             feature_importance.sort_values(by=['feature_importance_val'], ascending=False, inplace=True)
             features_with_positive_shap_n = feature_importance[feature_importance['feature_importance_val'] > 0].shape[0]
-            print(f"Number of features with positive SHAP value: {features_with_positive_shap_n}")
+            print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Number of features with positive SHAP value: {features_with_positive_shap_n}")
             final_features_count = min(features_with_positive_shap_n, features_selection_n)
             feature_importance = feature_importance.head(final_features_count)
             feature_importance.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
@@ -391,6 +409,10 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
             print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} Started running SelectFromModel Feature selection for antibiotic: {antibiotic}")
             # Write csv of data after FS
             feature_importances = model.feature_importances_
+            positive_importance_ind = np.where(feature_importances > 0)[0]
+            positive_feature_importances = list(feature_importances[positive_importance_ind])
+            feature_names = list(X_train.columns[positive_importance_ind])
+            print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} {len(positive_importance_ind)} features with positive weight")
             most_important_index = sorted(range(len(feature_importances)), key=lambda i: feature_importances[i], reverse=True)[:features_selection_n]
             temp_df = X_train.iloc[:, most_important_index]
             temp_df["label"] = y_train.values.ravel()
@@ -398,11 +420,11 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
             temp_df["Strain"] = list(final_df_train.loc[:, 'Strain'])
             temp_df["file_name"] = list(final_df_train.loc[:, 'file_name'])
             temp_df.to_csv(results_file_path.replace("RESULTS", "FS_DATA").replace("xlsx", "csv"), index=False)
-            importance_list = []
-            for ind in most_important_index:
-                importance_list.append([X_train.columns[ind], feature_importances[ind]])
-            importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
-            importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
+            # importance_list = []
+            # for ind in most_important_index:
+            #     importance_list.append([X_train.columns[ind], feature_importances[ind]])
+            # importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
+            # importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
             selection = SelectFromModel(model, threshold=-np.inf, prefit=True, max_features=features_selection_n)
             X_train = selection.transform(X_train)
             X_test = selection.transform(X_test)
@@ -415,14 +437,6 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
               eval_metric="auc", eval_set=eval_set, verbose=True,
               early_stopping_rounds=15
               )
-    # Save feature importance after re-training the model with best features
-    feature_importances_after = model.feature_importances_
-    most_important_index = sorted(range(len(feature_importances_after)), key=lambda i: feature_importances_after[i], reverse=True)
-    importance_list = []
-    for ind in most_important_index:
-        importance_list.append([X_train.columns[ind], feature_importances_after[ind]])
-    importance_df = pd.DataFrame(importance_list, columns=["kmer", "score"])
-    importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE_AFTER").replace("xlsx", "csv"), index=False)
 
     temp_scores = model.predict_proba(X_test)
     true_results = y_test.values.ravel()
@@ -437,6 +451,8 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
         "true_results": true_results,
         "resistance_score": resistance_score,
         "predictions": predictions,
+        "feature_names": feature_names,
+        "positive_feature_importances": positive_feature_importances
     }
 
     return results_dic
