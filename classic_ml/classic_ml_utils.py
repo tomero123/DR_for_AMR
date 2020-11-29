@@ -232,7 +232,7 @@ def train_test_and_write_results_cv(final_df, amr_df, results_file_path, model, 
             for i in inputs_list:
                 results_list.append(train_test_one_fold(*i))
 
-        write_feature_importance_to_excel(antibiotic, results_list, results_file_path, n_folds)
+        write_feature_importance_to_excel(results_list, results_file_path, n_folds)
         write_data_to_excel(antibiotic, results_list, results_file_path, all_results_dic)
         print(f"***{datetime.datetime.now().strftime(TIME_STR)} FINISHED training models for antibiotic: {antibiotic} in {round((time.time() - now) / 60, 4)} minutes***")
     except Exception as e:
@@ -307,7 +307,7 @@ def write_data_to_excel(antibiotic, results_list, results_file_path, all_results
         traceback.print_exc()
 
 
-def write_feature_importance_to_excel(antibiotic, results_list, results_file_path, n_folds):
+def write_feature_importance_to_excel(results_list, results_file_path, n_folds):
     importance_list = []
     feature_importance_dic = {}
     for fold_dic in results_list:
@@ -315,10 +315,11 @@ def write_feature_importance_to_excel(antibiotic, results_list, results_file_pat
             feature_importance_dic.setdefault(feature_name, 0)
             feature_importance_dic[feature_name] += feature_importance
 
-    for feature, importance_sum in sorted(feature_importance_dic.items(), key=operator.itemgetter(1),reverse=True):
-        importance_list.append([feature, importance_sum / n_folds])
-    importance_df = pd.DataFrame(importance_list, columns=["feature", "score"])
-    importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
+    if feature_importance_dic:
+        for feature, importance_sum in sorted(feature_importance_dic.items(), key=operator.itemgetter(1),reverse=True):
+            importance_list.append([feature, importance_sum / n_folds])
+        importance_df = pd.DataFrame(importance_list, columns=["feature", "score"])
+        importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
 
 
 def get_current_results_folder(results_folder_name, features_selection_n, test_method):
@@ -364,8 +365,8 @@ def get_all_resulst_df(all_results_dic, metrics_order):
 
 
 def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n, use_shap_feature_selection):
-    feature_names = None
-    positive_feature_importances = None
+    feature_names = []
+    positive_feature_importances = []
     non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
     final_df['label'].replace('R', 1, inplace=True)
     final_df['label'].replace('S', 0, inplace=True)
