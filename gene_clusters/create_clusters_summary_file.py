@@ -43,8 +43,10 @@ with open(os.path.join(summary_gene_files_path, cluster_output_file_name)) as cl
                 gene_ind = int(line.split(">")[1].split("|")[1].split(".")[0])
                 file_name = strains_df[strains_df["index"] == strain_ind]['file_name'].values[0]
                 genes_df = pd.read_csv(os.path.join(combined_files_path, file_name))
-                locus_tag = genes_df[genes_df['Unnamed: 0'] == gene_ind]['locus_tag'].values[0]
-                name_y = genes_df[genes_df['Unnamed: 0'] == gene_ind]['name_y'].values[0]
+                locus_tag = str(genes_df[genes_df['Unnamed: 0'] == gene_ind]['locus_tag'].values[0])
+                name_y = str(genes_df[genes_df['Unnamed: 0'] == gene_ind]['name_y'].values[0])
+                locus_tag_list.append(locus_tag)
+                gene_name_list.append(name_y)
 
 clusters_df['gene_name'] = gene_name_list
 clusters_df['locus_tag'] = locus_tag_list
