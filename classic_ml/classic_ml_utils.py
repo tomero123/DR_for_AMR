@@ -310,16 +310,22 @@ def write_data_to_excel(antibiotic, results_list, results_file_path, all_results
 def write_feature_importance_to_excel(results_list, results_file_path, n_folds):
     importance_list = []
     feature_importance_dic = {}
+    # sum all folds importance metrics
     for fold_dic in results_list:
-        for feature_name, feature_importance in zip(fold_dic["feature_names"], fold_dic["positive_feature_importances"]):
-            feature_importance_dic.setdefault(feature_name, 0)
-            feature_importance_dic[feature_name] += feature_importance
+        for metric, metric_dic in fold_dic["importance_dic"].items():
+            for feature_name, feature_importance in metric_dic.items():
+                feature_importance_dic.setdefault(metric, {})
+                feature_importance_dic[metric].setdefault(feature_name, 0)
+                feature_importance_dic[metric][feature_name] += feature_importance
 
-    if feature_importance_dic:
-        for feature, importance_sum in sorted(feature_importance_dic.items(), key=operator.itemgetter(1),reverse=True):
-            importance_list.append([feature, importance_sum / n_folds])
-        importance_df = pd.DataFrame(importance_list, columns=["feature", "score"])
-        importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
+    # divide all values by number of folds to get mean
+    for metric, metric_dic in feature_importance_dic.items():
+        for feature_name, feature_importance in metric_dic.items():
+            feature_importance_dic[metric][feature_name] = feature_importance / n_folds
+
+    importance_df = pd.DataFrame(feature_importance_dic)
+    importance_df = importance_df.sort_values(by="xgb_feature_importance", ascending=False)
+    importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
 
 
 def get_current_results_folder(results_folder_name, features_selection_n, test_method):
@@ -365,8 +371,7 @@ def get_all_resulst_df(all_results_dic, metrics_order):
 
 
 def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_list, results_file_path, model, antibiotic, features_selection_n, use_shap_feature_selection):
-    feature_names = []
-    positive_feature_importances = []
+    importance_dic = {}
     non_features_columns = ['file_id', 'file_name', 'Strain', 'label']
     final_df['label'].replace('R', 1, inplace=True)
     final_df['label'].replace('S', 0, inplace=True)
@@ -413,6 +418,13 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
             positive_importance_ind = np.where(feature_importances > 0)[0]
             positive_feature_importances = list(feature_importances[positive_importance_ind])
             feature_names = list(X_train.columns[positive_importance_ind])
+            xgb_feature_importance = {k:v for k, v in zip(feature_names, positive_feature_importances)}
+            importance_dic["xgb_feature_importance"] = xgb_feature_importance
+            importance_dic["weight"] = model.get_booster().get_score(importance_type="weight")
+            importance_dic["gain"] = model.get_booster().get_score(importance_type="gain")
+            importance_dic["cover"] = model.get_booster().get_score(importance_type="cover")
+            importance_dic["total_gain"] = model.get_booster().get_score(importance_type="total_gain")
+            importance_dic["total_cover"] = model.get_booster().get_score(importance_type="total_cover")
             print(f"{datetime.datetime.now().strftime(TIME_STR)} FOLD#{test_group} {len(positive_importance_ind)} features with positive weight")
             most_important_index = sorted(range(len(feature_importances)), key=lambda i: feature_importances[i], reverse=True)[:features_selection_n]
             temp_df = X_train.iloc[:, most_important_index]
@@ -452,8 +464,7 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
         "true_results": true_results,
         "resistance_score": resistance_score,
         "predictions": predictions,
-        "feature_names": feature_names,
-        "positive_feature_importances": positive_feature_importances
+        "importance_dic": importance_dic
     }
 
     return results_dic
