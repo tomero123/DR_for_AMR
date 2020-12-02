@@ -418,7 +418,7 @@ def train_test_one_fold(test_group, final_df, train_file_id_list, test_file_id_l
             positive_importance_ind = np.where(feature_importances > 0)[0]
             positive_feature_importances = list(feature_importances[positive_importance_ind])
             feature_names = list(X_train.columns[positive_importance_ind])
-            xgb_feature_importance = {k:v for k, v in zip(feature_names, positive_feature_importances)}
+            xgb_feature_importance = {str(k): v for k, v in zip(feature_names, positive_feature_importances)}
             importance_dic["xgb_feature_importance"] = xgb_feature_importance
             importance_dic["weight"] = model.get_booster().get_score(importance_type="weight")
             importance_dic["gain"] = model.get_booster().get_score(importance_type="gain")
