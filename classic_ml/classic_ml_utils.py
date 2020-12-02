@@ -325,7 +325,7 @@ def write_feature_importance_to_excel(results_list, results_file_path, n_folds):
 
     importance_df = pd.DataFrame(feature_importance_dic)
     importance_df = importance_df.sort_values(by="xgb_feature_importance", ascending=False)
-    importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"), index=False)
+    importance_df.to_csv(results_file_path.replace("RESULTS", "FS_IMPORTANCE").replace("xlsx", "csv"))
 
 
 def get_current_results_folder(results_folder_name, features_selection_n, test_method):
