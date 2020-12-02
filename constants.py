@@ -37,10 +37,11 @@ class FileType(Enum):
 
 
 class RawDataType(Enum):
-    ALL_GENOME = "all_genome"
-    ALL_GENES = "all_genes"
-    ACCESSORY_GENES = "accessory_genes"
+    ALL_GENOME = "all_genome"  # nucleotide seq
+    ALL_GENES = "all_genes"  # nucleotide seq
+    ACCESSORY_GENES = "accessory_genes"  # nucleotide seq
     GENE_CLUSTERS = "gene_clusters"
+    PROTEIN = "protein"
 
 
 # antibiotic dic

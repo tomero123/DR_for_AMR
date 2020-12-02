@@ -109,6 +109,8 @@ def create_kmers_file(input_list):
         K = input_list[2]
         input_folder = input_list[3]
         output_folder = input_list[4]
+        file_type = input_list[5]
+        file_suffix = input_list[6]
         print(f"Started processing: {file_name}")
         kmers_dic = {}
         fasta_sequences = SeqIO.parse(_open(os.path.join(input_folder, file_name)), 'fasta')
@@ -120,7 +122,7 @@ def create_kmers_file(input_list):
                     kmers_dic[key] += 1
                 else:
                     kmers_dic[key] = 1
-        with gzip.open(os.path.join(output_folder, file_name.replace(".fna.gz", ".txt.gz")), 'wt') as outfile:
+        with gzip.open(os.path.join(output_folder, file_name.replace("_" + file_type, "").replace(file_suffix, ".txt.gz")), 'wt') as outfile:
             json.dump(kmers_dic, outfile)
     except Exception as e:
         print(f"ERROR at create_kmers_file for: {file_name}, index: {ind}, message: {e}")
