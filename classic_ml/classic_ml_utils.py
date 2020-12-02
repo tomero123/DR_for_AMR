@@ -98,7 +98,7 @@ def get_final_df(antibiotic, kmers_df, label_df):
 
 def get_final_df_gene_clusters(antibiotic, label_df, path):
     try:
-        clusters_df_file_path = os.path.join(path, "summary_gene_files", "CLUSTERS_DATA_COUNTS.csv")
+        clusters_df_file_path = os.path.join(path, "summary_gene_files", "CLUSTERS_DATA.csv")
         all_strains_df_file_path = os.path.join(path, "summary_gene_files", "ALL_STRAINS.csv")
         clusters_df = pd.read_csv(clusters_df_file_path)
         all_strains_df = pd.read_csv(all_strains_df_file_path)
