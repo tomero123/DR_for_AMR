@@ -314,9 +314,10 @@ def write_feature_importance_to_excel(results_list, results_file_path, n_folds):
     for fold_dic in results_list:
         for metric, metric_dic in fold_dic["importance_dic"].items():
             for feature_name, feature_importance in metric_dic.items():
+                f_name_fixed = feature_name.strip()
                 feature_importance_dic.setdefault(metric, {})
-                feature_importance_dic[metric].setdefault(feature_name, 0)
-                feature_importance_dic[metric][feature_name] += feature_importance
+                feature_importance_dic[metric].setdefault(f_name_fixed, 0)
+                feature_importance_dic[metric][f_name_fixed] += feature_importance
 
     # divide all values by number of folds to get mean
     for metric, metric_dic in feature_importance_dic.items():

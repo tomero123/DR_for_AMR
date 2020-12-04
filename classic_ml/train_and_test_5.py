@@ -18,7 +18,7 @@ from constants import Bacteria, ANTIBIOTIC_DIC, TestMethod, TIME_STR, RawDataTyp
 # *********************************************************************************************************************************
 # Config
 BACTERIA = Bacteria.PSEUDOMONAS_AUREGINOSA.value if len(sys.argv) <= 1 else sys.argv[1]
-RAW_DATA_TYPE = RawDataType.ALL_GENES.value if len(sys.argv) <= 2 else sys.argv[2]
+RAW_DATA_TYPE = RawDataType.GENE_CLUSTERS.value if len(sys.argv) <= 2 else sys.argv[2]
 K = 10 if len(sys.argv) <= 3 else int(sys.argv[3])  # Choose K size
 FEATURES_SELECTION_N = 300 if len(sys.argv) <= 4 else int(sys.argv[4])  # Choose K size # number of features to leave after feature selection
 N_ESTIMATORS = 300 if len(sys.argv) <= 5 else int(sys.argv[5])
